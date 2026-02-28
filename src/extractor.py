@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCUm-WcLlDsz8ieyXQCuckuVOFi1X-SnY0"
+os.environ["GOOGLE_API_KEY"] = "GOOGLE_API_KEY"
 
 class ProposalFeatures(BaseModel):
     organization_name: str = Field(description="Official name of the NGO or organization")
