@@ -1,0 +1,102 @@
+[
+  {
+    "id": "gates-001",
+    "name": "Bill & Melinda Gates Foundation",
+    "focus_areas": ["global health", "education", "poverty alleviation", "agriculture"],
+    "geography": ["Sub-Saharan Africa", "South Asia", "Global"],
+    "grant_min": 100000,
+    "grant_max": 5000000,
+    "description": "Focuses on improving healthcare and reducing poverty through evidence-based programs. Prioritizes scalable, systems-level change with measurable outcomes.",
+    "typical_keywords": ["evidence-based", "scale", "systems change", "measurable impact", "data-driven"]
+  },
+  {
+    "id": "ford-001",
+    "name": "Ford Foundation",
+    "focus_areas": ["social justice", "gender equality", "economic opportunity", "democratic rights"],
+    "geography": ["Global", "Africa", "Latin America", "Asia"],
+    "grant_min": 50000,
+    "grant_max": 2000000,
+    "description": "Committed to reducing inequality and strengthening democratic values. Funds grassroots movements and advocacy organizations.",
+    "typical_keywords": ["inequality", "rights", "grassroots", "advocacy", "community-led"]
+  },
+  {
+    "id": "usaid-001",
+    "name": "USAID Development Innovation Ventures",
+    "focus_areas": ["economic growth", "health", "education", "food security", "climate"],
+    "geography": ["Developing countries", "Africa", "Asia", "Latin America"],
+    "grant_min": 25000,
+    "grant_max": 15000000,
+    "description": "US government agency funding innovative development solutions. Focuses on cost-effectiveness, scalability, and local ownership.",
+    "typical_keywords": ["innovation", "local ownership", "sustainability", "cost-effective", "scalable"]
+  },
+  {
+    "id": "wellcome-001",
+    "name": "Wellcome Trust",
+    "focus_areas": ["health", "medical research", "mental health", "infectious diseases"],
+    "geography": ["Global", "Africa", "Asia"],
+    "grant_min": 50000,
+    "grant_max": 10000000,
+    "description": "Funds science and research to improve health. Strong focus on infectious diseases and mental health in low-income countries.",
+    "typical_keywords": ["research", "health outcomes", "evidence", "clinical", "disease burden"]
+  },
+  {
+    "id": "mastercard-001",
+    "name": "Mastercard Foundation",
+    "focus_areas": ["youth employment", "education", "financial inclusion", "agriculture"],
+    "geography": ["Africa", "Sub-Saharan Africa"],
+    "grant_min": 100000,
+    "grant_max": 50000000,
+    "description": "Focused exclusively on Africa. Funds programs that create dignified and fulfilling work for young people.",
+    "typical_keywords": ["youth", "employment", "Africa", "financial inclusion", "dignity", "skills"]
+  },
+  {
+    "id": "rockefeller-001",
+    "name": "Rockefeller Foundation",
+    "focus_areas": ["food systems", "health", "climate", "economic mobility"],
+    "geography": ["Global", "Asia", "Africa", "United States"],
+    "grant_min": 50000,
+    "grant_max": 5000000,
+    "description": "Promotes the wellbeing of humanity by transforming food systems and health equity. Strong focus on climate resilience.",
+    "typical_keywords": ["food systems", "equity", "resilience", "transformation", "climate adaptation"]
+  },
+  {
+    "id": "macarthur-001",
+    "name": "MacArthur Foundation",
+    "focus_areas": ["climate", "criminal justice", "nuclear risk", "local journalism", "education"],
+    "geography": ["United States", "Global"],
+    "grant_min": 25000,
+    "grant_max": 2000000,
+    "description": "Supports creative people, effective institutions, and influential networks building a more just, verdant, and peaceful world.",
+    "typical_keywords": ["justice", "creative", "change", "institutions", "networks", "peace"]
+  },
+  {
+    "id": "eu-001",
+    "name": "European Union Development Fund",
+    "focus_areas": ["development", "democracy", "human rights", "environment", "trade"],
+    "geography": ["ACP countries", "Africa", "Caribbean", "Pacific"],
+    "grant_min": 100000,
+    "grant_max": 20000000,
+    "description": "EU funding for development cooperation in ACP countries. Strong emphasis on governance, sustainability, and partnership.",
+    "typical_keywords": ["governance", "partnership", "sustainability", "human rights", "EU alignment"]
+  },
+  {
+    "id": "open-society-001",
+    "name": "Open Society Foundations",
+    "focus_areas": ["democracy", "human rights", "justice", "education", "public health"],
+    "geography": ["Global", "Eastern Europe", "Africa", "Asia", "Americas"],
+    "grant_min": 10000,
+    "grant_max": 1000000,
+    "description": "Works to build vibrant and tolerant societies. Funds civil society organizations fighting for accountability and open government.",
+    "typical_keywords": ["civil society", "accountability", "transparency", "rights", "open government"]
+  },
+  {
+    "id": "unfoundation-001",
+    "name": "UN Foundation",
+    "focus_areas": ["climate", "global health", "women empowerment", "sustainable development"],
+    "geography": ["Global", "Developing countries"],
+    "grant_min": 50000,
+    "grant_max": 3000000,
+    "description": "Connects the UN with partners to build a better world. Focused on SDGs and multilateral solutions to global challenges.",
+    "typical_keywords": ["SDGs", "multilateral", "sustainable development", "women", "climate action"]
+  }
+]

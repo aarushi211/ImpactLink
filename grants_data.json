@@ -1,0 +1,4478 @@
+{
+    "errorcode": 0,
+    "msg": "Webservice Succeeds",
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.InpWRG1ROE1taUJSTmJmUWpkazVMOTBWZXcvWFRDSnp0Q3p2a3pLRzhWMHM9Ig.3J4086N1w8HsLD9SOWcm_t6T1kGU5p96ElFFw1XzorU",
+    "data": {
+        "searchParams": {
+            "resultType": "json",
+            "searchOnly": false,
+            "oppNum": "",
+            "cfda": "",
+            "sortBy": "",
+            "oppStatuses": "posted",
+            "startRecordNum": 0,
+            "eligibilities": "",
+            "fundingInstruments": "",
+            "fundingCategories": "",
+            "agencies": "",
+            "rows": 250,
+            "keyword": "education africa",
+            "keywordEncoded": true
+        },
+        "hitCount": 276,
+        "startRecord": 0,
+        "oppHits": [
+            {
+                "id": "357797",
+                "number": "PAS-ZAF-FY25-02",
+                "title": "Annual Program Statement 2025",
+                "agencyCode": "DOS-ZAF",
+                "agency": "U.S. Mission to South Africa",
+                "openDate": "12/18/2024",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.040"
+                ]
+            },
+            {
+                "id": "334326",
+                "number": "21-595",
+                "title": "Tribal Colleges and Universities Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "06/24/2021",
+                "closeDate": "04/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "350230",
+                "number": "PD-24-1340",
+                "title": "Research in the Formation of Engineers",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/17/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.041"
+                ]
+            },
+            {
+                "id": "344124",
+                "number": "23-510",
+                "title": "Improving Undergraduate STEM Education: Directorate for STEM Education",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "10/20/2022",
+                "closeDate": "07/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "355100",
+                "number": "24-584",
+                "title": "Advanced Technological Education",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "06/25/2024",
+                "closeDate": "10/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "358568",
+                "number": "PD-25-345Y",
+                "title": "Fire Science Innovations through Research and Education",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/16/2025",
+                "closeDate": "04/07/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076",
+                    "47.075",
+                    "47.084",
+                    "47.041",
+                    "47.050",
+                    "47.070",
+                    "47.079",
+                    "47.074",
+                    "47.083",
+                    "47.049"
+                ]
+            },
+            {
+                "id": "353413",
+                "number": "24-564",
+                "title": "IUSE/Professional Formation of Engineers:  Revolutionizing Engineering Departments",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "04/05/2024",
+                "closeDate": "04/14/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076",
+                    "47.041"
+                ]
+            },
+            {
+                "id": "356042",
+                "number": "NOAA-NOS-MB-27779",
+                "title": "FY 2024 &ndash; 2026 - Broad Agency Announcement (BAA) Announcement Type: Initial",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "08/14/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "361008",
+                "number": "26-501",
+                "title": "Collaboratory to Advance Mathematics Education and Learning (CAMEL) for K-12",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/12/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075"
+                ]
+            },
+            {
+                "id": "361327",
+                "number": "DFOP0017811",
+                "title": "FY 2026 Community College Administrator Program",
+                "agencyCode": "DOS-ECA",
+                "agency": "Bureau Of Educational and Cultural Affairs",
+                "openDate": "02/19/2026",
+                "closeDate": "04/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.408"
+                ]
+            },
+            {
+                "id": "356536",
+                "number": "PD-24-7789",
+                "title": "Geospace Cluster",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/26/2024",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "360665",
+                "number": "25-548",
+                "title": "Accelerating Research Translation",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/26/2025",
+                "closeDate": "03/12/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076",
+                    "47.079",
+                    "47.050",
+                    "47.083",
+                    "47.070",
+                    "47.074",
+                    "47.075",
+                    "47.084",
+                    "47.041",
+                    "47.049"
+                ]
+            },
+            {
+                "id": "357554",
+                "number": "25-515",
+                "title": "Security, Privacy, and Trust in Cyberspace",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/06/2024",
+                "closeDate": "09/28/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075",
+                    "47.076",
+                    "47.049",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "351947",
+                "number": "24-529",
+                "title": "Innovations in Graduate Education (IGE) Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "01/24/2024",
+                "closeDate": "03/25/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "361169",
+                "number": "USDA-NIFA-AFRI-011596",
+                "title": "Agriculture and Food Research Initiative Competitive Grants Program Education and Workforce Development",
+                "agencyCode": "USDA-NIFA",
+                "agency": "National Institute of Food and Agriculture",
+                "openDate": "01/20/2026",
+                "closeDate": "12/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.310"
+                ]
+            },
+            {
+                "id": "359932",
+                "number": "N0001425SF006",
+                "title": "FY25 ONR Office Of Naval Research (ONR) Science, Technology, Engineering, and Mathematics(STEM) Education and Workforce Program",
+                "agencyCode": "DOD-ONR",
+                "agency": "Office of Naval Research",
+                "openDate": "07/07/2025",
+                "closeDate": "06/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.330"
+                ]
+            },
+            {
+                "id": "332012",
+                "number": "PD-21-7700",
+                "title": "Education Programs in Atmospheric and Geospace Sciences",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/11/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "345938",
+                "number": "HQ003423NFOEASD01",
+                "title": "NDEP STEM Open NFO",
+                "agencyCode": "DOD-WHS",
+                "agency": "Washington Headquarters Services",
+                "openDate": "02/09/2023",
+                "closeDate": "02/08/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.006"
+                ]
+            },
+            {
+                "id": "308873",
+                "number": "PD-18-7222",
+                "title": "Crosscutting Activities in Materials Research",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/08/2018",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.049"
+                ]
+            },
+            {
+                "id": "356538",
+                "number": "PD-24-7790",
+                "title": "Atmosphere Cluster",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/26/2024",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "347022",
+                "number": "23-563",
+                "title": "Historically Black Colleges and Universities - Undergraduate Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/21/2023",
+                "closeDate": "10/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "344608",
+                "number": "23-520",
+                "title": "Training-based Workforce Development for Advanced Cyberinfrastructure  (CyberTraining)",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "11/22/2022",
+                "closeDate": "01/21/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075",
+                    "47.050",
+                    "47.076",
+                    "47.041",
+                    "47.049",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "359966",
+                "number": "25-540",
+                "title": "National Science Foundation Translation to Practice",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/09/2025",
+                "closeDate": "05/19/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.079",
+                    "47.083",
+                    "47.041",
+                    "47.074",
+                    "47.084",
+                    "47.049",
+                    "47.050",
+                    "47.070",
+                    "47.075",
+                    "47.076"
+                ]
+            },
+            {
+                "id": "355177",
+                "number": "PAR-24-233",
+                "title": "NIMH Research Education Mentoring Program for HIV Researchers (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "06/27/2024",
+                "closeDate": "05/07/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.242"
+                ]
+            },
+            {
+                "id": "361098",
+                "number": "EPA-EE-25-01",
+                "title": "Environmental Education Grant Program",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "01/07/2026",
+                "closeDate": "03/03/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.951"
+                ]
+            },
+            {
+                "id": "359104",
+                "number": "24-563",
+                "title": "Louis Stokes Alliances for Minority Participation",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/23/2025",
+                "closeDate": "11/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "339594",
+                "number": "22-586",
+                "title": "Faculty Early Career Development Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "04/19/2022",
+                "closeDate": "07/22/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.041",
+                    "47.074",
+                    "47.084",
+                    "47.079",
+                    "47.070",
+                    "47.049",
+                    "47.075",
+                    "47.083",
+                    "47.076",
+                    "47.050"
+                ]
+            },
+            {
+                "id": "357168",
+                "number": "PAR-25-204",
+                "title": "NIDA Research Education Program for Clinical Researchers and Clinicians (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "11/18/2024",
+                "closeDate": "11/12/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.279"
+                ]
+            },
+            {
+                "id": "355417",
+                "number": "RFA-OH-25-002",
+                "title": "Occupational Safety and Health Education and Research Centers (T42)",
+                "agencyCode": "HHS-CDC-HHSCDCERA",
+                "agency": "Centers for Disease Control and Prevention - ERA",
+                "openDate": "10/07/2024",
+                "closeDate": "10/26/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.262"
+                ]
+            },
+            {
+                "id": "349692",
+                "number": "PAR-23-240",
+                "title": "Alcohol and Other Substance Use Research Education Programs for Health Professionals (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "08/01/2023",
+                "closeDate": "05/25/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.273"
+                ]
+            },
+            {
+                "id": "325932",
+                "number": "W911NF-20-S-0008",
+                "title": "UNITED STATES MILITARY ACADEMY Broad Agency Announcement",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "04/01/2020",
+                "closeDate": "03/31/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "361023",
+                "number": "DE-FOA-0003541",
+                "title": "Fiscal Year 2026 Scientific Infrastructure Support for Consolidated Innovative Nuclear Research",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "12/15/2025",
+                "closeDate": "04/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "348375",
+                "number": "23-595",
+                "title": "Centers of Research Excellence in Science and Technology",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/25/2023",
+                "closeDate": "12/04/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "361254",
+                "number": "NNH26ZHA001C",
+                "title": "Next Gen STEM (NGS) NASA Aerospace Skilled Technical Workforce Hubs (NAS_Hub)",
+                "agencyCode": "NASA",
+                "agency": "National Aeronautics and Space Administration",
+                "openDate": "02/06/2026",
+                "closeDate": "03/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "43.008"
+                ]
+            },
+            {
+                "id": "361238",
+                "number": "26-503",
+                "title": "CyberAICorps Scholarship for Service",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "02/04/2026",
+                "closeDate": "04/03/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "355297",
+                "number": "RFA-CA-24-026",
+                "title": "National Cancer Institute Youth Enjoy Science Research Education Program (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "07/09/2024",
+                "closeDate": "09/28/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.398"
+                ]
+            },
+            {
+                "id": "352282",
+                "number": "PAR-24-127",
+                "title": "NIDCD's Mentored Research Education Pathway for Otolaryngology Residents and Medical Students (R25 - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/09/2024",
+                "closeDate": "09/29/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.173"
+                ]
+            },
+            {
+                "id": "356620",
+                "number": "PAR-25-020",
+                "title": "Research Experiences and/or Mentoring Networks through Research Education to Enhance Clinician-Scientists' Participation in NIDCDs Research (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "10/02/2024",
+                "closeDate": "09/29/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.173"
+                ]
+            },
+            {
+                "id": "300997",
+                "number": "NNH18ZHA002N-MUSIC",
+                "title": "EONS 2018: Appendix E Minority University Research and Education Project (MUREP) for Sustainability and Innovation Collaborative &ndash; (MUSIC) ",
+                "agencyCode": "NASA",
+                "agency": "National Aeronautics and Space Administration",
+                "openDate": "02/22/2018",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "43.008"
+                ]
+            },
+            {
+                "id": "350415",
+                "number": "PAR-23-276",
+                "title": "Cancer Research Education Grants Program - Courses for Skills Development (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "09/29/2023",
+                "closeDate": "01/07/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.398"
+                ]
+            },
+            {
+                "id": "350279",
+                "number": "PAR-23-277",
+                "title": "Cancer Research Education Grants Program - Research Experiences (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "09/21/2023",
+                "closeDate": "01/07/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.398"
+                ]
+            },
+            {
+                "id": "354972",
+                "number": "PAR-24-204",
+                "title": "Summer Research Education Experience Program (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "06/14/2024",
+                "closeDate": "05/07/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.853",
+                    "93.121",
+                    "93.113",
+                    "93.867",
+                    "93.279"
+                ]
+            },
+            {
+                "id": "357622",
+                "number": "PAR-25-197",
+                "title": "Limited Competition: NCATS Clinical and Translational Science Award (CTSA) Program Research Education Grants Programs (R25 - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/09/2024",
+                "closeDate": "05/28/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.350"
+                ]
+            },
+            {
+                "id": "359655",
+                "number": "RFA-AG-26-011",
+                "title": "NIA Expanding Research in AD/ADRD (ERA) Summer Research Education Program (R25 Independent Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "09/02/2025",
+                "closeDate": "05/26/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.866"
+                ]
+            },
+            {
+                "id": "359653",
+                "number": "RFA-AG-26-010",
+                "title": "NIA Expanding Research in AD/ADRD (ERA) Postbaccalaureate Research Education Program (R25 Independent Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "09/02/2025",
+                "closeDate": "05/26/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.866"
+                ]
+            },
+            {
+                "id": "354176",
+                "number": "PAR-24-200",
+                "title": "NINDS Research Education Opportunities (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "05/13/2024",
+                "closeDate": "07/14/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.853"
+                ]
+            },
+            {
+                "id": "350280",
+                "number": "PAR-23-278",
+                "title": "Cancer Research Education Grants Program - Curriculum or Methods Development (R25 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "09/21/2023",
+                "closeDate": "01/07/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.398"
+                ]
+            },
+            {
+                "id": "329436",
+                "number": "DE-FOA-0002265",
+                "title": "University Nuclear Leadership Program&ndash; Scholarship and Fellowship Support",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "10/15/2020",
+                "closeDate": "10/14/2030",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "361003",
+                "number": "HHS-2026-ACL-CIP-MPPG-0020",
+                "title": "Senior Medicare Patrol State Project Grants - Pennsylvania",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.048"
+                ]
+            },
+            {
+                "id": "361222",
+                "number": "AC-01-31-26",
+                "title": "Fiscal Year (FY) 2026 AmeriCorps State and National Competitive Grants",
+                "agencyCode": "AC",
+                "agency": "AmeriCorps",
+                "openDate": "01/30/2026",
+                "closeDate": "03/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "94.006"
+                ]
+            },
+            {
+                "id": "358380",
+                "number": "HQ003425NFOEASD03",
+                "title": "DoD Cyber Service Academy (DoD CSA)",
+                "agencyCode": "DOD-WHS",
+                "agency": "Washington Headquarters Services",
+                "openDate": "01/23/2025",
+                "closeDate": "01/22/2030",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.902"
+                ]
+            },
+            {
+                "id": "358403",
+                "number": "14-579",
+                "title": "Facilitating Research at Predominantly Undergraduate Institutions:",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "01/31/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050",
+                    "47.070",
+                    "47.074",
+                    "47.041",
+                    "47.075",
+                    "47.076",
+                    "47.049",
+                    "47.083",
+                    "47.079",
+                    "47.084"
+                ]
+            },
+            {
+                "id": "318918",
+                "number": "NNH19ZHA001C",
+                "title": "National Space Grant College and Fellowship Program - Opportunities in NASA STEM FY 2020 &ndash; 2024",
+                "agencyCode": "NASA",
+                "agency": "National Aeronautics and Space Administration",
+                "openDate": "07/29/2019",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "43.008"
+                ]
+            },
+            {
+                "id": "331306",
+                "number": "ROMENOFO002DOSEUR",
+                "title": "ANNUAL PROGRAM STATEMENT - PUBLIC AFFAIRS ITALY",
+                "agencyCode": "DOS-ITA",
+                "agency": "U.S. Mission to Italy",
+                "openDate": "02/04/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.040"
+                ]
+            },
+            {
+                "id": "350910",
+                "number": "24-506",
+                "title": "International Research Experiences for Students",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "11/08/2023",
+                "closeDate": "10/26/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076",
+                    "47.079",
+                    "47.070",
+                    "47.083",
+                    "47.041",
+                    "47.084",
+                    "47.049",
+                    "47.050",
+                    "47.074",
+                    "47.075"
+                ]
+            },
+            {
+                "id": "358552",
+                "number": "RFA-OD-25-003",
+                "title": "Short Courses on Innovative Methodologies and Approaches in the Behavioral and Social Sciences (R25 Clinical Trials Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "03/12/2025",
+                "closeDate": "04/09/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.242",
+                    "93.840",
+                    "93.361",
+                    "93.847",
+                    "93.313",
+                    "93.837",
+                    "93.398",
+                    "93.121",
+                    "93.213",
+                    "93.838",
+                    "93.279",
+                    "93.173",
+                    "93.233",
+                    "93.839"
+                ]
+            },
+            {
+                "id": "344610",
+                "number": "23-519",
+                "title": "Major Research Instrumentation Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "11/22/2022",
+                "closeDate": "11/16/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076",
+                    "47.074",
+                    "47.084",
+                    "47.041",
+                    "47.079",
+                    "47.083",
+                    "47.049",
+                    "47.050",
+                    "47.070",
+                    "47.075"
+                ]
+            },
+            {
+                "id": "357725",
+                "number": "25-523",
+                "title": "EPSCoR Research Infrastructure Improvement Program: EPSCoR Collaborations for Optimizing Research Ecosystems",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/14/2024",
+                "closeDate": "07/21/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.083"
+                ]
+            },
+            {
+                "id": "342747",
+                "number": "22-621",
+                "title": "NSF Astronomy and Astrophysics Postdoctoral Fellowships",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/27/2022",
+                "closeDate": "10/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.049"
+                ]
+            },
+            {
+                "id": "359103",
+                "number": "22-622",
+                "title": "NSF's Eddie Bernice Johnson Inclusion across the Nation of Communities of Learners of Underrepresented Discoverers in Engineering and Science (INCLUDES) Initiative",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/23/2025",
+                "closeDate": "05/12/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.074",
+                    "47.050",
+                    "47.079",
+                    "47.075",
+                    "47.076",
+                    "47.084",
+                    "47.083",
+                    "47.041",
+                    "47.049",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "360350",
+                "number": "25-545",
+                "title": "NSF STEM K-12",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "08/22/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "360371",
+                "number": "25-544",
+                "title": "Integrated Data Systems &amp; Services",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "08/27/2025",
+                "closeDate": "07/28/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.070"
+                ]
+            },
+            {
+                "id": "360945",
+                "number": "W912DR26RA021",
+                "title": "Conservation Interns at the Raystown Lake Project, USACE",
+                "agencyCode": "DOD-COE",
+                "agency": "Dept. of the Army  --  Corps of Engineers",
+                "openDate": "01/30/2026",
+                "closeDate": "03/02/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.010"
+                ]
+            },
+            {
+                "id": "360149",
+                "number": "25-543",
+                "title": "Computer and Information Science and Engineering (CISE): Future Computing Research",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/25/2025",
+                "closeDate": "09/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.070"
+                ]
+            },
+            {
+                "id": "354269",
+                "number": "24-573",
+                "title": "EPSCoR Research Infrastructure Improvement Program: Focused EPSCoR Collaborations Program (FEC)",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/17/2024",
+                "closeDate": "01/26/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.079",
+                    "47.083",
+                    "47.070",
+                    "47.084",
+                    "47.074",
+                    "47.041",
+                    "47.075",
+                    "47.076",
+                    "47.049",
+                    "47.050"
+                ]
+            },
+            {
+                "id": "361064",
+                "number": "ED-GRANTS-122925-001",
+                "title": "Office of Special Education and Rehabilitative Services (OSERS): Rehabilitation Services Administration (RSA): Braille Training Program, Assistance Listing Number 84.235E",
+                "agencyCode": "ED",
+                "agency": "Department of Education",
+                "openDate": "12/29/2025",
+                "closeDate": "03/27/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "84.235"
+                ]
+            },
+            {
+                "id": "356002",
+                "number": "NOAA-SEC-OED-2024-28060",
+                "title": "FY 2024 &ndash; 2026 - Broad Agency Announcement (BAA) for the Office of Education",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "08/12/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "338558",
+                "number": "PD-22-1529",
+                "title": "Facilities for Atmospheric Research and Education",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/08/2022",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "361336",
+                "number": "ED-GRANTS-022026-001",
+                "title": "OSERS-OSEP: State Technical Assistance Projects to Improve Services and Results for DeafBlind Children, Assistance Listing Number 84.326T",
+                "agencyCode": "ED",
+                "agency": "Department of Education",
+                "openDate": "02/20/2026",
+                "closeDate": "04/21/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "84.326"
+                ]
+            },
+            {
+                "id": "361057",
+                "number": "FOA-ETA-26-38",
+                "title": "YouthBuild 2025",
+                "agencyCode": "DOL-ETA",
+                "agency": "Employment and Training Administration",
+                "openDate": "12/23/2025",
+                "closeDate": "03/02/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "17.274"
+                ]
+            },
+            {
+                "id": "361158",
+                "number": "USDA-NIFA-VSGP-011778",
+                "title": "Veterinary Services Grant Program",
+                "agencyCode": "USDA-NIFA",
+                "agency": "National Institute of Food and Agriculture",
+                "openDate": "01/15/2026",
+                "closeDate": "04/16/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.336"
+                ]
+            },
+            {
+                "id": "360205",
+                "number": "USDA-NIFA-AFRI-011134",
+                "title": "Agriculture and Food Research Initiative Competitive Grants Program Foundational and Applied Science Program",
+                "agencyCode": "USDA-NIFA",
+                "agency": "National Institute of Food and Agriculture",
+                "openDate": "08/01/2025",
+                "closeDate": "12/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.310"
+                ]
+            },
+            {
+                "id": "361240",
+                "number": "W911NF26S0075",
+                "title": "Pilot Program to Increase Research Capacity at  Historically Black Colleges and Universities and Other Minority-Serving Institutions",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "02/05/2026",
+                "closeDate": "04/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.630"
+                ]
+            },
+            {
+                "id": "351714",
+                "number": "DE-FOA-0003285",
+                "title": "MINORITY SERVING INSTITUTIONS PARTNERSHIP PROGRAM (MSIPP) CONSORTIA GRANT PROGRAM (CGP)",
+                "agencyCode": "DOE-NNSA",
+                "agency": "NNSA",
+                "openDate": "01/05/2024",
+                "closeDate": "06/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.123"
+                ]
+            },
+            {
+                "id": "356127",
+                "number": "NOAA-NESDISPO-STAR-2024-27967",
+                "title": "FY 2024 &ndash; 2026 - Broad Agency Announcement (BAA) Announcement Type: Initial",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "08/19/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "356669",
+                "number": "NOAA-OAR-CPO-2024-28363",
+                "title": "FY 2024 &ndash; 2026 Broad Agency Announcement (BAA), Office of Oceanic and Atmospheric Research (OAR)",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "10/09/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "355706",
+                "number": "NOAA-NMFS-FHQ-2024-27611",
+                "title": "FY 2024 &ndash; 2026 Broad Agency Announcement (BAA), National Marine Fisheries Service",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "07/29/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "355705",
+                "number": "NOAA-NWS-2024-28059",
+                "title": "FY 2024 &ndash; 2026 - Broad Agency Announcement (BAA)",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "07/29/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.015"
+                ]
+            },
+            {
+                "id": "103313",
+                "number": "NOAA-OAR-CPO-2012-2003041",
+                "title": "Climate Program Office for FY 2012",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "07/06/2011",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.431"
+                ]
+            },
+            {
+                "id": "359236",
+                "number": "W911NF25S0007",
+                "title": "Staff Research Program",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "06/03/2025",
+                "closeDate": "06/02/2030",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "334972",
+                "number": "RFA-OH-22-006",
+                "title": "Commercial Fishing Occupational Safety Training Project Grants (T03)",
+                "agencyCode": "HHS-CDC-HHSCDCERA",
+                "agency": "Centers for Disease Control and Prevention - ERA",
+                "openDate": "07/11/2022",
+                "closeDate": "01/31/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.262"
+                ]
+            },
+            {
+                "id": "286437",
+                "number": "BAA-AFRL-AFOSR-2016-0008",
+                "title": "Air Force Defense Research Sciences Conference and Workshop Support",
+                "agencyCode": "DOD-AFOSR",
+                "agency": "Air Force Office of Scientific Research",
+                "openDate": "07/22/2016",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "345241",
+                "number": "W911NF-23-S-0003",
+                "title": "DEVCOM ANALYSIS CENTER BROAD AGENCY ANNOUNCEMENT FOR APPLIED RESEARCH",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "01/05/2023",
+                "closeDate": "01/04/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "361143",
+                "number": "21MP-FY26",
+                "title": "21st Century Museum Professionals Program (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.032"
+                ]
+            },
+            {
+                "id": "332052",
+                "number": "EDA-ATL-TA-ATRO-2021-2006846",
+                "title": "Atlanta FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.302",
+                    "11.303"
+                ]
+            },
+            {
+                "id": "332126",
+                "number": "EDA-DEN-TA-DRO-2021-2006850",
+                "title": "Denver FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.303",
+                    "11.302"
+                ]
+            },
+            {
+                "id": "332137",
+                "number": "EDA-AUS-TA-AURO-2021-2006848",
+                "title": "Austin FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.303",
+                    "11.302"
+                ]
+            },
+            {
+                "id": "332125",
+                "number": "EDA-CHI-TA-CRO-2021-2006849",
+                "title": "Chicago FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.302",
+                    "11.303"
+                ]
+            },
+            {
+                "id": "332138",
+                "number": "EDA-PHI-TA-PRO-2021-2006851",
+                "title": "Philadelphia FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.303",
+                    "11.302"
+                ]
+            },
+            {
+                "id": "332127",
+                "number": "EDA-SEA-TA-SRO-2021-2006853",
+                "title": "Seattle FY 2021 &ndash; FY 2023 EDA Planning and Local Technical Assistance",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "03/15/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.303",
+                    "11.302"
+                ]
+            },
+            {
+                "id": "345083",
+                "number": "P23AS00132",
+                "title": "NPS Cooperative Ecosystems Studies Units (CESU) Master Cooperative Agreements",
+                "agencyCode": "DOI-NPS",
+                "agency": "National Park Service",
+                "openDate": "12/22/2022",
+                "closeDate": "12/31/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.945"
+                ]
+            },
+            {
+                "id": "361217",
+                "number": "EPA-OAR-ORIA-25-03",
+                "title": "Wildfire Smoke Preparedness in Community Buildings",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "01/30/2026",
+                "closeDate": "04/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.044"
+                ]
+            },
+            {
+                "id": "361293",
+                "number": "DFOP0017779",
+                "title": "FY 2026 English Language Fellow, Specialist, and Virtual Educator Program",
+                "agencyCode": "DOS-ECA",
+                "agency": "Bureau Of Educational and Cultural Affairs",
+                "openDate": "02/13/2026",
+                "closeDate": "04/24/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.421"
+                ]
+            },
+            {
+                "id": "339728",
+                "number": "W911NF-22-S-0011",
+                "title": "Tactical Behaviors for Autonomous Maneuver",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "04/22/2022",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.630"
+                ]
+            },
+            {
+                "id": "113333",
+                "number": "P11AT80752",
+                "title": "Research Techs",
+                "agencyCode": "DOI-NPS",
+                "agency": "National Park Service",
+                "openDate": "08/10/2011",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.931"
+                ]
+            },
+            {
+                "id": "275109",
+                "number": "PD-05-1743",
+                "title": "National Facilities",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/13/2015",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.049"
+                ]
+            },
+            {
+                "id": "325599",
+                "number": "AFPRA-20-04",
+                "title": "U.S. Embassy Praia Ambassador&rsquo;s Special Self-Help (SSH) Program",
+                "agencyCode": "DOS-CPV",
+                "agency": "U.S. Mission to Cape Verde",
+                "openDate": "03/19/2020",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.220"
+                ]
+            },
+            {
+                "id": "336244",
+                "number": "ESP22APS",
+                "title": "Mission Spain Public Diplomacy 2022 Annual Program Statement",
+                "agencyCode": "DOS-ESP",
+                "agency": "U.S. Mission to Spain",
+                "openDate": "11/02/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.040"
+                ]
+            },
+            {
+                "id": "357498",
+                "number": "25-514",
+                "title": "NSF Scholarships in Science, Technology, Engineering, and Mathematics Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/03/2024",
+                "closeDate": "03/03/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "355196",
+                "number": "24-586",
+                "title": "NSF National Quantum Virtual Laboratory - Quantum Testbeds",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "06/28/2024",
+                "closeDate": "04/07/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.041",
+                    "47.076",
+                    "47.049",
+                    "47.070",
+                    "47.084",
+                    "47.074"
+                ]
+            },
+            {
+                "id": "341086",
+                "number": "22-603",
+                "title": "Mid-Career Advancement",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "06/11/2022",
+                "closeDate": "03/02/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050",
+                    "47.074",
+                    "47.076",
+                    "47.075",
+                    "47.083"
+                ]
+            },
+            {
+                "id": "355270",
+                "number": "24-588",
+                "title": "NSF EPSCoR Graduate Fellowship Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/04/2024",
+                "closeDate": "06/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.083",
+                    "47.075",
+                    "47.049",
+                    "47.074",
+                    "47.076",
+                    "47.050",
+                    "47.084",
+                    "47.041",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "358875",
+                "number": "PAR-25-415",
+                "title": "Support for Research Excellence  First Independent Research (SuRE-First) Award (R16 - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "06/13/2025",
+                "closeDate": "09/07/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.859",
+                    "93.242",
+                    "93.867",
+                    "93.307",
+                    "93.173",
+                    "93.361",
+                    "93.273",
+                    "93.279",
+                    "93.866",
+                    "93.879",
+                    "93.846",
+                    "93.113",
+                    "93.172",
+                    "93.853",
+                    "93.121",
+                    "93.286",
+                    "93.865",
+                    "93.398",
+                    "93.847",
+                    "93.855"
+                ]
+            },
+            {
+                "id": "358829",
+                "number": "PAR-25-414",
+                "title": "Support for Research Excellence (SuRE) Award (R16 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "06/13/2025",
+                "closeDate": "09/07/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.866",
+                    "93.279",
+                    "93.398",
+                    "93.273",
+                    "93.846",
+                    "93.121",
+                    "93.286",
+                    "93.307",
+                    "93.879",
+                    "93.853",
+                    "93.172",
+                    "93.242",
+                    "93.859",
+                    "93.113",
+                    "93.173",
+                    "93.361",
+                    "93.867",
+                    "93.847",
+                    "93.855",
+                    "93.865"
+                ]
+            },
+            {
+                "id": "349109",
+                "number": "23-602",
+                "title": "Facility and Instrumentation Request Process",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/06/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "324456",
+                "number": "20-544",
+                "title": "Expeditions in Computing",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "02/14/2020",
+                "closeDate": "03/31/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.070"
+                ]
+            },
+            {
+                "id": "329432",
+                "number": "PD-21-128Y",
+                "title": "Law &amp; Science",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "10/15/2020",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075"
+                ]
+            },
+            {
+                "id": "353475",
+                "number": "PD-24-7414",
+                "title": "Cyberinfrastructure for Public Access and Open Science",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "04/10/2024",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.083",
+                    "47.084",
+                    "47.074",
+                    "47.075",
+                    "47.049",
+                    "47.076",
+                    "47.079",
+                    "47.041",
+                    "47.050",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "359061",
+                "number": "24-562",
+                "title": "Centers of Research Excellence in Science and Technology - Research Infrastructure for Science and Engineering",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/21/2025",
+                "closeDate": "08/07/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "347679",
+                "number": "23-580",
+                "title": "Infrastructure Capacity for Biological Research",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "04/21/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.074"
+                ]
+            },
+            {
+                "id": "348012",
+                "number": "23-586",
+                "title": "Robert Noyce Teacher Scholarship Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "05/09/2023",
+                "closeDate": "08/25/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "356559",
+                "number": "GR-RCE-25-001",
+                "title": "RESTORE Act Centers of Excellence Research Grants Program",
+                "agencyCode": "USDOT-GCR",
+                "agency": "U.S. Dept. of Treasury RESTORE Act Program",
+                "openDate": "09/26/2024",
+                "closeDate": "10/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "21.015"
+                ]
+            },
+            {
+                "id": "39841",
+                "number": "FAA-COE-JAMS",
+                "title": "Joint Center of Excellence for Advanced Materials Research",
+                "agencyCode": "DOT-FAA-FAA COE-FAA JAMS",
+                "agency": "FAA-COE-JAMS",
+                "openDate": "11/01/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "20.109"
+                ]
+            },
+            {
+                "id": "345091",
+                "number": "23-536",
+                "title": "Scholarships in STEM Network",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/23/2022",
+                "closeDate": "08/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.076"
+                ]
+            },
+            {
+                "id": "356119",
+                "number": "24-597",
+                "title": "U.S. National Science Foundation Research Traineeship (NRT) Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "08/17/2024",
+                "closeDate": "09/08/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.049",
+                    "47.083",
+                    "47.050",
+                    "47.041",
+                    "47.076",
+                    "47.074",
+                    "47.079",
+                    "47.075",
+                    "47.084",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "360664",
+                "number": "25-549",
+                "title": "NSF National Innovation Corps Teams (NSF National I-Corps (TM) Teams) program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "09/26/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050",
+                    "47.083",
+                    "47.041",
+                    "47.070",
+                    "47.074",
+                    "47.075",
+                    "47.076",
+                    "47.079",
+                    "47.049",
+                    "47.084"
+                ]
+            },
+            {
+                "id": "358036",
+                "number": "25-533",
+                "title": "Findable Accessible Interoperable Reusable Open Science",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "01/07/2025",
+                "closeDate": "04/08/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.079",
+                    "47.075",
+                    "47.049",
+                    "47.074",
+                    "47.076",
+                    "47.050",
+                    "47.083",
+                    "47.084",
+                    "47.041",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "344715",
+                "number": "23-525",
+                "title": "Oceanographic Facilities and Equipment Support",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "12/01/2022",
+                "closeDate": "01/11/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "355219",
+                "number": "24-587",
+                "title": "Research on the Science and Technology Enterprise: Indicators, Statistics, and Methods (NCSES S&amp;T)",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "07/01/2024",
+                "closeDate": "06/16/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075"
+                ]
+            },
+            {
+                "id": "344634",
+                "number": "PD-22-1332",
+                "title": "Social Psychology",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "11/22/2022",
+                "closeDate": "07/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075"
+                ]
+            },
+            {
+                "id": "254073",
+                "number": "PD-14-5720",
+                "title": "Ocean Drilling Program",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "04/18/2014",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.050"
+                ]
+            },
+            {
+                "id": "347026",
+                "number": "23-569",
+                "title": "A Science of Science Approach to Analyzing and Innovating the Biomedical Research Enterprise",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "03/21/2023",
+                "closeDate": "09/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.859",
+                    "47.075"
+                ]
+            },
+            {
+                "id": "350561",
+                "number": "PD-24-1699",
+                "title": "Cognitive Neuroscience",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "10/12/2023",
+                "closeDate": "08/17/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.075"
+                ]
+            },
+            {
+                "id": "361333",
+                "number": "26-506",
+                "title": "Pathways to Enable Secure Open-Source Ecosystems",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "02/19/2026",
+                "closeDate": "09/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.084",
+                    "47.075",
+                    "47.049",
+                    "47.074",
+                    "47.076",
+                    "47.050",
+                    "47.041",
+                    "47.070"
+                ]
+            },
+            {
+                "id": "361297",
+                "number": "26-505",
+                "title": "National Quantum and Nanotechnology Infrastructure",
+                "agencyCode": "NSF",
+                "agency": "U.S. National Science Foundation",
+                "openDate": "02/13/2026",
+                "closeDate": "05/14/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "47.079",
+                    "47.049",
+                    "47.076",
+                    "47.074",
+                    "47.041",
+                    "47.075"
+                ]
+            },
+            {
+                "id": "361106",
+                "number": "DFOP0017675",
+                "title": "2026 CTR Non-Proliferation Programing",
+                "agencyCode": "DOS-ISN",
+                "agency": "Bureau of International Security-Nonproliferation",
+                "openDate": "01/08/2026",
+                "closeDate": "03/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.033"
+                ]
+            },
+            {
+                "id": "358289",
+                "number": "DFOP0017042",
+                "title": "Notice of Intent:  Program to End Modern Slavery FY 2025",
+                "agencyCode": "DOS-GTIP",
+                "agency": "Office to Monitor-Combat Trafficking in Persons",
+                "openDate": "01/16/2025",
+                "closeDate": "01/01/2099",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.019"
+                ]
+            },
+            {
+                "id": "359879",
+                "number": "RFA-RM-26-017",
+                "title": "Pilot Projects Enhancing Utility and Usage of Common Fund Data Sets (R03 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "01/30/2026",
+                "closeDate": "06/23/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.310"
+                ]
+            },
+            {
+                "id": "343725",
+                "number": "HT942523SBAA1",
+                "title": "DOD Defense Health Agency (DHA) Research &amp; Development FY23-FY27 BROAD AGENCY ANNOUNCEMENT for Extramural Medical Research",
+                "agencyCode": "DOD-AMRAA",
+                "agency": "Dept. of the Army -- USAMRAA",
+                "openDate": "09/22/2022",
+                "closeDate": "09/30/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.420"
+                ]
+            },
+            {
+                "id": "358955",
+                "number": "2025-NIST-MSE-01",
+                "title": "Measurement Science and Engineering (MSE) Research Grant Programs",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "05/14/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.042",
+                    "11.620",
+                    "11.609",
+                    "11.619"
+                ]
+            },
+            {
+                "id": "359050",
+                "number": "FA955025S0001",
+                "title": "Research Interests of the Air Force Office of Scientific Research",
+                "agencyCode": "DOD-AFOSR",
+                "agency": "Air Force Office of Scientific Research",
+                "openDate": "05/20/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "347858",
+                "number": "W911NF-23-S-0010",
+                "title": "UNITED STATES ARMY RESEARCH INSTITUTE FOR THE BEHAVIORAL AND SOCIAL SCIENCES (ARI) BROAD AGENCY ANNOUNCEMENT FOR BASIC, APPLIED, AND ADVANCED SCIENTIFIC RESEARCH",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "05/01/2023",
+                "closeDate": "04/30/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.630"
+                ]
+            },
+            {
+                "id": "361211",
+                "number": "USDA-NIFA-AFRI-011677",
+                "title": "Agriculture and Food Research Initiative  Strengthening Agricultural Systems",
+                "agencyCode": "USDA-NIFA",
+                "agency": "National Institute of Food and Agriculture",
+                "openDate": "01/29/2026",
+                "closeDate": "03/26/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.310"
+                ]
+            },
+            {
+                "id": "361307",
+                "number": "FOA-ETA-26-40",
+                "title": "Strengthening Community Colleges Training Grants (Round 6)",
+                "agencyCode": "DOL-ETA",
+                "agency": "Employment and Training Administration",
+                "openDate": "02/17/2026",
+                "closeDate": "05/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "17.280"
+                ]
+            },
+            {
+                "id": "343653",
+                "number": "W81XWH-22-DHAPP",
+                "title": "Department of Defense HIV/AIDS Prevention Program",
+                "agencyCode": "DOD-AMRAA",
+                "agency": "Dept. of the Army -- USAMRAA",
+                "openDate": "09/19/2022",
+                "closeDate": "09/18/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.350"
+                ]
+            },
+            {
+                "id": "360918",
+                "number": "PAR-25-444",
+                "title": "Cancer Center Support Grants (CCSGs) for NCI-designated Cancer Centers (P30 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "11/26/2025",
+                "closeDate": "09/25/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.397"
+                ]
+            },
+            {
+                "id": "348830",
+                "number": "HQ003423NFOEASD07",
+                "title": "DoW&rsquo;s Energy, Installations, and Environment Innovation Partners Programs",
+                "agencyCode": "DOD-WHS",
+                "agency": "Washington Headquarters Services",
+                "openDate": "06/21/2023",
+                "closeDate": "01/08/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.632"
+                ]
+            },
+            {
+                "id": "330175",
+                "number": "FA7000-21-S-0001",
+                "title": "Research Interests of the United States Air Force Academy (formerly USAFA-BAA-2021)",
+                "agencyCode": "DOD-USAFA",
+                "agency": "Air Force Academy",
+                "openDate": "12/02/2020",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "355499",
+                "number": "RDK-RAD-FOA-2024",
+                "title": "Research and Development (RAD) Directed Energy (RD) University Assistance Instruments",
+                "agencyCode": "DOD-AFRL",
+                "agency": "Air Force -- Research Lab",
+                "openDate": "07/18/2024",
+                "closeDate": "07/18/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "361218",
+                "number": "EPA-HQ-OCSPP-OPP-2025-001",
+                "title": "PRIA 5 Training Development",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "01/30/2026",
+                "closeDate": "03/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.722"
+                ]
+            },
+            {
+                "id": "345738",
+                "number": "RFA-OH-24-001",
+                "title": "National Center for Construction Safety and Health Research and Translation (U54)",
+                "agencyCode": "HHS-CDC-HHSCDCERA",
+                "agency": "Centers for Disease Control and Prevention - ERA",
+                "openDate": "09/13/2023",
+                "closeDate": "12/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.262"
+                ]
+            },
+            {
+                "id": "349804",
+                "number": "HQ003423NFOEASD17",
+                "title": "Defense Security Cooperation University - Research Grants",
+                "agencyCode": "DOD-WHS",
+                "agency": "Washington Headquarters Services",
+                "openDate": "08/08/2023",
+                "closeDate": "08/07/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.024"
+                ]
+            },
+            {
+                "id": "361368",
+                "number": "FOA-ETA-26-17",
+                "title": "The Reentry Employment in Skilled Trades, Advanced Manufacturing, Registered Apprenticeships, and Training (RESTART) Initiative",
+                "agencyCode": "DOL-ETA",
+                "agency": "Employment and Training Administration",
+                "openDate": "02/25/2026",
+                "closeDate": "04/15/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "17.270"
+                ]
+            },
+            {
+                "id": "360368",
+                "number": "PA-26-001",
+                "title": "Administrative Supplements to Existing NIH Grants and Cooperative Agreements (Parent Admin Supp Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "11/26/2025",
+                "closeDate": "11/30/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.310"
+                ]
+            },
+            {
+                "id": "332894",
+                "number": "W911NF21S0009",
+                "title": "LPS Qubit Collaboratory (LQC)",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "04/16/2021",
+                "closeDate": "04/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "351404",
+                "number": "HM047623BAA0001",
+                "title": "Boosting Innovative GEOINT - Science &amp; Technology  Broad Agency Announcement (BIG-ST BAA)",
+                "agencyCode": "DOD-NGIA",
+                "agency": "National Geospatial-Intelligence Agency ",
+                "openDate": "12/15/2023",
+                "closeDate": "12/14/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.630"
+                ]
+            },
+            {
+                "id": "355150",
+                "number": "W911NF-24-S-0008",
+                "title": "ARMY APPLICATIONS LAB BROAD AGENCY ANNOUNCEMENT FOR DISRUPTIVE APPLICATIONS",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "06/26/2024",
+                "closeDate": "04/04/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "359648",
+                "number": "RFA-OD-25-010",
+                "title": "Resource-Related Research Projects for Development of Models and Related Materials for Studying Human Health and Diseases (R24 Clinical Trials Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/05/2025",
+                "closeDate": "09/28/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.351"
+                ]
+            },
+            {
+                "id": "359861",
+                "number": "PAR-26-033",
+                "title": "NIGMS Institutional Biomedical Undergraduate Research Training (BURT) Program (T34)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/29/2025",
+                "closeDate": "09/25/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.859"
+                ]
+            },
+            {
+                "id": "361025",
+                "number": "CMS-2V2-26-001",
+                "title": "Nursing Home Staffing Campaign",
+                "agencyCode": "HHS-CMS",
+                "agency": "Center for Medicare and Medicaid Services",
+                "openDate": "02/09/2026",
+                "closeDate": "03/27/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.693"
+                ]
+            },
+            {
+                "id": "356612",
+                "number": "HDTRA1-25-S-0001",
+                "title": "Fundamental Research to Counter Weapons of Mass Destruction",
+                "agencyCode": "DOD-DTRA",
+                "agency": "Defense Threat Reduction Agency",
+                "openDate": "10/01/2024",
+                "closeDate": "09/30/2034",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.351"
+                ]
+            },
+            {
+                "id": "334971",
+                "number": "RFA-OH-22-005",
+                "title": "Commercial Fishing Occupational Safety Research Cooperative Agreement (U01)",
+                "agencyCode": "HHS-CDC-HHSCDCERA",
+                "agency": "Centers for Disease Control and Prevention - ERA",
+                "openDate": "07/08/2022",
+                "closeDate": "01/31/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.262"
+                ]
+            },
+            {
+                "id": "359004",
+                "number": "PAR-26-042",
+                "title": "Research Grants in Clinical Informatics (R01 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/11/2026",
+                "closeDate": "03/05/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.879"
+                ]
+            },
+            {
+                "id": "359003",
+                "number": "PAR-26-040",
+                "title": "Advancing Bioinformatics, Translational Bioinformatics and Computational Biology Research (R01 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/11/2026",
+                "closeDate": "03/05/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.879"
+                ]
+            },
+            {
+                "id": "334079",
+                "number": "EDA-HDQ-RNTA-2021",
+                "title": "FY 2021 - 2023 Economic Development RNTA",
+                "agencyCode": "DOC",
+                "agency": "Department of Commerce",
+                "openDate": "06/09/2021",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.312",
+                    "11.303"
+                ]
+            },
+            {
+                "id": "360521",
+                "number": "HHS-2026-ACL-NIDILRR-ARCP-0202",
+                "title": "Advanced Rehabilitation Research Training (ARRT) Program - Community Living and Participation",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.433"
+                ]
+            },
+            {
+                "id": "360514",
+                "number": "HHS-2026-ACL-NIDILRR-ARHF-0201",
+                "title": "Advanced Rehabilitation Research Training (ARRT) Program - Health and Function",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.433"
+                ]
+            },
+            {
+                "id": "360493",
+                "number": "HHS-2026-ACL-NIDILRR-AREM-0200",
+                "title": "Advanced Rehabilitation Research Training (ARRT) Program - Employment",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.433"
+                ]
+            },
+            {
+                "id": "360931",
+                "number": "RFA-DK-26-306",
+                "title": "Engineering Improved Stem Cell-Derived Islet Cells for Replacement Therapies (R01 - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/03/2025",
+                "closeDate": "03/07/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.847"
+                ]
+            },
+            {
+                "id": "359659",
+                "number": "PAR-26-116",
+                "title": "Opportunities for Collaborative Research at the NIH Clinical Center (U01 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/08/2025",
+                "closeDate": "03/06/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.313"
+                ]
+            },
+            {
+                "id": "356231",
+                "number": "NOAA-NMFS-HCPO-2024-28122",
+                "title": "NOAA Great Lakes Fish Habitat Restoration Partnership Grants",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "08/27/2024",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.463"
+                ]
+            },
+            {
+                "id": "361378",
+                "number": "26PR08",
+                "title": "Facilitator Training for Victim Offender Dialogue",
+                "agencyCode": "USDOJ-BOP-NIC",
+                "agency": "National Institute of Corrections",
+                "openDate": "02/27/2026",
+                "closeDate": "04/17/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "16.601"
+                ]
+            },
+            {
+                "id": "361139",
+                "number": "LB21-FY26",
+                "title": "Laura Bush 21st Century Librarian Program (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.313"
+                ]
+            },
+            {
+                "id": "286105",
+                "number": "P16AS00322",
+                "title": "R Package Development and Data Certification for the National Park Service Units of the National Capital Region and the Northeast",
+                "agencyCode": "DOI-NPS",
+                "agency": "National Park Service",
+                "openDate": "07/14/2016",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.945"
+                ]
+            },
+            {
+                "id": "350338",
+                "number": "2023-NIST-CHIPS-SMME-01",
+                "title": "CHIPS Incentives Program &ndash; Facilities for Semiconductor Materials and Manufacturing Equipment",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "09/29/2023",
+                "closeDate": "11/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.037"
+                ]
+            },
+            {
+                "id": "359274",
+                "number": "RFA-DC-26-001",
+                "title": "Early-Stage Dissemination and Implementation Research in Communication Disorders (R21 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/05/2026",
+                "closeDate": "06/17/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.173"
+                ]
+            },
+            {
+                "id": "360526",
+                "number": "HHS-2026-ACL-NIDILRR-IFST-0205",
+                "title": "Field Initiated Projects Program: Minority-Serving Institutions (MSI) -Research",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.433"
+                ]
+            },
+            {
+                "id": "360527",
+                "number": "HHS-2026-ACL-NIDILRR-IFST-0206",
+                "title": "Field Initiated Projects Program: Minority-Serving Institutions (MSI) - Development",
+                "agencyCode": "HHS-ACL",
+                "agency": "Administration for Community Living",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.433"
+                ]
+            },
+            {
+                "id": "344592",
+                "number": "W911NF-23-S-0001",
+                "title": "DEVCOM ARMY RESEARCH LABORATORY BROAD AGENCY ANNOUNCEMENT FOR FOUNDATIONAL RESEARCH",
+                "agencyCode": "DOD-AMC",
+                "agency": "Dept of the Army -- Materiel Command",
+                "openDate": "11/21/2022",
+                "closeDate": "11/20/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.431"
+                ]
+            },
+            {
+                "id": "289185",
+                "number": "P17AS00001",
+                "title": "Enhancing Interpretation at Ford's Theatre",
+                "agencyCode": "DOI-NPS",
+                "agency": "National Park Service",
+                "openDate": "09/28/2016",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.946"
+                ]
+            },
+            {
+                "id": "358859",
+                "number": "RFA-NS-27-001",
+                "title": "BRAIN Initiative: Research Resource Grants for Technology Integration and Dissemination (U24 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/09/2026",
+                "closeDate": "10/06/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.372"
+                ]
+            },
+            {
+                "id": "359656",
+                "number": "PAR-26-138",
+                "title": "National Centers for Cryo-electron Tomography (cryoET) (R24 -Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/05/2026",
+                "closeDate": "01/26/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.859"
+                ]
+            },
+            {
+                "id": "361022",
+                "number": "DE-FOA-0003540",
+                "title": "Fiscal Year 2026 Distinguished Early Career Program",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "12/15/2025",
+                "closeDate": "03/03/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "359862",
+                "number": "PAR-26-121",
+                "title": "Maximizing Investigators' Research Award (MIRA) (R35 - Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/11/2025",
+                "closeDate": "05/26/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.859"
+                ]
+            },
+            {
+                "id": "361209",
+                "number": "EPA-I-R4-SFL-2025-01",
+                "title": "2025 South Florida Program",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "01/28/2026",
+                "closeDate": "03/16/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.484"
+                ]
+            },
+            {
+                "id": "358861",
+                "number": "RFA-NS-26-010",
+                "title": "The NINDS Human Biospecimen and Data Repository (U24 - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/06/2026",
+                "closeDate": "03/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.853"
+                ]
+            },
+            {
+                "id": "361140",
+                "number": "NLG-LIBRARIES-FY26",
+                "title": "National Leadership Grants for Libraries (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.312"
+                ]
+            },
+            {
+                "id": "361146",
+                "number": "ALHC-FY26",
+                "title": "Museum Grants for American Latino History and Culture (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.033"
+                ]
+            },
+            {
+                "id": "361221",
+                "number": "AC-01-30-26",
+                "title": "Fiscal Year (FY) 2026 AmeriCorps Seniors RSVP Competition",
+                "agencyCode": "AC",
+                "agency": "AmeriCorps",
+                "openDate": "01/30/2026",
+                "closeDate": "03/26/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "94.002"
+                ]
+            },
+            {
+                "id": "359725",
+                "number": "PAR-26-134",
+                "title": "The Metastasis Research Network (MetNet): MetNet Research Projects (U01 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/04/2026",
+                "closeDate": "11/22/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.396"
+                ]
+            },
+            {
+                "id": "347414",
+                "number": "EDA-DISASTER-2023",
+                "title": "FY 2023 Disaster Supplemental",
+                "agencyCode": "DOC-EDA",
+                "agency": "Economic Development Administration",
+                "openDate": "04/24/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.307"
+                ]
+            },
+            {
+                "id": "358935",
+                "number": "PAR-26-115",
+                "title": "Institutional Network Award for Promoting Kidney, Urologic, and Hematologic Research Training (U2C - Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/10/2025",
+                "closeDate": "05/26/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.847"
+                ]
+            },
+            {
+                "id": "358910",
+                "number": "RFA-DK-26-308",
+                "title": "Limited Competition Renewal for the Continuation of the Liver Cirrhosis Network: Clinical Research Centers (U01 Clinical Trial Required)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/05/2025",
+                "closeDate": "03/08/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.847"
+                ]
+            },
+            {
+                "id": "359939",
+                "number": "RFA-AI-27-019",
+                "title": "Impact of Initial Influenza Exposure on Immunity in Infants (U01 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "02/10/2026",
+                "closeDate": "06/04/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.855"
+                ]
+            },
+            {
+                "id": "361053",
+                "number": "HRSA-26-009",
+                "title": "Fiscal Year (FY) 2026 National Technical Assistance Programs (NTAP) Cooperative Agreements",
+                "agencyCode": "HHS-HRSA",
+                "agency": "Health Resources and Services Administration",
+                "openDate": "12/23/2025",
+                "closeDate": "03/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.129"
+                ]
+            },
+            {
+                "id": "361144",
+                "number": "AAHC-FY26",
+                "title": "Museum Grants for African American History and Culture (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.309"
+                ]
+            },
+            {
+                "id": "346815",
+                "number": "PWEAA2023",
+                "title": "FY 2025 EDA Public Works and Economic Adjustment Assistance Programs",
+                "agencyCode": "DOC-EDA",
+                "agency": "Economic Development Administration",
+                "openDate": "03/14/2023",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.300",
+                    "11.307"
+                ]
+            },
+            {
+                "id": "359646",
+                "number": "RFA-OD-25-011",
+                "title": "Animal and Biological Material Resource Centers (P40 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/05/2025",
+                "closeDate": "01/09/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.351"
+                ]
+            },
+            {
+                "id": "338821",
+                "number": "FA8651-22-S-0001",
+                "title": "Air Delivered Effects",
+                "agencyCode": "DOD-AFRL-RW",
+                "agency": "Munitions Directorate",
+                "openDate": "03/22/2022",
+                "closeDate": "03/21/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "361374",
+                "number": "RD-RBCS-26-RMAP-LOAN",
+                "title": "Rural Microentrepreneur Program(RMAP)",
+                "agencyCode": "USDA-RBCS",
+                "agency": "Rural Business-Cooperative Service ",
+                "openDate": "02/26/2026",
+                "closeDate": "06/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.870"
+                ]
+            },
+            {
+                "id": "361373",
+                "number": "RD-RBCS-26-RMAP",
+                "title": "Rural Microentrepreneur Assistance Program",
+                "agencyCode": "USDA-RBCS",
+                "agency": "Rural Business-Cooperative Service ",
+                "openDate": "02/26/2026",
+                "closeDate": "06/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.870"
+                ]
+            },
+            {
+                "id": "357994",
+                "number": "P25AS00474",
+                "title": "FY2025 NAGPRA Repatriation Grants",
+                "agencyCode": "DOI-NPS",
+                "agency": "National Park Service",
+                "openDate": "01/03/2025",
+                "closeDate": "05/08/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.922"
+                ]
+            },
+            {
+                "id": "359647",
+                "number": "RFA-OD-25-012",
+                "title": "Informatics, Coordination and Service Center for the Mutant Mouse Resource and Research Centers (U42 Clinical Trial Not Allowed)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/05/2025",
+                "closeDate": "05/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.351"
+                ]
+            },
+            {
+                "id": "361191",
+                "number": "NOAA-NMFS-GARFO-2026-31286",
+                "title": "2026 Atlantic Sea Scallop Research Set Aside Program",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "01/22/2026",
+                "closeDate": "03/23/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.454"
+                ]
+            },
+            {
+                "id": "361174",
+                "number": "NAG-HAWAIIAN-FY26",
+                "title": "Native Hawaiian Library Services Grants (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/21/2026",
+                "closeDate": "04/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.311"
+                ]
+            },
+            {
+                "id": "361173",
+                "number": "NAG-ENHANCEMENT-FY26",
+                "title": "Native American Library Services Enhancement Grants (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/21/2026",
+                "closeDate": "04/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.311"
+                ]
+            },
+            {
+                "id": "359225",
+                "number": "EDA-DISASTER-2025",
+                "title": "EDA FY25 Disaster Supplemental",
+                "agencyCode": "DOC-EDA",
+                "agency": "Economic Development Administration",
+                "openDate": "06/04/2025",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.307"
+                ]
+            },
+            {
+                "id": "361099",
+                "number": "N00244-26-S-NPS-F001",
+                "title": "Research Initiatives at the Naval Postgraduate School",
+                "agencyCode": "DOD-ONR-SUP",
+                "agency": "Naval Supply Systems Command",
+                "openDate": "01/13/2026",
+                "closeDate": "01/13/2030",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.300"
+                ]
+            },
+            {
+                "id": "361147",
+                "number": "NLG-M-FY26",
+                "title": "National Leadership Grants for Museums (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.312"
+                ]
+            },
+            {
+                "id": "361148",
+                "number": "NANH-FY26",
+                "title": "Native American/Native Hawaiian Museum Services (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.308"
+                ]
+            },
+            {
+                "id": "360581",
+                "number": "PA-26-002",
+                "title": "NIH Collaborative International Research Project (Parent PF5 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "01/20/2026",
+                "closeDate": "05/07/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.310"
+                ]
+            },
+            {
+                "id": "360950",
+                "number": "FR-6900-N-34",
+                "title": "Choice Neighborhoods Implementation Grants for Fiscal Year 2025",
+                "agencyCode": "HUD",
+                "agency": "Department of Housing and Urban Development",
+                "openDate": "12/09/2025",
+                "closeDate": "03/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "14.889"
+                ]
+            },
+            {
+                "id": "352198",
+                "number": "NOAA-NMFS-HCPO-2024-25198",
+                "title": "FY 2024 Atlantic Salmon Habitat Restoration Partnership Grants",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "02/05/2024",
+                "closeDate": "03/31/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.463"
+                ]
+            },
+            {
+                "id": "361020",
+                "number": "DE-FOA-0003538",
+                "title": "Fiscal Year 2026 Consolidated Innovative Nuclear Research",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "12/15/2025",
+                "closeDate": "06/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "361314",
+                "number": "DE-FOA-0003615",
+                "title": "Building EPSCoR-State/National Laboratory Partnerships",
+                "agencyCode": "PAMS-SC",
+                "agency": "Office of Science",
+                "openDate": "02/18/2026",
+                "closeDate": "05/21/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.049"
+                ]
+            },
+            {
+                "id": "280970",
+                "number": "DE-SOL-0008318",
+                "title": "RFI - DOE Infrastructure Work Scope Development",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "01/14/2016",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "279638",
+                "number": "RDBCP-REAP-RES-EEI-2016",
+                "title": "Renewable Energy Systems and Energy Efficiency Improvements Program",
+                "agencyCode": "USDA-RBCS",
+                "agency": "Rural Business-Cooperative Service ",
+                "openDate": "10/13/2015",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.868"
+                ]
+            },
+            {
+                "id": "361137",
+                "number": "HRSA-26-007",
+                "title": "Service Area Competition - Additional Area 1",
+                "agencyCode": "HHS-HRSA",
+                "agency": "Health Resources and Services Administration",
+                "openDate": "01/13/2026",
+                "closeDate": "03/16/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.224"
+                ]
+            },
+            {
+                "id": "360258",
+                "number": "FA238424S2233",
+                "title": "Continuing Human Enabling Enhancing Restoring and Sustaining",
+                "agencyCode": "DOD-AFRL",
+                "agency": "Air Force -- Research Lab",
+                "openDate": "08/07/2025",
+                "closeDate": "08/22/2044",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "361149",
+                "number": "ME-FY26",
+                "title": "Museums Empowered (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.301"
+                ]
+            },
+            {
+                "id": "360651",
+                "number": "2025-NIST-CHIPS-CRDO-01",
+                "title": "CHIPS Research and Development Office (CRDO) Broad Agency Announcement (BAA)",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "09/24/2025",
+                "closeDate": "09/30/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.042"
+                ]
+            },
+            {
+                "id": "330597",
+                "number": "2021-NIST-MEP-CAP-01",
+                "title": "NIST MEP Competitive Awards Program",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "12/28/2020",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.611"
+                ]
+            },
+            {
+                "id": "361311",
+                "number": "EPA-REG7-WPDG-25",
+                "title": "Region 7 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/18/2026",
+                "closeDate": "04/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361312",
+                "number": "EPA-REG06-WPDG-25",
+                "title": "Region 06 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/18/2026",
+                "closeDate": "04/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361319",
+                "number": "EPA-REG5-WPDG-25",
+                "title": "Region 5 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/18/2026",
+                "closeDate": "04/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361313",
+                "number": "EPA-REG10-WPDG-25",
+                "title": "Region 10 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/18/2026",
+                "closeDate": "04/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361331",
+                "number": "EPA-REG2-WPDG-25",
+                "title": "Region 2 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/19/2026",
+                "closeDate": "04/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361338",
+                "number": "EPA-REG4-WPDG-25",
+                "title": "FY 2025 Region 4 Wetlands Program",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/20/2026",
+                "closeDate": "04/06/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361337",
+                "number": "EPA-REG08-WPDG-25",
+                "title": "Region 08 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/20/2026",
+                "closeDate": "04/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361335",
+                "number": "EPA-REG1-WPDG-25",
+                "title": "Region 1 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/20/2026",
+                "closeDate": "04/24/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "361274",
+                "number": "NOAA-NOS-IOOS-2025-30552",
+                "title": "FY 2026 Implementation of the U.S. Integrated Ocean Observing System (IOOS)",
+                "agencyCode": "DOC-DOCNOAAERA",
+                "agency": "DOC NOAA - ERA Production",
+                "openDate": "02/10/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.012"
+                ]
+            },
+            {
+                "id": "361361",
+                "number": "EPA-REG9-WPDG-25",
+                "title": "Region 9 Fiscal Year 2025 Wetland Program Development Grants",
+                "agencyCode": "EPA",
+                "agency": "Environmental Protection Agency",
+                "openDate": "02/24/2026",
+                "closeDate": "04/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "66.461"
+                ]
+            },
+            {
+                "id": "318351",
+                "number": "FA8650-19-S-5010",
+                "title": "Defense Production Act Title III Expansion of Domestic Production Capability and Capacity",
+                "agencyCode": "DOD-AFRL",
+                "agency": "Air Force -- Research Lab",
+                "openDate": "07/12/2019",
+                "closeDate": "07/12/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.777",
+                    "12.800"
+                ]
+            },
+            {
+                "id": "361141",
+                "number": "NAG-BASIC-FY26",
+                "title": "Native American Library Services Basic Grant (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.311"
+                ]
+            },
+            {
+                "id": "361365",
+                "number": "DE-FOA-0003472",
+                "title": "Next-Generation Geothermal Field Tests and Geothermal Resource Characterization and Confirmation",
+                "agencyCode": "DOE-GFO",
+                "agency": "Golden Field Office",
+                "openDate": "02/25/2026",
+                "closeDate": "03/27/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.087"
+                ]
+            },
+            {
+                "id": "361261",
+                "number": "OFOP0002512",
+                "title": "Freedom 250 Outreach Across India",
+                "agencyCode": "DOS-IND",
+                "agency": "U.S. Mission to India",
+                "openDate": "02/09/2026",
+                "closeDate": "03/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "19.040"
+                ]
+            },
+            {
+                "id": "361292",
+                "number": "G26AS00076",
+                "title": "Cooperative Agreement for Affiliated Partner with the Rocky Mountain Cooperative Ecosystem Studies Unit (CESU)",
+                "agencyCode": "DOI-USGS1",
+                "agency": "Geological Survey",
+                "openDate": "02/12/2026",
+                "closeDate": "03/12/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.808"
+                ]
+            },
+            {
+                "id": "361351",
+                "number": "2026-NIST-PMGP-01",
+                "title": "Precision Measurement Grant Program",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "02/23/2026",
+                "closeDate": "06/22/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.053"
+                ]
+            },
+            {
+                "id": "349586",
+                "number": "HT9425-23-S-SOC1",
+                "title": "BROAD AGENCY ANNOUNCEMENT (BAA) for Extramural Biomedical and Human Performance Research and Development Department of Defense",
+                "agencyCode": "DOD-AMRAA",
+                "agency": "Dept. of the Army -- USAMRAA",
+                "openDate": "07/27/2023",
+                "closeDate": "07/31/2028",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.420"
+                ]
+            },
+            {
+                "id": "359145",
+                "number": "RFA-DK-26-310",
+                "title": "Diabetes Research Centers (P30 Clinical Trial Optional)",
+                "agencyCode": "HHS-NIH11",
+                "agency": "National Institutes of Health",
+                "openDate": "12/05/2025",
+                "closeDate": "01/27/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.847"
+                ]
+            },
+            {
+                "id": "361107",
+                "number": "FR-6900-N-31",
+                "title": "Lead Hazard Reduction Capacity Building Grant Program",
+                "agencyCode": "HUD",
+                "agency": "Department of Housing and Urban Development",
+                "openDate": "01/08/2026",
+                "closeDate": "03/10/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "14.912"
+                ]
+            },
+            {
+                "id": "361237",
+                "number": "W9126G262SOI8046",
+                "title": "Bat Diet Characterization Focusing on Tricolored Bats and Little Brown Bats for Arnold Air Base, Tennessee",
+                "agencyCode": "DOD-COE-FW",
+                "agency": "Fort Worth District",
+                "openDate": "02/05/2026",
+                "closeDate": "03/05/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.005"
+                ]
+            },
+            {
+                "id": "341131",
+                "number": "NAP-AX-22-001",
+                "title": "Leading Edge Acceleration Projects (LEAP) in Health Information Technology",
+                "agencyCode": "HHS-OS-ONC",
+                "agency": "Office of the National Coordinator",
+                "openDate": "06/14/2022",
+                "closeDate": "09/30/2027",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "93.345"
+                ]
+            },
+            {
+                "id": "361142",
+                "number": "MFA-FY26",
+                "title": "Museums for America (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.301"
+                ]
+            },
+            {
+                "id": "361145",
+                "number": "IGSM-FY26",
+                "title": "Inspire Grants for Small Museums (2026)",
+                "agencyCode": "IMLS",
+                "agency": "Institute of Museum and Library Services",
+                "openDate": "01/13/2026",
+                "closeDate": "03/13/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "45.301"
+                ]
+            },
+            {
+                "id": "360057",
+                "number": "VA-NCA-VLGP-FY2026",
+                "title": "Veterans Legacy Grants Program",
+                "agencyCode": "VA-VLGP",
+                "agency": "Veterans Legacy Grants Program",
+                "openDate": "02/25/2026",
+                "closeDate": "03/27/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "64.204"
+                ]
+            },
+            {
+                "id": "345327",
+                "number": "VPL-01-23",
+                "title": "Announcement of Stand Down Grants",
+                "agencyCode": "DOL-ETA-VETS",
+                "agency": "Veterans Employment and Training Service",
+                "openDate": "01/10/2023",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "17.805"
+                ]
+            },
+            {
+                "id": "357592",
+                "number": "DE-FOA-0003446",
+                "title": "HARMONY: Human-Centric Analytics for Resilient &amp; Modernized Power sYstems",
+                "agencyCode": "DOE-NETL",
+                "agency": "National Energy Technology Laboratory",
+                "openDate": "12/09/2024",
+                "closeDate": "04/09/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.122"
+                ]
+            },
+            {
+                "id": "349554",
+                "number": "FA2391-23-S-2403",
+                "title": "Pioneering Aerospace Capabilities, Engineering and Research (PACER)",
+                "agencyCode": "DOD-AFRL",
+                "agency": "Air Force -- Research Lab",
+                "openDate": "07/26/2023",
+                "closeDate": "05/10/2043",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.800"
+                ]
+            },
+            {
+                "id": "358258",
+                "number": "DE-FOA-0003556",
+                "title": "Stimulate Utilization of Plentiful Energy in Rocks through High-temperature Original Technologies (SUPERHOT)",
+                "agencyCode": "DOE-ARPAE",
+                "agency": "Advanced Research Projects Agency Energy ",
+                "openDate": "01/16/2025",
+                "closeDate": "03/05/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.135"
+                ]
+            },
+            {
+                "id": "361021",
+                "number": "DE-FOA-0003539",
+                "title": "Fiscal Year 2026 Phase II Continuation Consolidated Innovative Nuclear Research",
+                "agencyCode": "DOE-ID",
+                "agency": "Idaho Field Office",
+                "openDate": "12/15/2025",
+                "closeDate": "05/20/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.121"
+                ]
+            },
+            {
+                "id": "361290",
+                "number": "RDBCP-VAPG-2026",
+                "title": "Value-Added Producer Grant",
+                "agencyCode": "USDA-RBCS",
+                "agency": "Rural Business-Cooperative Service ",
+                "openDate": "02/17/2026",
+                "closeDate": "04/22/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.352"
+                ]
+            },
+            {
+                "id": "361309",
+                "number": "DE-FOA-0003614",
+                "title": "Energy Frontier Research Centers (EFRCs)",
+                "agencyCode": "PAMS-SC",
+                "agency": "Office of Science",
+                "openDate": "02/18/2026",
+                "closeDate": "07/01/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.049"
+                ]
+            },
+            {
+                "id": "360602",
+                "number": "USDA-FS-WPIA-2026",
+                "title": "2026 Wood Products Infrastructure Assistance Program",
+                "agencyCode": "USDA-FS",
+                "agency": "Forest Service",
+                "openDate": "02/18/2026",
+                "closeDate": "04/22/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "10.725"
+                ]
+            },
+            {
+                "id": "356605",
+                "number": "N0001425SB001",
+                "title": "FY25 Long Range Broad Agency Announcement (BAA) for Navy and Marine Corps Science and Technology",
+                "agencyCode": "DOD-ONR",
+                "agency": "Office of Naval Research",
+                "openDate": "10/01/2024",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.300"
+                ]
+            },
+            {
+                "id": "358716",
+                "number": "FR-6900-N-74",
+                "title": "Application Instructions for the Indian Community Development Block Grant (ICDBG) Imminent Threat (IT) Program",
+                "agencyCode": "HUD",
+                "agency": "Department of Housing and Urban Development",
+                "openDate": "04/18/2025",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "14.862"
+                ]
+            },
+            {
+                "id": "352845",
+                "number": "F24AS00298",
+                "title": "F24AS00298 Cooperative Agriculture",
+                "agencyCode": "DOI-FWS",
+                "agency": "Fish and Wildlife Service",
+                "openDate": "03/06/2024",
+                "closeDate": "03/07/2029",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "15.681"
+                ]
+            },
+            {
+                "id": "360678",
+                "number": "DE-FOA-0003600",
+                "title": "FY 2026 Continuation of Solicitation for the Office of Science Financial Assistance Program",
+                "agencyCode": "PAMS-SC",
+                "agency": "Office of Science",
+                "openDate": "09/30/2025",
+                "closeDate": "09/30/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "81.049"
+                ]
+            },
+            {
+                "id": "323740",
+                "number": "2020-NIST-MEP-MDAP-01",
+                "title": "NIST MEP Disaster Assessment Program",
+                "agencyCode": "DOC-NIST",
+                "agency": "National Institute of Standards and Technology",
+                "openDate": "01/17/2020",
+                "closeDate": "",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "11.611"
+                ]
+            },
+            {
+                "id": "360884",
+                "number": "AFPMB-BAA-26-01",
+                "title": "Deployed Warfighter Protection (DWFP) Program for the Protection of Deployed Military Personnel from Threats Posed by Arthropod Disease Vectors",
+                "agencyCode": "DOD-AMC-ACCAPGD",
+                "agency": "ACC-APG-Detrick",
+                "openDate": "11/19/2025",
+                "closeDate": "03/25/2026",
+                "oppStatus": "posted",
+                "docType": "synopsis",
+                "cfdaList": [
+                    "12.355"
+                ]
+            }
+        ],
+        "oppStatusOptions": [
+            {
+                "label": "posted",
+                "value": "posted",
+                "count": 276
+            },
+            {
+                "label": "closed",
+                "value": "closed",
+                "count": 4915
+            },
+            {
+                "label": "archived",
+                "value": "archived",
+                "count": 34758
+            },
+            {
+                "label": "forecasted",
+                "value": "forecasted",
+                "count": 93
+            }
+        ],
+        "dateRangeOptions": [
+            {
+                "label": "Posted Date - Last 3 Days",
+                "value": "3",
+                "count": 3
+            },
+            {
+                "label": "Posted Date - Last 1 Week",
+                "value": "7",
+                "count": 8
+            },
+            {
+                "label": "Posted Date - Last 2 Weeks",
+                "value": "14",
+                "count": 27
+            },
+            {
+                "label": "Posted Date - Last 3 Weeks",
+                "value": "21",
+                "count": 44
+            },
+            {
+                "label": "Posted Date - Last 4 Weeks",
+                "value": "28",
+                "count": 52
+            },
+            {
+                "label": "Posted Date - Last 5 Weeks",
+                "value": "35",
+                "count": 62
+            },
+            {
+                "label": "Posted Date - Last 6 Weeks",
+                "value": "42",
+                "count": 67
+            },
+            {
+                "label": "Posted Date - Last 7 Weeks",
+                "value": "49",
+                "count": 83
+            },
+            {
+                "label": "Posted Date - Last 8 Weeks",
+                "value": "56",
+                "count": 87
+            }
+        ],
+        "suggestion": "",
+        "eligibilities": [
+            {
+                "label": "City or township governments",
+                "value": "02",
+                "count": 67
+            },
+            {
+                "label": "County governments",
+                "value": "01",
+                "count": 66
+            },
+            {
+                "label": "For profit organizations other than small businesses",
+                "value": "22",
+                "count": 49
+            },
+            {
+                "label": "Independent school districts",
+                "value": "05",
+                "count": 43
+            },
+            {
+                "label": "Individuals",
+                "value": "21",
+                "count": 4
+            },
+            {
+                "label": "Native American tribal governments (Federally recognized)",
+                "value": "07",
+                "count": 72
+            },
+            {
+                "label": "Native American tribal organizations (other than Federally recognized tribal governments)",
+                "value": "11",
+                "count": 51
+            },
+            {
+                "label": "Nonprofits having a 501(c)(3) status with the IRS, other than institutions of higher education",
+                "value": "12",
+                "count": 81
+            },
+            {
+                "label": "Nonprofits that do not have a 501(c)(3) status with the IRS, other than institutions of higher education",
+                "value": "13",
+                "count": 66
+            },
+            {
+                "label": "Others (see text field entitled \"Additional Information on Eligibility\" for clarification)",
+                "value": "25",
+                "count": 199
+            },
+            {
+                "label": "Private institutions of higher education",
+                "value": "20",
+                "count": 80
+            },
+            {
+                "label": "Public and State controlled institutions of higher education",
+                "value": "06",
+                "count": 86
+            },
+            {
+                "label": "Public housing authorities/Indian housing authorities",
+                "value": "08",
+                "count": 40
+            },
+            {
+                "label": "Small businesses",
+                "value": "23",
+                "count": 53
+            },
+            {
+                "label": "Special district governments",
+                "value": "04",
+                "count": 60
+            },
+            {
+                "label": "State governments",
+                "value": "00",
+                "count": 70
+            },
+            {
+                "label": "Unrestricted (i.e., open to any type of entity above), subject to any clarification in text field entitled \"Additional Information on Eligibility\"",
+                "value": "99",
+                "count": 39
+            }
+        ],
+        "fundingCategories": [
+            {
+                "label": "Agriculture",
+                "value": "AG",
+                "count": 7
+            },
+            {
+                "label": "Arts",
+                "value": "AR",
+                "count": 14
+            },
+            {
+                "label": "Business and Commerce",
+                "value": "BC",
+                "count": 4
+            },
+            {
+                "label": "Community Development",
+                "value": "CD",
+                "count": 3
+            },
+            {
+                "label": "Consumer Protection",
+                "value": "CP",
+                "count": 1
+            },
+            {
+                "label": "Disaster Prevention and Relief",
+                "value": "DPR",
+                "count": 2
+            },
+            {
+                "label": "Education",
+                "value": "ED",
+                "count": 23
+            },
+            {
+                "label": "Employment, Labor and Training",
+                "value": "ELT",
+                "count": 10
+            },
+            {
+                "label": "Energy",
+                "value": "EN",
+                "count": 10
+            },
+            {
+                "label": "Environment",
+                "value": "ENV",
+                "count": 26
+            },
+            {
+                "label": "Food and Nutrition",
+                "value": "FN",
+                "count": 5
+            },
+            {
+                "label": "Health",
+                "value": "HL",
+                "count": 54
+            },
+            {
+                "label": "Housing",
+                "value": "HO",
+                "count": 5
+            },
+            {
+                "label": "Humanities",
+                "value": "HU",
+                "count": 14
+            },
+            {
+                "label": "Income Security and Social Services",
+                "value": "ISS",
+                "count": 4
+            },
+            {
+                "label": "Infrastructure Investment and Jobs Act (IIJA)",
+                "value": "IIJ",
+                "count": 1
+            },
+            {
+                "label": "Natural Resources",
+                "value": "NR",
+                "count": 14
+            },
+            {
+                "label": "Opportunity Zone Benefits",
+                "value": "OZ",
+                "count": 3
+            },
+            {
+                "label": "Other (see text field entitled \"Explanation of Other Category of Funding Activity\" for clarification)",
+                "value": "O",
+                "count": 28
+            },
+            {
+                "label": "Science and Technology and other Research and Development",
+                "value": "ST",
+                "count": 119
+            },
+            {
+                "label": "Transportation",
+                "value": "T",
+                "count": 2
+            }
+        ],
+        "fundingInstruments": [
+            {
+                "label": "Cooperative Agreement",
+                "value": "CA",
+                "count": 110
+            },
+            {
+                "label": "Grant",
+                "value": "G",
+                "count": 207
+            },
+            {
+                "label": "Other",
+                "value": "O",
+                "count": 26
+            },
+            {
+                "label": "Procurement Contract",
+                "value": "PC",
+                "count": 19
+            }
+        ],
+        "agencies": [
+            {
+                "subAgencyOptions": [],
+                "label": "AmeriCorps",
+                "value": "AC",
+                "count": 2
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Forest Service",
+                        "value": "USDA-FS",
+                        "count": 3
+                    },
+                    {
+                        "label": "National Institute of Food and Agriculture",
+                        "value": "USDA-NIFA",
+                        "count": 4
+                    },
+                    {
+                        "label": "Rural Business-Cooperative Service ",
+                        "value": "USDA-RBCS",
+                        "count": 4
+                    }
+                ],
+                "label": "Department of Agriculture",
+                "value": "USDA",
+                "count": 11
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Department of Commerce",
+                        "value": "DOC",
+                        "count": 8
+                    },
+                    {
+                        "label": "DOC NOAA - ERA Production",
+                        "value": "DOC-DOCNOAAERA",
+                        "count": 10
+                    },
+                    {
+                        "label": "Economic Development Administration",
+                        "value": "DOC-EDA",
+                        "count": 3
+                    },
+                    {
+                        "label": "National Institute of Standards and Technology",
+                        "value": "DOC-NIST",
+                        "count": 6
+                    }
+                ],
+                "label": "Department of Commerce",
+                "value": "DOC",
+                "count": 27
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "ACC-APG-Detrick",
+                        "value": "DOD-AMC-ACCAPGD",
+                        "count": 1
+                    },
+                    {
+                        "label": "Air Force -- Research Lab",
+                        "value": "DOD-AFRL",
+                        "count": 5
+                    },
+                    {
+                        "label": "Air Force Academy",
+                        "value": "DOD-USAFA",
+                        "count": 1
+                    },
+                    {
+                        "label": "Air Force Office of Scientific Research",
+                        "value": "DOD-AFOSR",
+                        "count": 2
+                    },
+                    {
+                        "label": "DARPA - Microsystems Technology Office ",
+                        "value": "DOD-DARPA-MTO",
+                        "count": 1
+                    },
+                    {
+                        "label": "DARPA - Tactical Technology Office",
+                        "value": "DOD-DARPA-TTO",
+                        "count": 1
+                    },
+                    {
+                        "label": "Defense Threat Reduction Agency",
+                        "value": "DOD-DTRA",
+                        "count": 1
+                    },
+                    {
+                        "label": "Dept of the Army -- Materiel Command",
+                        "value": "DOD-AMC",
+                        "count": 9
+                    },
+                    {
+                        "label": "Dept. of the Army  --  Corps of Engineers",
+                        "value": "DOD-COE",
+                        "count": 1
+                    },
+                    {
+                        "label": "Dept. of the Army -- USAMRAA",
+                        "value": "DOD-AMRAA",
+                        "count": 3
+                    },
+                    {
+                        "label": "Fort Worth District",
+                        "value": "DOD-COE-FW",
+                        "count": 1
+                    },
+                    {
+                        "label": "Munitions Directorate",
+                        "value": "DOD-AFRL-RW",
+                        "count": 2
+                    },
+                    {
+                        "label": "National Geospatial-Intelligence Agency ",
+                        "value": "DOD-NGIA",
+                        "count": 1
+                    },
+                    {
+                        "label": "NAVAIR",
+                        "value": "DOD-ONR-AIR",
+                        "count": 1
+                    },
+                    {
+                        "label": "Naval Research Laboratory",
+                        "value": "DOD-ONR-NRL",
+                        "count": 1
+                    },
+                    {
+                        "label": "Naval Supply Systems Command",
+                        "value": "DOD-ONR-SUP",
+                        "count": 1
+                    },
+                    {
+                        "label": "NSWC CRANE - N00164",
+                        "value": "DOD-ONR-SEA-CRANE",
+                        "count": 1
+                    },
+                    {
+                        "label": "Office of Naval Research",
+                        "value": "DOD-ONR",
+                        "count": 2
+                    },
+                    {
+                        "label": "Washington Headquarters Services",
+                        "value": "DOD-WHS",
+                        "count": 4
+                    }
+                ],
+                "label": "Department of Defense",
+                "value": "DOD",
+                "count": 39
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "Department of Education",
+                "value": "ED",
+                "count": 2
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Advanced Research Projects Agency Energy ",
+                        "value": "DOE-ARPAE",
+                        "count": 3
+                    },
+                    {
+                        "label": "Golden Field Office",
+                        "value": "DOE-GFO",
+                        "count": 1
+                    },
+                    {
+                        "label": "Idaho Field Office",
+                        "value": "DOE-ID",
+                        "count": 6
+                    },
+                    {
+                        "label": "National Energy Technology Laboratory",
+                        "value": "DOE-NETL",
+                        "count": 1
+                    },
+                    {
+                        "label": "NNSA",
+                        "value": "DOE-NNSA",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Energy",
+                "value": "DOE",
+                "count": 12
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Office of Science",
+                        "value": "PAMS-SC",
+                        "count": 3
+                    }
+                ],
+                "label": "Department of Energy - Office of Science",
+                "value": "PAMS",
+                "count": 3
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Administration for Community Living",
+                        "value": "HHS-ACL",
+                        "count": 6
+                    },
+                    {
+                        "label": "Center for Medicare and Medicaid Services",
+                        "value": "HHS-CMS",
+                        "count": 2
+                    },
+                    {
+                        "label": "Centers for Disease Control - OPHPR",
+                        "value": "HHS-CDC-OPHPR",
+                        "count": 1
+                    },
+                    {
+                        "label": "Centers for Disease Control and Prevention - ERA",
+                        "value": "HHS-CDC-HHSCDCERA",
+                        "count": 4
+                    },
+                    {
+                        "label": "Health Resources and Services Administration",
+                        "value": "HHS-HRSA",
+                        "count": 2
+                    },
+                    {
+                        "label": "National Institutes of Health",
+                        "value": "HHS-NIH11",
+                        "count": 40
+                    },
+                    {
+                        "label": "Office of the National Coordinator",
+                        "value": "HHS-OS-ONC",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Health and Human Services",
+                "value": "HHS",
+                "count": 56
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "Department of Housing and Urban Development",
+                "value": "HUD",
+                "count": 3
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "National Institute of Corrections",
+                        "value": "USDOJ-BOP-NIC",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Justice",
+                "value": "USDOJ",
+                "count": 1
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Employment and Training Administration",
+                        "value": "DOL-ETA",
+                        "count": 5
+                    },
+                    {
+                        "label": "Veterans Employment and Training Service",
+                        "value": "DOL-ETA-VETS",
+                        "count": 1
+                    },
+                    {
+                        "label": "Veterans Employment and Training Service",
+                        "value": "DOL-VETS",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Labor",
+                "value": "DOL",
+                "count": 7
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Bureau of Democracy Human Rights and Labor",
+                        "value": "DOS-DRL",
+                        "count": 1
+                    },
+                    {
+                        "label": "Bureau Of Educational and Cultural Affairs",
+                        "value": "DOS-ECA",
+                        "count": 4
+                    },
+                    {
+                        "label": "Bureau of International Security-Nonproliferation",
+                        "value": "DOS-ISN",
+                        "count": 1
+                    },
+                    {
+                        "label": "Office to Monitor-Combat Trafficking in Persons",
+                        "value": "DOS-GTIP",
+                        "count": 1
+                    },
+                    {
+                        "label": "U.S. Mission to Cape Verde",
+                        "value": "DOS-CPV",
+                        "count": 1
+                    },
+                    {
+                        "label": "U.S. Mission to India",
+                        "value": "DOS-IND",
+                        "count": 1
+                    },
+                    {
+                        "label": "U.S. Mission to Italy",
+                        "value": "DOS-ITA",
+                        "count": 1
+                    },
+                    {
+                        "label": "U.S. Mission to South Africa",
+                        "value": "DOS-ZAF",
+                        "count": 1
+                    },
+                    {
+                        "label": "U.S. Mission to Spain",
+                        "value": "DOS-ESP",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of State",
+                "value": "DOS",
+                "count": 12
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Bureau of Reclamation",
+                        "value": "DOI-BOR",
+                        "count": 1
+                    },
+                    {
+                        "label": "Fish and Wildlife Service",
+                        "value": "DOI-FWS",
+                        "count": 1
+                    },
+                    {
+                        "label": "Geological Survey",
+                        "value": "DOI-USGS1",
+                        "count": 2
+                    },
+                    {
+                        "label": "National Park Service",
+                        "value": "DOI-NPS",
+                        "count": 6
+                    }
+                ],
+                "label": "Department of the Interior",
+                "value": "DOI",
+                "count": 10
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "U.S. Dept. of Treasury RESTORE Act Program",
+                        "value": "USDOT-GCR",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of the Treasury",
+                "value": "USDOT",
+                "count": 1
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "DOT - FAA Aviation Research Grants",
+                        "value": "DOT-FAA-FAA ARG",
+                        "count": 1
+                    },
+                    {
+                        "label": "FAA-COE-JAMS",
+                        "value": "DOT-FAA-FAA COE-FAA JAMS",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Transportation",
+                "value": "DOT",
+                "count": 2
+            },
+            {
+                "subAgencyOptions": [
+                    {
+                        "label": "Construction of State Home Facilities",
+                        "value": "VA-CSHF",
+                        "count": 1
+                    },
+                    {
+                        "label": "Veterans Legacy Grants Program",
+                        "value": "VA-VLGP",
+                        "count": 1
+                    }
+                ],
+                "label": "Department of Veterans Affairs",
+                "value": "VA",
+                "count": 2
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "Environmental Protection Agency",
+                "value": "EPA",
+                "count": 14
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "Institute of Museum and Library Services",
+                "value": "IMLS",
+                "count": 13
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "National Aeronautics and Space Administration",
+                "value": "NASA",
+                "count": 3
+            },
+            {
+                "subAgencyOptions": [],
+                "label": "U.S. National Science Foundation",
+                "value": "NSF",
+                "count": 56
+            }
+        ],
+        "accessKey": "",
+        "errorMsgs": []
+    }
+}
