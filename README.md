@@ -1,5 +1,5 @@
-# 📊 Grant Graph: AI-Driven Strategic Funding Matcher
-Grant Graph is a high-precision RAG (Retrieval-Augmented Generation) pipeline designed to help NGOs find and win the best-fit grants. Unlike basic keyword search tools, Grant Graph uses a Two-Stage Re-Ranking architecture and Semantic Chunking to ensure that logical eligibility—not just word similarity—drives the results.
+# 📊 ImpactLink: AI-Driven Strategic Funding Matcher
+ImpactLink is a high-precision RAG (Retrieval-Augmented Generation) pipeline designed to help NGOs find and win the best-fit grants. Unlike basic keyword search tools, ImpactLink uses a Two-Stage Re-Ranking architecture and Semantic Chunking to ensure that logical eligibility—not just word similarity—drives the results.
 
 ## 🚀 Key Features
 - **Smart Grant Discovery:**: View and filter a curated database of global grants with real-time match scoring
@@ -17,7 +17,7 @@ Grant Graph is a high-precision RAG (Retrieval-Augmented Generation) pipeline de
 Small NGOs often lack dedicated grant-writing teams. They spend ~40% of their time manually filtering through 50+ page PDFs, only to find they are ineligible due to a single clause buried in the appendix. This "Information Overload" leads to a 70% rejection rate for grassroots organizations.
 
 ## 🟢 The Solution
-Grant Graph is a high-precision RAG pipeline that automates the eligibility "Deep Reasoner." By using semantic chunking and a two-stage re-ranking architecture, it ensures that NGOs only spend time on grants they are logically qualified to win. It then assists in drafting and budgeting to turn a mission into a winning proposal in minutes.
+ImpactLink is a high-precision RAG pipeline that automates the eligibility "Deep Reasoner." By using semantic chunking and a two-stage re-ranking architecture, it ensures that NGOs only spend time on grants they are logically qualified to win. It then assists in drafting and budgeting to turn a mission into a winning proposal in minutes.
 
 ## 🛠️ Tech Stack
 |Category | Tools|
@@ -30,7 +30,7 @@ Grant Graph is a high-precision RAG pipeline that automates the eligibility "Dee
 |Frontend | Next.js 15+, Tailwind CSS, Lucide React |
 
 ## 🛠️ Product Workflow
-Grant Graph takes an NGO from "Idea" to "Submitted" in one seamless flow:
+ImpactLink takes an NGO from "Idea" to "Submitted" in one seamless flow:
 - **Upload & Analyze:** Upload an existing project proposal or concept note (PDF).
 - **Match:** The AI extracts your mission and constraints to find the top 5 most compatible grants.
 - **Refine:** Use the Budget Builder to align your costs with the specific grant's ceiling.
@@ -71,7 +71,7 @@ python main.py
 - `load_vectors.py`: Script for ingesting and embedding grant datasets.
 
 ## 🗺️ Future Roadmap
-While the core RAG pipeline and dashboard are functional, we envision Grant Graph evolving into a comprehensive ecosystem for non-profit success:
+While the core RAG pipeline and dashboard are functional, we envision ImpactLink evolving into a comprehensive ecosystem for non-profit success:
 - **Multi-Agent Collaborative Drafting:** Implementing a "Critique Agent" that acts as a mock grant reviewer to score drafts and suggest improvements before submission.
 - **Automatic Grant Scraping:** Integration with grants.gov and international NGO databases to provide real-time alerts for new funding opportunities.
 - **Multi-Modal Ingestion:** Supporting image-to-text for scanning physical grant flyers or handwritten project notes from field workers.
@@ -79,4 +79,4 @@ While the core RAG pipeline and dashboard are functional, we envision Grant Grap
 - **Impact Reporting:** A module to help NGOs auto-generate progress reports for donors by pulling data from their internal project logs.
 
 ## 🏆 Hackathon Notes
-Small NGOs often lack dedicated grant writers, putting them at a disadvantage against larger organizations. Grant Graph levels the playing field by providing professional-grade drafting and budgeting tools, allowing grassroots organizations to focus their energy where it belongs: on the mission.
+Small NGOs often lack dedicated grant writers, putting them at a disadvantage against larger organizations. ImpactLink levels the playing field by providing professional-grade drafting and budgeting tools, allowing grassroots organizations to focus their energy where it belongs: on the mission.
