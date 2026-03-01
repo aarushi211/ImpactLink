@@ -1,8 +1,17 @@
 import { useState, useRef, useEffect } from "react";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import useBudget from "../hooks/useBudget";
+=======
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Nav } from "../components";
+import useGrants from "../hooks/useGrants";
+import useBudget from "../hooks/useBudget";
+import { useAuth } from "../context/AuthContext";
+import useWorkStore from "../hooks/useWorkStore";
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -171,8 +180,27 @@ function ChatMessage({ msg }) {
 
 export default function Budget() {
   const navigate = useNavigate();
+<<<<<<< HEAD
   const { grants, proposal } = useGrants();
   const { budget, loading, error, generate, refine, reset } = useBudget();
+=======
+  const [searchParams] = useSearchParams();
+  const { profile } = useAuth();
+  const { grants, proposal } = useGrants();
+  const { budget, loading, error, generate, refine, reset } = useBudget();
+  const { saveBudget, budgets, proposals } = useWorkStore();
+  const [savedBudgetId,   setSavedBudgetId]   = useState(null);
+  const [preloadedBudget, setPreloadedBudget] = useState(null);
+
+  // saved proposal selector
+  const [selectedProposalId, setSelectedProposalId] = useState(
+    sessionStorage.getItem("upload_draft_id") || ""
+  );
+  const activeProposal    = proposals.find(p => p.id === selectedProposalId);
+  const resolvedProposal  = activeProposal?.proposal_context
+    || proposal   // from useGrants (sessionStorage)
+    || null;
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
 
   // grant + budget amount selection
   const [selectedGrantId, setSelectedGrantId] = useState("");
@@ -183,11 +211,44 @@ export default function Budget() {
   const [input,     setInput]     = useState("");
   const [chatReady, setChatReady] = useState(false);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
   const chatEndRef  = useRef(null);
   const inputRef    = useRef(null);
 
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
 
+<<<<<<< HEAD
+=======
+  // When user picks a saved proposal, auto-load its linked budget if one exists
+  useEffect(() => {
+    if (!activeProposal?.budget_id) return;
+    const linked = budgets.find(b => b.id === activeProposal.budget_id);
+    if (linked) setPreloadedBudget(linked);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProposalId]);
+
+  // Load saved budget if ?load=<id>
+  const loadBudgetId = searchParams.get("load");
+  useEffect(() => {
+    if (!loadBudgetId || !budgets.length) return;
+    const saved = budgets.find(b => b.id === loadBudgetId);
+    if (!saved) return;
+    // Restore budget state directly
+    reset();
+    // We'll inject via the budget hook's internal setter — 
+    // since useBudget doesn't expose one, set via generate with a stub
+    // Instead: store in local state as a "preloaded" budget
+    setPreloadedBudget(saved);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadBudgetId, budgets]);
+
+  // Reload a saved budget when navigated to from Dashboard
+
+
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
   // pre-fill max_budget from selected grant ceiling (or floor as fallback)
   useEffect(() => {
     if (!selectedGrant) {
@@ -215,6 +276,7 @@ export default function Budget() {
     reset();
     setMessages([]);
     setChatReady(false);
+<<<<<<< HEAD
     await generate(proposal, Number(maxBudget));
   };
 
@@ -225,6 +287,31 @@ export default function Budget() {
       setMessages([{
         role: "assistant",
         content: `I've generated a ${budget.items.length}-line budget totalling ${fmt(budget.total_requested)} based on your project location. ${budget.locality_explanation} Ask me to adjust any category — I'll rebalance automatically.`,
+=======
+    await generate(resolvedProposal, Number(maxBudget));
+  };
+
+  // Auto-save budget when first generated, and open chat
+  useEffect(() => {
+    if (displayBudget && messages.length === 0) {
+      // Save to work store
+      if (profile) {
+        saveBudget({
+          title:                selectedGrant?.title || activeProposal?.title || "Budget",
+          grant_title:          selectedGrant?.title || "",
+          grant_id:             selectedGrant ? String(selectedGrant.grant_id) : "",
+          max_budget:           Number(maxBudget) || 0,
+          proposal_id:          activeProposal?.id || null,
+          items:                displayBudget.items,
+          total_requested:      displayBudget.total_requested,
+          locality_explanation: displayBudget.locality_explanation,
+        }).then(saved => { if (saved) setSavedBudgetId(saved.id); });
+      }
+      setChatReady(true);
+      setMessages([{
+        role: "assistant",
+        content: `I've generated a ${displayBudget.items.length}-line budget totalling ${fmt(displayBudget.total_requested)} based on your project location. ${displayBudget.locality_explanation} Ask me to adjust any category — I'll rebalance automatically.`,
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
       }]);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
@@ -239,12 +326,17 @@ export default function Budget() {
     const userMsg = { role: "user", content: text };
     setMessages(prev => [...prev, userMsg]);
 
+<<<<<<< HEAD
     await refine(budget, text);
+=======
+    await refine(displayBudget, text);
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
   };
 
   // when refine returns a new budget, add assistant ack
   const prevBudgetRef = useRef(null);
   useEffect(() => {
+<<<<<<< HEAD
     if (budget && prevBudgetRef.current && budget !== prevBudgetRef.current) {
       setMessages(prev => [...prev, {
         role: "assistant",
@@ -253,6 +345,16 @@ export default function Budget() {
       }]);
     }
     prevBudgetRef.current = budget;
+=======
+    if (displayBudget && prevBudgetRef.current && displayBudget !== prevBudgetRef.current) {
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: displayBudget.locality_explanation,
+        budgetUpdated: true,
+      }]);
+    }
+    prevBudgetRef.current = displayBudget;
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
   }, [budget]);
 
   const handleKeyDown = (e) => {
@@ -264,7 +366,12 @@ export default function Budget() {
 
   // ── derived ────────────────────────────────────────────
 
+<<<<<<< HEAD
   const canGenerate = !!proposal && !!maxBudget && Number(maxBudget) > 0;
+=======
+  const displayBudget = budget || preloadedBudget;
+  const canGenerate = !!resolvedProposal && !!maxBudget && Number(maxBudget) > 0;
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
   const isGenerating = loading === "generating";
   const isRefining   = loading === "refining";
 
@@ -286,13 +393,21 @@ export default function Budget() {
           style={{ background: "none", border: "none", color: "#555", fontSize: 13, cursor: "pointer", padding: 0 }}
         >←</button>
         <span style={{ color: "#fff", fontWeight: 700, fontSize: 13 }}>Budget Builder</span>
+<<<<<<< HEAD
         {budget && (
+=======
+        {displayBudget && (
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
           <span style={{
             background: "#0d2e1a", color: "#4ade80",
             border: "1px solid #166534",
             borderRadius: 5, padding: "2px 9px", fontSize: 10, fontWeight: 700,
           }}>
+<<<<<<< HEAD
             {fmt(budget.total_requested)}
+=======
+            {fmt(displayBudget.total_requested)}
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
           </span>
         )}
       </div>
@@ -318,6 +433,40 @@ export default function Budget() {
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+<<<<<<< HEAD
+=======
+              {/* Saved Proposal picker */}
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <label style={{ display: "block", color: "#555", fontSize: 11,
+                  fontWeight: 600, marginBottom: 6 }}>
+                  Saved Proposal
+                </label>
+                <select
+                  value={selectedProposalId}
+                  onChange={e => {
+                    setSelectedProposalId(e.target.value);
+                    sessionStorage.setItem("upload_draft_id", e.target.value);
+                  }}
+                  style={{
+                    width: "100%", background: "#1a1a28",
+                    border: "1px solid var(--border)",
+                    color: selectedProposalId ? "#ddd" : "#444",
+                    padding: "9px 10px", borderRadius: 8, fontSize: 12,
+                    cursor: "pointer", outline: "none",
+                  }}
+                >
+                  <option value="">Use uploaded proposal…</option>
+                  {proposals.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p._type === "build" ? "✦ " : "✍ "}
+                      {p.title.length > 44 ? p.title.slice(0, 44) + "…" : p.title}
+                      {p.budget_id ? " · 💰" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
               {/* Grant picker */}
               <div style={{ flex: 1, minWidth: 200 }}>
                 <label style={{ display: "block", color: "#555", fontSize: 11,
@@ -382,6 +531,7 @@ export default function Budget() {
             </div>
 
             {/* Proposal context chips */}
+<<<<<<< HEAD
             {proposal && (
               <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {proposal.organization_name && (
@@ -403,12 +553,39 @@ export default function Budget() {
                     border: "1px solid #2a2a3e", borderRadius: 20,
                     padding: "3px 10px", fontSize: 11 }}>
                     📄 {proposal.project_title.slice(0, 40)}{proposal.project_title.length > 40 ? "…" : ""}
+=======
+            {resolvedProposal && (
+              <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {resolvedProposal.organization_name && (
+                  <span style={{ background: "#1e1e30", color: "#666",
+                    border: "1px solid #2a2a3e", borderRadius: 20,
+                    padding: "3px 10px", fontSize: 11 }}>
+                    🏢 {resolvedProposal.organization_name}
+                  </span>
+                )}
+                {(resolvedProposal.geographic_focus || [])[0] && (
+                  <span style={{ background: "#1e1e30", color: "#666",
+                    border: "1px solid #2a2a3e", borderRadius: 20,
+                    padding: "3px 10px", fontSize: 11 }}>
+                    📍 {resolvedProposal.geographic_focus[0]}
+                  </span>
+                )}
+                {resolvedProposal.project_title && (
+                  <span style={{ background: "#1e1e30", color: "#666",
+                    border: "1px solid #2a2a3e", borderRadius: 20,
+                    padding: "3px 10px", fontSize: 11 }}>
+                    📄 {resolvedProposal.project_title.slice(0, 40)}{resolvedProposal.project_title.length > 40 ? "…" : ""}
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
                   </span>
                 )}
               </div>
             )}
 
+<<<<<<< HEAD
             {!proposal && (
+=======
+            {!resolvedProposal && (
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
               <p style={{ marginTop: 12, color: "#444", fontSize: 12 }}>
                 No proposal uploaded yet.{" "}
                 <span
@@ -456,7 +633,11 @@ export default function Budget() {
           )}
 
           {/* Budget table */}
+<<<<<<< HEAD
           {budget && !isGenerating && (
+=======
+          {displayBudget && !isGenerating && (
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
             <>
               {/* Locality explanation banner */}
               <div style={{
@@ -466,7 +647,11 @@ export default function Budget() {
               }}>
                 <span style={{ fontSize: 16, flexShrink: 0 }}>📍</span>
                 <p style={{ margin: 0, color: "#7cb9f5", fontSize: 13, lineHeight: 1.6 }}>
+<<<<<<< HEAD
                   {budget.locality_explanation}
+=======
+                  {displayBudget.locality_explanation}
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
                 </p>
               </div>
 
@@ -484,17 +669,29 @@ export default function Budget() {
                     Line Items
                   </p>
                   <span style={{ color: "#444", fontSize: 12 }}>
+<<<<<<< HEAD
                     {budget.items.length} categories · {fmt(budget.total_requested)} total
                   </span>
                 </div>
                 <div style={{ padding: "8px 0 16px" }}>
                   <BudgetTable items={budget.items} total={budget.total_requested} />
+=======
+                    {displayBudget.items.length} categories · {fmt(displayBudget.total_requested)} total
+                  </span>
+                </div>
+                <div style={{ padding: "8px 0 16px" }}>
+                  <BudgetTable items={displayBudget.items} total={displayBudget.total_requested} />
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
                 </div>
               </div>
 
               {/* Donut-style summary pills */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+<<<<<<< HEAD
                 {budget.items.map((item, i) => (
+=======
+                {displayBudget.items.map((item, i) => (
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
                   <div key={i} style={{
                     background: "var(--bg-card)", border: "1px solid var(--border)",
                     borderRadius: 8, padding: "8px 14px",
@@ -515,7 +712,11 @@ export default function Budget() {
           )}
 
           {/* Empty state */}
+<<<<<<< HEAD
           {!budget && !isGenerating && !error && (
+=======
+          {!displayBudget && !isGenerating && !error && (
+>>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
             <div style={{
               background: "var(--bg-card)", border: "1px dashed var(--border)",
               borderRadius: 12, padding: "60px 24px", textAlign: "center",
