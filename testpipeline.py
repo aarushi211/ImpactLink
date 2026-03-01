@@ -5,7 +5,7 @@ from agents.scoring_agent import score_proposal
 from services.vector_store import find_similar_grants
 from services.budget_generator import generate_budget
 
-PDF_PATH = "Data/Americorps to The United Way of Greater Charlotte.pdf"
+PDF_PATH = "Data/LA grant proposal.pdf"
 
 print("=" * 50)
 print(f"PIPELINE STARTING (Mode: {'GROQ' if USE_GROQ else 'LOCAL'})")
