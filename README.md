@@ -1,6 +1,5 @@
-# 📊 Grant Graph: AI-Driven Strategic Funding Matcher
-Grant Graph is a high-precision RAG (Retrieval-Augmented Generation) pipeline designed to help NGOs find and win the best-fit grants. Unlike basic keyword search tools, Grant Graph uses a Two-Stage Re-Ranking architecture and Semantic Chunking to ensure that logical eligibility—not just word similarity—drives the results.
 
+<<<<<<< HEAD
 ## 🚀 Key Features
 - **Smart Grant Discovery:**: View and filter a curated database of global grants with real-time match scoring
 - **AI Proposal Draft Assistant:** Generate high-quality first drafts of grant applications tailored specifically to the requirements of a selected funder
@@ -80,3 +79,5 @@ While the core RAG pipeline and dashboard are functional, we envision Grant Grap
 
 ## 🏆 Hackathon Notes
 Small NGOs often lack dedicated grant writers, putting them at a disadvantage against larger organizations. Grant Graph levels the playing field by providing professional-grade drafting and budgeting tools, allowing grassroots organizations to focus their energy where it belongs: on the mission.
+=======
+>>>>>>> d1f2bbd043276083d835d5527db5f99ffb881b13
