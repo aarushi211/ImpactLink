@@ -87,7 +87,7 @@ CANDIDATE GRANTS (Top 20 from Vector Search):
 
 def get_llm(USE_GROQ):
     if USE_GROQ:
-        return ChatGroq(model="llama-3.1-8b-instant", groq_api_key=GROQ_API_KEY)
+        return ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY)
     return ChatOllama(model=LOCAL_LLM_MODEL)
 
 def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
