@@ -26,4 +26,16 @@ export const scoreProposal = async (proposal) => {
   return res.data;
 };
 
+// Generate a localized line-item budget
+export const generateBudget = async (proposal, maxBudget) => {
+  const res = await api.post("/api/budget/generate", { proposal, max_budget: maxBudget });
+  return res.data;
+};
+
+// Refine an existing budget via plain-English chat
+export const refineBudget = async (currentBudget, userRequest) => {
+  const res = await api.post("/api/budget/refine", { current_budget: currentBudget, user_request: userRequest });
+  return res.data;
+};
+
 export default api;
