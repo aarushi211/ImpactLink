@@ -40,9 +40,6 @@ class DraftRequest(BaseModel):
     proposal: dict
     grant: dict
 
-<<<<<<< HEAD
-# ── Routes ───────────────────────────────────────────────
-=======
 class BudgetGenerateRequest(BaseModel):
     proposal: dict
     max_budget: int
@@ -122,7 +119,6 @@ class SaveBudgetRequest(BaseModel):
 
 
 # ── Core routes ────────────────────────────────────────────────
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
 
 @app.get("/")
 def root():
@@ -134,21 +130,11 @@ async def upload(file: UploadFile = File(...)):
         raise HTTPException(400, "Only PDF or DOCX files are supported.")
     file_bytes = await file.read()
     proposal = parse_proposal(file_bytes, file.filename)
-<<<<<<< HEAD
-
-=======
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
     scoring, matches = await asyncio.gather(
         asyncio.to_thread(score_proposal, proposal),
         asyncio.to_thread(find_similar_grants, proposal, 5),
     )
-<<<<<<< HEAD
-
-    return { "proposal": proposal, "scoring": scoring, "matches": matches }
-
-=======
     return {"proposal": proposal, "scoring": scoring, "matches": matches}
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
 
 @app.post("/api/match")
 def match(req: ProposalRequest):
@@ -186,32 +172,10 @@ class BudgetRefineRequest(BaseModel):
 
 @app.post("/api/budget/generate")
 async def budget_generate(req: BudgetGenerateRequest):
-<<<<<<< HEAD
-    """
-    Generate a localized line-item budget from a proposal + grant max amount.
-    Returns: { items, total_requested, locality_explanation }
-    """
-=======
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
     result = await asyncio.to_thread(generate_budget, req.proposal, req.max_budget)
     if "error" in result:
         raise HTTPException(500, result.get("details", "Budget generation failed"))
     return result
-<<<<<<< HEAD
-
-
-@app.post("/api/budget/refine")
-async def budget_refine(req: BudgetRefineRequest):
-    """
-    Refine an existing budget based on a plain-English user request.
-    Keeps total_requested constant, rebalances line items.
-    Returns: { items, total_requested, locality_explanation }
-    """
-    result = await asyncio.to_thread(refine_budget, req.current_budget, req.user_request)
-    if "error" in result:
-        raise HTTPException(500, result.get("details", "Budget refinement failed"))
-    return result
-=======
 
 @app.post("/api/budget/refine")
 async def budget_refine(req: BudgetRefineRequest):
@@ -359,4 +323,3 @@ def work_delete_budget(ngo_id: str, budget_id: str):
 @app.get("/api/work/summary/{ngo_id}")
 def work_summary(ngo_id: str):
     return get_summary(ngo_id)
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f

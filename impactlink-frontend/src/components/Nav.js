@@ -9,10 +9,7 @@ export default function Nav() {
   const links = [
     { label: "Dashboard",       path: "/dashboard" },
     { label: "View Grants",     path: "/grants" },
-<<<<<<< HEAD
-=======
     { label: "Build Proposal",  path: "/build" },
->>>>>>> 8a40449fb3d259f1f85554a89ef937e9c2b7e91f
     { label: "Draft Assistant", path: "/draft" },
     { label: "Budget Builder",  path: "/budget" },
     { label: "Upload",          path: "/upload" },
