@@ -13,10 +13,12 @@ export default function useGrants() {
     const storedScoring  = sessionStorage.getItem("scoring");
 
     if (storedMatches) {
-      setGrants(JSON.parse(storedMatches));
-      setProposal(JSON.parse(storedProposal));
-      setScoring(JSON.parse(storedScoring));
-      setHasReal(true);
+      try {
+        setGrants(JSON.parse(storedMatches));
+        setProposal(storedProposal ? JSON.parse(storedProposal) : null);
+        setScoring(storedScoring  ? JSON.parse(storedScoring)  : null);
+        setHasReal(true);
+      } catch (_) {}
       setLoading(false);
     } else {
       import("../services/mockData").then(m => {

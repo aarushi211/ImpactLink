@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { Nav, StatCard, GrantCard, SectionHeader } from "../components";
 import { useAuth } from "../context/AuthContext";
@@ -23,36 +25,42 @@ function itemSubtitle(item, meta) {
   return wordCount ? `${wordCount.toLocaleString()} words` : meta.label;
 }
 
-function WorkItem({ item, onOpen, onDelete }) {
+function WorkItem({ item, active, onSelect, onOpen, onDelete }) {
   const meta     = TYPE_META[item._type || item.type] || TYPE_META.draft;
   const date     = new Date(item.updated_at).toLocaleDateString("en-US",
     { month: "short", day: "numeric" });
-  const subtitle = itemSubtitle(item, meta);
+  const subtitle    = itemSubtitle(item, meta);
+  const isBudget    = (item._type || item.type) === "budget";
+  const borderColor = active ? meta.color : "var(--border)";
 
   return (
     <div
+      onClick={onSelect}
       style={{
-        background: "var(--bg-card)", border: "1px solid var(--border)",
+        background: active ? `${meta.color}11` : "var(--bg-card)",
+        border: `1px solid ${borderColor}`,
         borderRadius: 10, padding: "11px 14px",
         display: "flex", alignItems: "center", gap: 10,
-        transition: "border-color 0.15s",
+        transition: "all 0.15s",
+        cursor: isBudget ? "default" : "pointer",
       }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = meta.color}
-      onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor = meta.color; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor = "var(--border)"; }}
     >
-      {/* Icon */}
+      {/* Active indicator */}
       <div style={{
         width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-        background: "#1a1a2e",
+        background: active ? `${meta.color}22` : "#1a1a2e",
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 14, color: meta.color,
       }}>
-        {meta.icon}
+        {active ? "◉" : meta.icon}
       </div>
 
       {/* Text */}
-      <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={onOpen}>
-        <p style={{ margin: 0, fontWeight: 600, color: "#e0e0f0",
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 600,
+          color: active ? "#fff" : "#e0e0f0",
           fontSize: 13, overflow: "hidden", textOverflow: "ellipsis",
           whiteSpace: "nowrap" }}>
           {item.title}
@@ -66,7 +74,7 @@ function WorkItem({ item, onOpen, onDelete }) {
 
       {/* Edit button */}
       <button
-        onClick={onOpen}
+        onClick={e => { e.stopPropagation(); onOpen(); }}
         title="Open / Edit"
         style={{
           background: "none", border: "1px solid #2a2a3e",
@@ -113,27 +121,52 @@ export default function Dashboard() {
   const firstName = (p.org_name || "there").split(" ")[0];
   const recentItems = allItems.slice(0, 8);
 
+  // Active proposal selected in Saved Work — drives grant panel
+  const [activeProposalId, setActiveProposalId] = useState(null);
+  const activeProposal = allItems.find(i => i.id === activeProposalId) || null;
+
+  // Grants to show: if a proposal is selected and has matches_id, filter + reorder
+  // Otherwise fall back to the full grants list from sessionStorage
+  const visibleGrants = (() => {
+    if (!activeProposal || !activeProposal.matches_id?.length) return grants;
+    // Reorder grants to match the saved matches_id order, then append any extras
+    const ids = activeProposal.matches_id.map(String);
+    const inSet = grants.filter(g => ids.includes(String(g.grant_id)));
+    const rest  = grants.filter(g => !ids.includes(String(g.grant_id)));
+    // Sort inSet by original matches_id order
+    inSet.sort((a, b) => ids.indexOf(String(a.grant_id)) - ids.indexOf(String(b.grant_id)));
+    return [...inSet, ...rest];
+  })();
+
   // Derive stats from saved items + profile
   const totalDrafts  = drafts.length + builds.length;
   const totalBudgets = budgets.length;
   const matchSets    = 0; // matches stored in sessionStorage, not work store
 
-  // Navigate to the right page to reopen / edit a saved item
+  // Clicking a proposal card selects it (updates grant panel) without navigating
+  // The "Edit" button on the card navigates to the editor
+  const selectProposal = (item) => {
+    const type = item._type || item.type;
+    if (type === "budget") return; // budgets don't have grant matches
+    setActiveProposalId(prev => prev === item.id ? null : item.id); // toggle
+    // Also set sessionStorage so Draft/Budget pages pick it up
+    sessionStorage.setItem("upload_draft_id", item.id);
+    if (item.proposal_context) {
+      sessionStorage.setItem("proposal", JSON.stringify(item.proposal_context));
+    }
+  };
+
+  // Edit button — navigate to the right editor
   const openItem = (item) => {
     const type = item._type || item.type;
-
     if (type === "build") {
-      // Built proposals always go to /build
       sessionStorage.setItem("upload_draft_id", item.id);
       navigate(`/build?load=${item.id}`);
     } else if (type === "draft") {
-      // Set this as the active proposal for Draft + Budget pages
       sessionStorage.setItem("upload_draft_id", item.id);
       if (item.section_order?.length > 0) {
-        // Has written sections — open in edit mode
         navigate(`/draft?load=${item.id}${item.grant_id ? `&grant=${item.grant_id}` : ""}`);
       } else {
-        // Upload-only (no sections yet) — open Draft to start drafting
         navigate(`/draft${item.grant_id ? `?grant=${item.grant_id}` : ""}`);
       }
     } else if (type === "budget") {
@@ -177,23 +210,40 @@ export default function Dashboard() {
           <div>
             {/* Top matched grants */}
             <div style={{ display: "flex", alignItems: "center",
-              justifyContent: "space-between", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>
-                Top Matched Grants
-              </h2>
+              justifyContent: "space-between", marginBottom: activeProposal ? 8 : 16 }}>
+              <div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: 0 }}>
+                  Top Matched Grants
+                </h2>
+                {activeProposal && (
+                  <p style={{ color: "var(--accent)", fontSize: 11, fontWeight: 600,
+                    margin: "3px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ background: "var(--accent)", borderRadius: "50%",
+                      width: 6, height: 6, display: "inline-block", flexShrink: 0 }} />
+                    Showing matches for: {activeProposal.title?.length > 36
+                      ? activeProposal.title.slice(0, 36) + "…"
+                      : activeProposal.title}
+                    <button
+                      onClick={() => setActiveProposalId(null)}
+                      style={{ background: "none", border: "none", color: "#444",
+                        cursor: "pointer", fontSize: 11, padding: 0, marginLeft: 2 }}
+                    >✕</button>
+                  </p>
+                )}
+              </div>
               <button
                 onClick={() => navigate("/grants")}
                 style={{ background: "transparent", border: "1px solid var(--border)",
                   color: "var(--accent)", padding: "8px 18px", borderRadius: 8,
-                  fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
               >
                 View All →
               </button>
             </div>
 
-            {grants.length > 0 ? (
+            {visibleGrants.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {grants.slice(0, 3).map(g => (
+                {visibleGrants.slice(0, 3).map(g => (
                   <GrantCard key={g.grant_id} grant={g} compact />
                 ))}
               </div>
@@ -345,12 +395,14 @@ export default function Dashboard() {
                     <WorkItem
                       key={item.id}
                       item={item}
+                      active={activeProposalId === item.id}
+                      onSelect={() => selectProposal(item)}
                       onOpen={() => openItem(item)}
                       onDelete={() => {
-                    if (item._type === "draft")  deleteDraft(item.id);
-                    if (item._type === "build")  deleteBuild(item.id);
-                    if (item._type === "budget") deleteBudget(item.id);
-                  }}
+                        if (item._type === "draft")  deleteDraft(item.id);
+                        if (item._type === "build")  deleteBuild(item.id);
+                        if (item._type === "budget") deleteBudget(item.id);
+                      }}
                     />
                   ))}
                   {allItems.length > 8 && (

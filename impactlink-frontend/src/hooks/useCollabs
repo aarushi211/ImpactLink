@@ -1,0 +1,40 @@
+import { useState, useCallback } from "react";
+import api from "../services/api";
+
+export default function useCollabs() {
+  const [collabs, setCollabs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasData, setHasData] = useState(false);
+
+  /**
+   * @param {Record<string, any>} proposal
+   * @param {string|null} [ngoId]
+   */
+  const fetchCollabs = useCallback(async (proposal, ngoId) => {
+    if (!proposal) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.post("/api/collab/match", {
+        proposal: proposal,
+        ngo_id: ngoId || null,
+        top_k: 6,
+      });
+      setCollabs(res.data.collabs || []);
+      setHasData(true);
+    } catch (/** @type {any} */ e) {
+      setError(e?.response?.data?.detail || "Could not load collaborator matches.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const clear = useCallback(() => {
+    setCollabs([]);
+    setHasData(false);
+    setError(null);
+  }, []);
+
+  return { collabs, loading, error, hasData, fetchCollabs, clear };
+}

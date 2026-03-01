@@ -12,6 +12,7 @@ from services.vector_store import find_similar_grants
 from services.budget_generator import generate_budget
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, login, get_profile, update_profile, list_collab_profiles
+from services.ngo_collab import find_similar_ngos
 from agents.build_agent import build_proposal_stream, revise_section
 from services.work_store import (
     save_draft,   update_draft,  list_drafts,  get_draft,  delete_draft,
@@ -60,6 +61,11 @@ class LoginRequest(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     ngo_id:  str
     updates: dict
+
+class CollabMatchRequest(BaseModel):
+    proposal:    dict
+    ngo_id:      Optional[str] = None   # exclude requester's own profile
+    top_k:       int = 6
 
 class ReviseRequest(BaseModel):
     current_draft: str
@@ -218,6 +224,16 @@ def profile_update(req: ProfileUpdateRequest):
 @app.get("/api/ngos/collab")
 def ngos_collab():
     return {"ngos": list_collab_profiles()}
+
+@app.post("/api/collab/match")
+async def collab_match(req: CollabMatchRequest):
+    """Find NGOs whose mission/work is most similar to the given proposal."""
+    all_ngos = list_collab_profiles()
+    # Exclude the requesting NGO from results
+    if req.ngo_id:
+        all_ngos = [n for n in all_ngos if n["id"] != req.ngo_id]
+    results = await asyncio.to_thread(find_similar_ngos, req.proposal, all_ngos, req.top_k)
+    return {"collabs": results}
 
 
 # ── Build routes ───────────────────────────────────────────────
