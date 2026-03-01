@@ -30,14 +30,6 @@ class DraftRequest(BaseModel):
     proposal: dict
     grant: dict
 
-class BudgetRequest(BaseModel):
-    proposal: dict
-    max_budget: int
-
-class RefineBudgetRequest(BaseModel):
-    current_budget: dict
-    user_request: str
-
 # ── Routes ───────────────────────────────────────────────
 
 @app.get("/")
@@ -57,22 +49,12 @@ async def upload(file: UploadFile = File(...)):
     file_bytes = await file.read()
     proposal = parse_proposal(file_bytes, file.filename)
 
-    # scoring, matches = await asyncio.gather(
-    #     asyncio.to_thread(score_proposal, proposal),
-    #     asyncio.to_thread(find_similar_grants, proposal, 5),
-    # )
-    scoring, matches, initial_budget = await asyncio.gather(
+    scoring, matches = await asyncio.gather(
         asyncio.to_thread(score_proposal, proposal),
         asyncio.to_thread(find_similar_grants, proposal, 5),
-        asyncio.to_thread(generate_budget, proposal, 100000) 
     )
 
-    return { 
-        "proposal": proposal, 
-        "scoring": scoring, 
-        "matches": matches,
-        "budget": initial_budget 
-    }
+    return { "proposal": proposal, "scoring": scoring, "matches": matches }
 
 
 @app.post("/api/match")
@@ -111,21 +93,38 @@ def draft_stream(req: DraftRequest):
 
     return StreamingResponse(generate(), media_type="text/plain")
 
+
+# ── Budget routes ─────────────────────────────────────────
+
+class BudgetGenerateRequest(BaseModel):
+    proposal: dict
+    max_budget: int
+
+class BudgetRefineRequest(BaseModel):
+    current_budget: dict
+    user_request: str
+
+
 @app.post("/api/budget/generate")
-async def generate_new_budget(req: BudgetRequest):
+async def budget_generate(req: BudgetGenerateRequest):
     """
-    Generates a fresh budget if the user selects a specific grant 
-    with a different award ceiling.
+    Generate a localized line-item budget from a proposal + grant max amount.
+    Returns: { items, total_requested, locality_explanation }
     """
-    budget = await asyncio.to_thread(generate_budget, req.proposal, req.max_budget)
-    return budget
+    result = await asyncio.to_thread(generate_budget, req.proposal, req.max_budget)
+    if "error" in result:
+        raise HTTPException(500, result.get("details", "Budget generation failed"))
+    return result
+
 
 @app.post("/api/budget/refine")
-async def refine_budget_chat(req: RefineBudgetRequest):
+async def budget_refine(req: BudgetRefineRequest):
     """
-    The Chatbot endpoint. Takes the current budget JSON and the 
-    user's text request, returning a re-balanced budget.
+    Refine an existing budget based on a plain-English user request.
+    Keeps total_requested constant, rebalances line items.
+    Returns: { items, total_requested, locality_explanation }
     """
-    # This uses Groq for logical re-allocation
-    updated_budget = await asyncio.to_thread(refine_budget, req.current_budget, req.user_request)
-    return updated_budget
+    result = await asyncio.to_thread(refine_budget, req.current_budget, req.user_request)
+    if "error" in result:
+        raise HTTPException(500, result.get("details", "Budget refinement failed"))
+    return result

@@ -5,10 +5,11 @@ export default function Nav() {
   const { pathname } = useLocation();
 
   const links = [
-    { label: "Dashboard",     path: "/dashboard" },
-    { label: "View Grants",   path: "/grants" },
+    { label: "Dashboard",       path: "/dashboard" },
+    { label: "View Grants",     path: "/grants" },
     { label: "Draft Assistant", path: "/draft" },
-    { label: "Upload",        path: "/upload" },
+    { label: "Budget Builder",  path: "/budget" },
+    { label: "Upload",          path: "/upload" },
   ];
 
   return (
