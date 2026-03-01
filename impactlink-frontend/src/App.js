@@ -5,6 +5,7 @@ import GrantsList from "./pages/GrantsList";
 import GrantDetail from "./pages/GrantDetail";
 import Upload from "./pages/Upload";
 import Draft from "./pages/Draft";
+import Budget from "./pages/Budget";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/grants/:id"    element={<GrantDetail />} />
         <Route path="/upload"        element={<Upload />} />
         <Route path="/draft"         element={<Draft />} />
+        <Route path="/budget"        element={<Budget />} />
         <Route path="*"              element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
