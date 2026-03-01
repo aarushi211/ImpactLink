@@ -3,6 +3,9 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import useDraft from "../hooks/useDraft";
+import { useAuth } from "../context/AuthContext";
+import useWorkStore from "../hooks/useWorkStore";
+import api from "../services/api";
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -59,19 +62,59 @@ export default function Draft() {
   const [searchParams] = useSearchParams();
   const grantId = searchParams.get("grant");
 
+  const { profile } = useAuth();
   const { grants, proposal } = useGrants();
   const { draft, sections, sectionOrder, activeSection, loading, done, error, reset } = useDraft();
+  const { saveDraft, updateDraft, drafts, proposals } = useWorkStore();
+  const [savedDraftId, setSavedDraftId] = useState(null);
+  const [saveStatus,   setSaveStatus]   = useState(null); // "saved" | "error" | null
 
-  const [selectedGrantId, setSelectedGrantId] = useState(grantId || "");
+  const [selectedGrantId,   setSelectedGrantId]   = useState(grantId || "");
+  const [selectedProposalId, setSelectedProposalId] = useState(
+    sessionStorage.getItem("upload_draft_id") || ""
+  );
   const [activeTab,       setActiveTab]       = useState(null);
   const [editedContent,   setEditedContent]   = useState({});
   const [wordCounts,      setWordCounts]      = useState({});
   const [pdfLoading,      setPdfLoading]      = useState(false);
 
   const textareaRef = useRef(null);
-  const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
+  const selectedGrant    = grants.find(g => String(g.grant_id) === String(selectedGrantId));
+  // Active saved proposal (uploaded or built) — provides proposal_context for drafting
+  const activeProposal   = proposals.find(p => p.id === selectedProposalId);
+  // Resolved proposal: prefer saved proposal_context, fall back to sessionStorage proposal
+  const resolvedProposal = activeProposal?.proposal_context
+    || proposal
+    || null;
 
   useEffect(() => { if (grantId) setSelectedGrantId(grantId); }, [grantId]);
+
+
+
+  // Load saved draft if ?load=<id> is in URL
+  const loadId = searchParams.get("load");
+  useEffect(() => {
+    if (!loadId || !drafts.length) return;
+    const saved = drafts.find(d => d.id === loadId);
+    if (!saved) return;
+    // Restore sections + grant selection
+    const restoredSections = saved.sections || {};
+    const restoredOrder    = saved.section_order || Object.keys(restoredSections);
+    if (saved.grant_id) setSelectedGrantId(saved.grant_id);
+    setSavedDraftId(saved.id);
+    // Populate editedContent from saved sections
+    const ec = {};
+    const wc = {};
+    restoredOrder.forEach(key => {
+      if (restoredSections[key]) {
+        ec[key] = restoredSections[key].content || "";
+        wc[key] = (restoredSections[key].content || "").trim().split(/\s+/).filter(Boolean).length;
+      }
+    });
+    setEditedContent(ec);
+    setWordCounts(wc);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadId, drafts]);
 
   useEffect(() => {
     if (sectionOrder.length > 0 && !activeTab) setActiveTab(sectionOrder[0]);
@@ -81,6 +124,14 @@ export default function Draft() {
   useEffect(() => {
     if (activeSection) setActiveTab(activeSection);
   }, [activeSection]);
+
+  // Auto-save draft when streaming finishes
+  useEffect(() => {
+    if (done && sectionOrder.length > 0 && profile) {
+      handleSave();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
 
   useEffect(() => {
     sectionOrder.forEach(key => {
@@ -111,11 +162,47 @@ export default function Draft() {
   };
 
   const handleDraft = () => {
-    if (!proposal || !selectedGrant) return;
+    if (!resolvedProposal || !selectedGrant) return;
     setEditedContent({});
     setActiveTab(null);
+    setSavedDraftId(null);
+    setSaveStatus(null);
     reset();
-    draft(proposal, selectedGrant);
+    draft(resolvedProposal, selectedGrant);
+  };
+
+  // Save current draft to store
+  const handleSave = async (currentSections) => {
+    if (!profile || !selectedGrant) return;
+    try {
+      const secToSave = {};
+      sectionOrder.forEach(key => {
+        secToSave[key] = {
+          title:   sections[key]?.title   || key,
+          content: currentSections?.[key] ?? editedContent[key] ?? sections[key]?.content ?? "",
+        };
+      });
+      if (savedDraftId) {
+        await updateDraft(savedDraftId, secToSave);
+      } else {
+        const matchIds = (activeProposal?.matches_id || []);
+        const saved = await saveDraft({
+          title:            selectedGrant.title,
+          grant_title:      selectedGrant.title,
+          grant_id:         String(selectedGrant.grant_id),
+          agency:           selectedGrant.agency || "",
+          proposal_context: resolvedProposal || {},
+          matches_id:       matchIds,
+          sections:         secToSave,
+          section_order:    sectionOrder,
+        });
+        if (saved) setSavedDraftId(saved.id);
+      }
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus(null), 2500);
+    } catch (e) {
+      setSaveStatus("error");
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -274,31 +361,56 @@ export default function Draft() {
               {totalWords.toLocaleString()} words
             </span>
           )}
+          {savedDraftId && !done && (
+            <span style={{ color: "#444", fontSize: 11, fontWeight: 600,
+              background: "#1a1a28", border: "1px solid #2a2a3e",
+              borderRadius: 5, padding: "2px 8px" }}>
+              ✎ Editing saved
+            </span>
+          )}
           {done && (
-            <button
-              onClick={handleDownloadPDF}
-              disabled={pdfLoading}
-              style={{
-                background: pdfLoading ? "#1a1a2e" : "#e63946",
-                border: "none", color: "#fff",
-                padding: "6px 14px", borderRadius: 7,
-                fontSize: 12, fontWeight: 700, cursor: pdfLoading ? "wait" : "pointer",
-                display: "flex", alignItems: "center", gap: 6,
-              }}
-            >
-              {pdfLoading ? "⟳ Generating..." : "↓ Download PDF"}
-            </button>
+            <>
+              {saveStatus === "saved" && (
+                <span style={{ color: "var(--green)", fontSize: 11, fontWeight: 600 }}>✓ Saved</span>
+              )}
+              {saveStatus === "error" && (
+                <span style={{ color: "var(--red)", fontSize: 11 }}>Save failed</span>
+              )}
+              <button
+                onClick={() => handleSave()}
+                style={{
+                  background: "#1a1a28", border: "1px solid #2a2a3e",
+                  color: "#888", padding: "6px 13px", borderRadius: 7,
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                💾 Save
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                disabled={pdfLoading}
+                style={{
+                  background: pdfLoading ? "#1a1a2e" : "#e63946",
+                  border: "none", color: "#fff",
+                  padding: "6px 14px", borderRadius: 7,
+                  fontSize: 12, fontWeight: 700, cursor: pdfLoading ? "wait" : "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                {pdfLoading ? "⟳ Generating..." : "↓ Download PDF"}
+              </button>
+            </>
           )}
           <button
             onClick={handleDraft}
-            disabled={!selectedGrant || !proposal || loading}
+            disabled={!selectedGrant || !resolvedProposal || loading}
             style={{
-              background: selectedGrant && proposal && !loading ? "var(--accent)" : "#1a1a2e",
+              background: selectedGrant && resolvedProposal && !loading ? "var(--accent)" : "#1a1a2e",
               border: "none",
-              color: selectedGrant && proposal && !loading ? "#fff" : "#444",
+              color: selectedGrant && resolvedProposal && !loading ? "#fff" : "#444",
               padding: "6px 14px", borderRadius: 7,
               fontSize: 12, fontWeight: 700,
-              cursor: selectedGrant && proposal && !loading ? "pointer" : "not-allowed",
+              cursor: selectedGrant && resolvedProposal && !loading ? "pointer" : "not-allowed",
             }}
           >
             {loading ? "Writing…" : hasSections ? "↺ Redraft" : "✦ Draft"}
@@ -316,6 +428,40 @@ export default function Draft() {
           display: "flex", flexDirection: "column",
           position: "sticky", top: 112, height: "calc(100vh - 112px)", overflowY: "auto",
         }}>
+          {/* Saved Proposal selector */}
+          <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid #1e1e2e" }}>
+            <p style={{ color: "#333", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 7px" }}>Proposal</p>
+            <select
+              value={selectedProposalId}
+              onChange={e => {
+                setSelectedProposalId(e.target.value);
+                sessionStorage.setItem("upload_draft_id", e.target.value);
+              }}
+              style={{
+                width: "100%", background: "#1a1a28", border: "1px solid #2a2a3e",
+                color: selectedProposalId ? "#ddd" : "#444",
+                padding: "7px 8px", borderRadius: 6,
+                fontSize: 11, cursor: "pointer", outline: "none",
+              }}
+            >
+              <option value="">From sessionStorage…</option>
+              {proposals.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p._type === "build" ? "✦ " : "✍ "}
+                  {p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title}
+                </option>
+              ))}
+            </select>
+            {activeProposal && (
+              <p style={{ color: "#444", fontSize: 9, margin: "4px 0 0", lineHeight: 1.5 }}>
+                {activeProposal.proposal_context?.organization_name || ""}
+                {activeProposal.matches_id?.length
+                  ? ` · ${activeProposal.matches_id.length} matches`
+                  : ""}
+              </p>
+            )}
+          </div>
+
           {/* Grant picker */}
           <div style={{ padding: "14px 14px 10px", borderBottom: "1px solid #1e1e2e" }}>
             <p style={{ color: "#333", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 7px" }}>Grant</p>
@@ -441,10 +587,10 @@ export default function Draft() {
             <div style={{ width: 760, background: "#fff", borderRadius: 2, padding: "100px 80px", textAlign: "center", boxShadow: "0 4px 32px rgba(0,0,0,0.4)" }}>
               <p style={{ fontSize: 40, marginBottom: 16 }}>✍</p>
               <p style={{ fontWeight: 800, color: "#1a1a2e", fontSize: 22, marginBottom: 8 }}>
-                {!proposal ? "Upload a proposal first" : !selectedGrant ? "Select a grant to begin" : "Ready to draft"}
+                {!resolvedProposal ? "Upload or select a saved proposal" : !selectedGrant ? "Select a grant to begin" : "Ready to draft"}
               </p>
               <p style={{ color: "#888", fontSize: 14, maxWidth: 340, margin: "0 auto 24px" }}>
-                {!proposal ? "Go to Upload to parse your organization's proposal." : "Choose a target grant from the left panel and click Draft."}
+                {!resolvedProposal ? "Go to Upload to parse your proposal, or pick a saved one below." : "Choose a target grant from the left panel and click Draft."}
               </p>
               {!proposal && (
                 <button onClick={() => navigate("/upload")} style={{ background: "#7c6fef", border: "none", color: "#fff", padding: "12px 28px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>

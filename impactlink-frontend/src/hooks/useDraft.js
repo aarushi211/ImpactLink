@@ -1,18 +1,11 @@
 import { useState } from "react";
 
 /**
- * useDraft
- * Calls /api/draft/stream and updates sections as each one arrives.
+ * useDraft — streams proposal sections from /api/draft/stream.
+ * Saving is handled by the Draft page via useWorkStore after streaming completes.
  *
- * Returns:
- *   draft(proposal, grant)  — start drafting
- *   sections                — { key: { title, content } } built up as stream arrives
- *   sectionOrder            — array of keys in order
- *   activeSection           — key of section currently being written
- *   loading                 — true while streaming
- *   done                    — true when all sections complete
- *   error                   — error string or null
- *   reset()                 — clear all state
+ * draft(proposal, grant)   — start streaming
+ * sections / sectionOrder / activeSection / loading / done / error / reset
  */
 export default function useDraft() {
   const [sections,      setSections]      = useState({});
@@ -34,15 +27,14 @@ export default function useDraft() {
       const res = await fetch(
         `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/draft/stream`,
         {
-          method: "POST",
+          method:  "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ proposal, grant }),
+          body:    JSON.stringify({ proposal, grant }),
         }
       );
-
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-      const reader = res.body.getReader();
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
 
       while (true) {
@@ -50,19 +42,15 @@ export default function useDraft() {
         if (streamDone) break;
 
         const lines = decoder.decode(value).split("\n").filter(Boolean);
-
         for (const line of lines) {
           try {
             const chunk = JSON.parse(line);
-
             if (chunk.done) {
               setDone(true);
               setActiveSection(null);
               setLoading(false);
               return;
             }
-
-            // Add section as it arrives
             setActiveSection(chunk.key);
             setSections(prev => ({
               ...prev,
@@ -71,9 +59,7 @@ export default function useDraft() {
             setSectionOrder(prev =>
               prev.includes(chunk.key) ? prev : [...prev, chunk.key]
             );
-          } catch (_) {
-            // Partial chunk — skip
-          }
+          } catch (_) {}
         }
       }
     } catch (err) {

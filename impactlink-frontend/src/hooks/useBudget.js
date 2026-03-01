@@ -2,19 +2,15 @@ import { useState, useCallback } from "react";
 import api from "../services/api";
 
 /**
- * useBudget — manages the full budget lifecycle
+ * useBudget — manages budget generation and refinement.
+ * Saving is handled by the Budget page via useWorkStore.
  *
- * generate(proposal, maxBudget)  → calls POST /api/budget/generate
- * refine(currentBudget, message) → calls POST /api/budget/refine
- *
- * State:
- *   budget      – { items: [...], total_requested, locality_explanation } | null
- *   loading     – "generating" | "refining" | null
- *   error       – string | null
+ * generate(proposal, maxBudget)
+ * refine(currentBudget, userRequest)
  */
 export default function useBudget() {
   const [budget,  setBudget]  = useState(null);
-  const [loading, setLoading] = useState(null);   // "generating" | "refining" | null
+  const [loading, setLoading] = useState(null); // "generating" | "refining" | null
   const [error,   setError]   = useState(null);
 
   const generate = useCallback(async (proposal, maxBudget) => {
