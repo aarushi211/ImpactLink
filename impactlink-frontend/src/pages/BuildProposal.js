@@ -268,6 +268,7 @@ export default function BuildProposal() {
   const [secOrder,  setSecOrder]  = useState([]);
 
   const [selectedGrantId, setSelectedGrant] = useState("");
+  const [proposalName,   setProposalName]   = useState("");
 
   const chatEndRef = useRef(null);
   const inputRef   = useRef(null);
@@ -344,7 +345,7 @@ export default function BuildProposal() {
               if (profile) {
                 const selectedG = grants.find(g => String(g.grant_id) === String(selectedGrantId));
                 saveBuild({
-                  title:         selectedG?.title || profile?.org_name || "Built Proposal",
+                  title:         proposalName.trim() || selectedG?.title || profile?.org_name || "Built Proposal",
                   org_name:      profile?.org_name || "",
                   grant_title:   selectedG?.title || "",
                   sections:      chunk.sections,
@@ -432,7 +433,7 @@ export default function BuildProposal() {
           }).catch(() => {}); // non-fatal if patch endpoint not wired
         }
         await saveBuild({
-          title:         selectedG?.title || profile?.org_name || "Built Proposal",
+          title:         proposalName.trim() || selectedG?.title || profile?.org_name || "Built Proposal",
           org_name:      profile?.org_name || "",
           grant_title:   selectedG?.title || "",
           sections:      cleanSections,
@@ -501,7 +502,7 @@ export default function BuildProposal() {
       y += titleLines.length * 28 + 8;
 
       doc.setFontSize(11); doc.setFont("helvetica","normal"); doc.setTextColor(100,100,120);
-      doc.text(`${selectedGrant?.agency || ""}  ·  ${profile?.org_name || "Your Organization"}`, mL, y);
+      doc.text(`${selectedGrant?.agency || ""}  ·  ${proposalName.trim() || profile?.org_name || "Your Organization"}`, mL, y);
       y += 12;
       doc.setDrawColor(200,200,220); doc.setLineWidth(0.5); doc.line(mL, y, pW-mR, y);
       y += 28;
@@ -546,7 +547,7 @@ export default function BuildProposal() {
         doc.text(`Page ${i} of ${total}`, pW-mR, pH-16, {align:"right"});
       }
 
-      const slug = (profile?.org_name || "proposal").replace(/\s+/g,"_").toLowerCase();
+      const slug = (proposalName.trim() || profile?.org_name || "proposal").replace(/\s+/g,"_").toLowerCase();
       doc.save(`${slug}_built_proposal.pdf`);
     } catch(e) { console.error(e); } finally { setPdfLoad(false); }
   };
@@ -628,9 +629,26 @@ export default function BuildProposal() {
           <button onClick={() => navigate(-1)}
             style={{ background:"none",border:"none",color:"#555",
               fontSize:13,cursor:"pointer",padding:0 }}>←</button>
-          <span style={{ color:"#fff",fontWeight:700,fontSize:13 }}>
-            Build a Proposal
-          </span>
+          {hasStarted ? (
+            <input
+              value={proposalName}
+              onChange={e => setProposalName(e.target.value)}
+              placeholder="Proposal name…"
+              style={{
+                background: "none", border: "none",
+                borderBottom: "1px solid #2a2a4e",
+                color: "#fff", fontWeight: 700, fontSize: 13,
+                outline: "none", padding: "0 0 1px",
+                minWidth: 120, maxWidth: 260,
+              }}
+              onFocus={e => e.target.style.borderBottomColor = "var(--accent)"}
+              onBlur={e => e.target.style.borderBottomColor = "#2a2a4e"}
+            />
+          ) : (
+            <span style={{ color:"#fff",fontWeight:700,fontSize:13 }}>
+              {proposalName.trim() || "Build a Proposal"}
+            </span>
+          )}
           {totalSections > 0 && (
             <span style={{
               background: allApproved ? "#0d2e1a" : "#1a1a28",
@@ -732,6 +750,33 @@ export default function BuildProposal() {
                         <span style={{ fontSize:12 }}>{STEP_ICONS[i]}</span> {s}
                       </span>
                     ))}
+                  </div>
+
+                  {/* Proposal name input */}
+                  <div style={{ marginBottom: 14, textAlign: "left" }}>
+                    <label style={{ color: "#555", fontSize: 11, fontWeight: 700,
+                      textTransform: "uppercase", letterSpacing: "0.06em",
+                      display: "block", marginBottom: 6 }}>
+                      Proposal Name <span style={{ color: "#333355", fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    <input
+                      value={proposalName}
+                      onChange={e => setProposalName(e.target.value)}
+                      placeholder={`${profile?.org_name || "Your Org"} — ${new Date().getFullYear()} Grant Proposal`}
+                      style={{
+                        width: "100%", background: "#111120",
+                        border: "1px solid #2a2a4e",
+                        borderRadius: 9, padding: "10px 14px",
+                        color: "#e0e0f0", fontSize: 13,
+                        outline: "none", boxSizing: "border-box",
+                        transition: "border-color 0.15s",
+                      }}
+                      onFocus={e => e.target.style.borderColor = "var(--accent)"}
+                      onBlur={e => e.target.style.borderColor = "#2a2a4e"}
+                    />
+                    <p style={{ color: "#333355", fontSize: 10, margin: "4px 0 0" }}>
+                      This name will appear in your Dashboard and on the PDF cover.
+                    </p>
                   </div>
 
                   <button

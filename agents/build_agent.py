@@ -47,7 +47,10 @@ STEPS = [
         "title":      "Key Activities",
         "section_map": "proposed_solution",
         "question":   "Great. Now let's get specific. **What will your team actually do?** List the main activities — workshops, trainings, services, infrastructure — and roughly how often. Think of this as your project's action plan.",
-        "draft_instructions": "Describe the project activities in detail. For each key activity, explain what will happen, who will be involved, and what the expected outcome is. Show clear cause-effect logic between activities and impact.",
+        "draft_instructions": """Describe the project activities in detail. Lead with an activities summary table in markdown:
+| Activity | Frequency | Who Leads | # Served | Outcome |
+|----------|-----------|-----------|---------|---------|
+Fill one row per activity using the user's stated activities. Then write the narrative explanation for each. Show clear cause-effect logic between activities and impact.""",
     },
     {
         "key":        "beneficiaries",
@@ -68,14 +71,21 @@ STEPS = [
         "title":      "Goals & Measurement",
         "section_map": "evaluation_plan",
         "question":   "How will you know you've succeeded? **What are your 3–5 measurable goals or KPIs?** For example: '200 youth trained', '80% pass rate', '3 partner schools onboarded'. Be as specific as possible.",
-        "draft_instructions": "Write an evaluation plan. List 3–5 specific, measurable KPIs with targets. Explain data collection methods, who is responsible for tracking, and the reporting timeline.",
+        "draft_instructions": """Write an evaluation plan. Start with a SMART goals table in markdown:
+| Goal | Metric | Baseline | Target | Timeline |
+|------|--------|----------|--------|----------|
+Then list 3–5 KPIs using the user's stated goals. Explain data collection methods, who is responsible, and the reporting timeline. Derive table values from user inputs.""",
     },
     {
         "key":        "budget",
         "title":      "Budget Overview",
         "section_map": "budget_narrative",
         "question":   "Let's talk money. **What are your main cost categories?** For example: staff salaries, training materials, venue rental, technology, travel. Give me rough estimates or percentages if you have them.",
-        "draft_instructions": "Write a budget narrative justifying each cost category. Explain why each expense is necessary, reasonable, and directly tied to project activities. Reference the geographic cost context.",
+        "draft_instructions": """Write a budget narrative. Lead with a budget breakdown table in markdown:
+| Category | Est. Amount (USD) | % of Total | Notes |
+|----------|------------------|------------|-------|
+Use rows for: Personnel, Fringe, Consultants, Supplies, Travel, Indirect Costs.
+Derive amounts from user's stated figures. Then write the prose justification for each line.""",
     },
     {
         "key":        "sustainability",
@@ -95,13 +105,18 @@ Your task: take the user's raw answer and turn it into polished, professional gr
 Rules:
 - Write in clear, evidence-based, compelling grant language
 - Be specific — use the user's details, don't invent facts
-- 180–280 words for this section
-- Return ONLY the section text — no headers, no JSON, no preamble"""),
+- 180–280 words for this section (tables do not count toward word count)
+- USE MARKDOWN TABLES where specified — standard markdown format with | separators
+- Return ONLY the section content — markdown tables and headers ARE allowed
+- Do NOT add JSON, preamble, or meta-commentary"""),
     ("user", """Section: {section_title}
 Instructions: {instructions}
 
 Organization context:
 {org_context}
+
+User's specific data inputs:
+{user_values}
 
 User's answer for this section:
 {user_answer}
@@ -143,6 +158,24 @@ def _org_context(profile: dict) -> str:
 
 
 # ── Main streaming function ────────────────────────────────────
+def _extract_user_values(profile: dict, answered: dict) -> str:
+    """Pull concrete numbers the user mentioned for table population."""
+    import re
+    lines = []
+    if profile.get("location"):
+        lines.append(f"Location: {profile['location']}")
+    if profile.get("key_activities"):
+        lines.append(f"Activities: {', '.join(profile['key_activities'])}")
+    # Scan answered values for numbers
+    for key, answer in answered.items():
+        # Pull out dollar amounts, percentages, and counts
+        numbers = re.findall(r'\$[\d,]+|\d+%|\d{2,}\s+(?:people|participants|youth|families|units|staff)', answer)
+        if numbers:
+            lines.append(f"{key}: {', '.join(numbers[:4])}")
+    return "\n".join(lines) if lines else "Estimate reasonably from context."
+
+
+
 
 def build_proposal_stream(answers: list, profile: dict, grant: dict = None):
     """
@@ -178,10 +211,12 @@ def build_proposal_stream(answers: list, profile: dict, grant: dict = None):
             return
 
         # This step has an answer — draft the section
+        user_values = _extract_user_values(profile, answered)
         response = chain.invoke({
             "section_title": step["title"],
             "instructions":  step["draft_instructions"],
             "org_context":   org_ctx,
+            "user_values":   user_values,
             "user_answer":   answered[key],
         })
 

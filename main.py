@@ -8,7 +8,7 @@ import asyncio
 from services.parser import parse_proposal
 from agents.scoring_agent import score_proposal
 from agents.draft_agent import draft_proposal, draft_proposal_stream
-from services.vector_store import find_similar_grants
+from services.vector_store import find_similar_grants, topic_search_grants
 from services.budget_generator import generate_budget
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, login, get_profile, update_profile, list_collab_profiles
@@ -61,6 +61,15 @@ class LoginRequest(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     ngo_id:  str
     updates: dict
+
+
+
+
+class TopicSearchRequest(BaseModel):
+    query:   str
+    top_k:   int = 10
+    ngo_id:  str = ""
+
 
 class CollabMatchRequest(BaseModel):
     proposal:    dict
@@ -232,7 +241,7 @@ async def collab_match(req: CollabMatchRequest):
     # Exclude the requesting NGO from results
     if req.ngo_id:
         all_ngos = [n for n in all_ngos if n["id"] != req.ngo_id]
-    results = await asyncio.to_thread(find_similar_ngos, req.proposal, all_ngos, req.top_k)
+    results = await asyncio.to_thread(find_similar_ngos, req.proposal, all_ngos, req.top_k, req.ngo_profile)
     return {"collabs": results}
 
 
@@ -339,3 +348,17 @@ def work_delete_budget(ngo_id: str, budget_id: str):
 @app.get("/api/work/summary/{ngo_id}")
 def work_summary(ngo_id: str):
     return get_summary(ngo_id)
+
+# ── Agentic Topic Search ───────────────────────────────────────────────────
+
+@app.post("/api/grants/search")
+async def grants_topic_search(req: TopicSearchRequest):
+    """
+    Agentic semantic search — user types a topic/keyword and the AI:
+    1. Embeds the query text
+    2. Retrieves top candidates from ChromaDB
+    3. LLM re-ranks and explains why each grant matches the topic
+    Returns top 10 grants with match explanations.
+    """
+    results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k)
+    return {"grants": results, "query": req.query}

@@ -64,7 +64,7 @@ export default function Draft() {
 
   const { profile } = useAuth();
   const { grants, proposal } = useGrants();
-  const { draft, sections, sectionOrder, activeSection, loading, done, error, reset } = useDraft();
+  const { draft, load, sections, sectionOrder, activeSection, loading, done, error, reset } = useDraft();
   const { saveDraft, updateDraft, drafts, proposals } = useWorkStore();
   const [savedDraftId, setSavedDraftId] = useState(null);
   const [saveStatus,   setSaveStatus]   = useState(null); // "saved" | "error" | null
@@ -77,6 +77,8 @@ export default function Draft() {
   const [editedContent,   setEditedContent]   = useState({});
   const [wordCounts,      setWordCounts]      = useState({});
   const [pdfLoading,      setPdfLoading]      = useState(false);
+  const [draftScore,      setDraftScore]      = useState(null);   // rescored after draft completes
+  const [rescoring,       setRescoring]       = useState(false);  // spinner while scoring
 
   const textareaRef = useRef(null);
   const selectedGrant    = grants.find(g => String(g.grant_id) === String(selectedGrantId));
@@ -97,12 +99,14 @@ export default function Draft() {
     if (!loadId || !drafts.length) return;
     const saved = drafts.find(d => d.id === loadId);
     if (!saved) return;
-    // Restore sections + grant selection
     const restoredSections = saved.sections || {};
     const restoredOrder    = saved.section_order || Object.keys(restoredSections);
+    // Restore grant + save ID
     if (saved.grant_id) setSelectedGrantId(saved.grant_id);
     setSavedDraftId(saved.id);
-    // Populate editedContent from saved sections
+    // Populate useDraft state so editor panels render immediately (done=true)
+    load(restoredSections, restoredOrder);
+    // Also seed editedContent so edits work from the start
     const ec = {};
     const wc = {};
     restoredOrder.forEach(key => {
@@ -127,8 +131,12 @@ export default function Draft() {
 
   // Auto-save draft when streaming finishes
   useEffect(() => {
-    if (done && sectionOrder.length > 0 && profile) {
-      handleSave();
+    if (done && sectionOrder.length > 0) {
+      if (profile) handleSave();
+      // Rescore the draft against the specific grant
+      if (selectedGrant && sections && Object.keys(sections).length > 0) {
+        runRescore(sections, selectedGrant);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done]);
@@ -161,12 +169,54 @@ export default function Draft() {
     }, 0);
   };
 
+
+  // ── Rescore after draft completes ──────────────────────────────────────
+  // The draft was written specifically for selectedGrant, so we score the
+  // drafted text *against* that grant to reflect tailoring, not just the
+  // raw proposal.
+  const runRescore = async (draftedSections, grant) => {
+    if (!grant || !draftedSections || Object.keys(draftedSections).length === 0) return;
+    setRescoring(true);
+    try {
+      // Build a combined proposal object merging original context + drafted text
+      const draftText = Object.values(draftedSections)
+        .map(s => s.content || "").join("\n\n");
+      const scoringPayload = {
+        ...resolvedProposal,
+        drafted_text:    draftText,
+        target_grant:    grant.title,
+        target_agency:   grant.agency,
+        grant_focus:     grant.focus_areas || "",
+        grant_ceiling:   grant.award_ceiling || 0,
+        application_tip: grant.application_tip || "",
+      };
+      const res = await api.post("/api/score", { proposal: scoringPayload });
+      const s = res.data?.scoring || res.data;
+      setDraftScore({
+        overall:         s.overall_score      || 0,
+        clarity:         s.clarity_score      || 0,
+        impact:          s.impact_score       || 0,
+        budget:          s.budget_score       || 0,
+        locality:        s.locality_alignment || 0,
+        funder_readiness: s.funder_readiness  || "moderate",
+        strengths:       s.strengths          || [],
+        weaknesses:      s.weaknesses         || [],
+        recommendations: s.recommendations    || [],
+      });
+    } catch (e) {
+      console.error("Rescore failed:", e);
+    } finally {
+      setRescoring(false);
+    }
+  };
+
   const handleDraft = () => {
     if (!resolvedProposal || !selectedGrant) return;
     setEditedContent({});
     setActiveTab(null);
     setSavedDraftId(null);
     setSaveStatus(null);
+    setDraftScore(null);
     reset();
     draft(resolvedProposal, selectedGrant);
   };
@@ -348,8 +398,12 @@ export default function Draft() {
             {selectedGrant ? selectedGrant.title : "New Proposal"}
           </span>
           {selectedGrant && (
-            <span style={{ background: "#1e1e30", color: "var(--accent)", border: "1px solid #2e2e4e", borderRadius: 5, padding: "2px 8px", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-              {selectedGrant.similarity_score}% match
+            <span style={{ background: "#1e1e30",
+              color: draftScore ? (draftScore.overall >= 70 ? "var(--green)" : draftScore.overall >= 45 ? "var(--accent)" : "var(--red)") : "var(--accent)",
+              border: "1px solid #2e2e4e", borderRadius: 5, padding: "2px 8px", fontSize: 10, fontWeight: 700, flexShrink: 0,
+              transition: "color 0.3s",
+            }}>
+              {rescoring ? "Scoring…" : draftScore ? `${draftScore.overall}% draft score` : `${selectedGrant.similarity_score}% match`}
             </span>
           )}
         </div>
@@ -736,9 +790,68 @@ export default function Draft() {
             </p>
 
             <div style={{ background: "#1a1a28", borderRadius: 6, padding: "8px 10px", marginBottom: 12 }}>
-              <p style={{ color: "#444", fontSize: 9, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>Match</p>
-              <p style={{ color: "var(--accent)", fontWeight: 800, fontSize: 18, margin: 0 }}>{selectedGrant.similarity_score}%</p>
+              <p style={{ color: "#444", fontSize: 9, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>
+                {draftScore ? "Draft Score" : "Match"}
+              </p>
+              {rescoring ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 14, height: 14, border: "2px solid #2a2a4e",
+                    borderTop: "2px solid var(--accent)", borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite" }} />
+                  <span style={{ color: "#555", fontSize: 11 }}>Scoring…</span>
+                  <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
+                </div>
+              ) : draftScore ? (
+                <>
+                  <p style={{ color: draftScore.overall >= 70 ? "var(--green)" : draftScore.overall >= 45 ? "var(--accent)" : "var(--red)",
+                    fontWeight: 800, fontSize: 22, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+                    {draftScore.overall}<span style={{ fontSize: 12, fontWeight: 400 }}>%</span>
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    {[
+                      ["Clarity",  draftScore.clarity],
+                      ["Impact",   draftScore.impact],
+                      ["Budget",   draftScore.budget],
+                      ["Locality", draftScore.locality],
+                    ].map(([label, val]) => (
+                      <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ color: "#333355", fontSize: 9, width: 42 }}>{label}</span>
+                        <div style={{ flex: 1, height: 3, background: "#2a2a4e", borderRadius: 99 }}>
+                          <div style={{ width: `${val}%`, height: "100%", borderRadius: 99,
+                            background: val >= 70 ? "var(--green)" : val >= 45 ? "var(--accent)" : "var(--red)",
+                            transition: "width 0.6s ease" }} />
+                        </div>
+                        <span style={{ color: "#444", fontSize: 9, width: 22, textAlign: "right" }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ margin: "6px 0 0", fontSize: 9, fontWeight: 700, textTransform: "uppercase",
+                    color: draftScore.funder_readiness === "strong" ? "var(--green)" : draftScore.funder_readiness === "moderate" ? "var(--accent)" : "var(--red)" }}>
+                    {draftScore.funder_readiness}
+                  </p>
+                </>
+              ) : (
+                <p style={{ color: "var(--accent)", fontWeight: 800, fontSize: 18, margin: 0 }}>{selectedGrant.similarity_score}%</p>
+              )}
             </div>
+
+            {/* Draft score insights */}
+            {draftScore && draftScore.strengths?.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ color: "#2a2a3e", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 5px" }}>Strengths</p>
+                {draftScore.strengths.slice(0,2).map((s, i) => (
+                  <p key={i} style={{ color: "#22c55e", fontSize: 10, margin: "0 0 3px", lineHeight: 1.4 }}>✓ {s}</p>
+                ))}
+              </div>
+            )}
+            {draftScore && draftScore.weaknesses?.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ color: "#2a2a3e", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 5px" }}>To Improve</p>
+                {draftScore.weaknesses.slice(0,2).map((w, i) => (
+                  <p key={i} style={{ color: "#f59e0b", fontSize: 10, margin: "0 0 3px", lineHeight: 1.4 }}>⚠ {w}</p>
+                ))}
+              </div>
+            )}
 
             {selectedGrant.close_date && (
               <p style={{ color: "var(--red)", fontSize: 10, fontWeight: 700, marginBottom: 12 }}>⏰ Due {selectedGrant.close_date}</p>

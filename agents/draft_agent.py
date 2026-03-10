@@ -264,22 +264,25 @@ scored because funders want to know: will we know if this worked?
 
 STRUCTURE:
 
+SMART GOALS TABLE — Start with this markdown table:
+| Goal | Metric | Baseline | Target | Timeline |
+|------|--------|----------|--------|----------|
+
+Derive rows from the user's stated KPIs. Be SMART: Specific, Measurable,
+Achievable, Relevant, Time-bound. Then continue with:
+
 OPENING STATEMENT:
 State the evaluation approach in one sentence: who will conduct evaluation (internal 
 staff, external evaluator, or both), what framework will be used (logic model, 
 theory of change, etc.).
 
-KPI TABLE (write as prose, not a table):
-List 4–6 specific KPIs. For each, state:
-- Metric name
-- Baseline (what is the current level before intervention)
-- Target (what will it be after)
-- Data source (how will you measure it — surveys, admin records, test scores, etc.)
-- Frequency (monthly, quarterly, annually)
+KPI TABLE — Output as a REAL markdown table with these exact 5 columns:
+| KPI | Baseline | Target | Data Source | Frequency |
+|-----|----------|--------|-------------|-----------|
 
-Example: "We will track the rate of affordable unit completion quarterly, with a 
-baseline of 0 units and a target of 12 completed units by project end, measured 
-through certificate of occupancy records submitted to the County recorder."
+List 4–6 specific, measurable KPIs drawn from the user's stated goals.
+Each row must be concrete and tied to a project activity.
+After the table, write 1–2 sentences interpreting the most important KPI.
 
 DATA COLLECTION METHODS:
 Describe 2–3 specific data collection tools: participant surveys (include response 
@@ -302,7 +305,14 @@ is responsible for preparing them.""",
         "instructions": """The budget narrative is where many proposals die. Reviewers check: Do the 
 numbers match the activities? Are costs reasonable and justified? Is this realistic?
 
-BUDGET CATEGORIES TO COVER (write in prose, one paragraph per category):
+BUDGET SUMMARY TABLE — Lead with this markdown table before the prose narrative:
+| Category | Amount (USD) | % of Total | Justification (brief) |
+|----------|-------------|------------|----------------------|
+
+Fill rows for: Personnel, Fringe/Benefits, Consultants, Supplies & Equipment,
+Travel, Other Direct Costs, Indirect/Overhead.
+Derive amounts from the user's stated budget figures or estimate reasonably.
+After the table, write the detailed prose narrative for each category:
 
 1. PERSONNEL (typically 50–70% of budget):
 For each position: title, FTE percentage, annual salary, total cost, and specific 
@@ -419,6 +429,9 @@ Writing instructions:
 ━━━ TARGET GRANT / FUNDER ━━━
 {grant}
 
+━━━ USER'S SPECIFIC DATA INPUTS ━━━
+{user_values}
+
 ━━━ CRITICAL RULES FOR THIS RESPONSE ━━━
 1. Use the funder's exact program language where possible — mirror their vocabulary
 2. Every claim needs a number, a name, or a date — no vague statements
@@ -426,13 +439,40 @@ Writing instructions:
 4. Demonstrate equity lens appropriate for CA state funding
 5. Do NOT start with a generic opener like "This proposal seeks to..." 
    — open with the most compelling, specific sentence possible
-6. Return ONLY the section prose — no headers, no JSON, no meta-commentary
+6. USE MARKDOWN TABLES where instructed — format them exactly as standard markdown
+   with header row, separator row (|---|---|), and data rows
+7. Return ONLY the section content — no JSON, no meta-commentary outside the section
+   Headers and tables ARE allowed where the section instructions require them
 
 Write the section now:""")
 ])
 
 
 # ── Draft functions ───────────────────────────────────────────────────────────
+
+def _extract_user_values(proposal: dict) -> str:
+    """Pull concrete numbers and facts from proposal for table population."""
+    lines = []
+    if proposal.get("total_budget"):
+        lines.append(f"Total budget: ${proposal['total_budget']:,}")
+    if proposal.get("target_beneficiaries"):
+        lines.append(f"Target beneficiaries: {', '.join(proposal['target_beneficiaries'])}")
+    if proposal.get("key_activities"):
+        lines.append(f"Key activities: {', '.join(proposal['key_activities'])}")
+    if proposal.get("kpis"):
+        lines.append(f"KPIs: {', '.join(proposal['kpis'])}")
+    if proposal.get("budget_breakdown"):
+        for k, v in proposal["budget_breakdown"].items():
+            lines.append(f"  {k}: ${v:,}" if isinstance(v, (int, float)) else f"  {k}: {v}")
+    if proposal.get("geographic_focus"):
+        lines.append(f"Geography: {', '.join(proposal['geographic_focus'])}")
+    if proposal.get("timeline"):
+        lines.append(f"Timeline: {proposal['timeline']}")
+    if proposal.get("number_served"):
+        lines.append(f"People served: {proposal['number_served']}")
+    return "\n".join(lines) if lines else "Use reasonable estimates based on proposal context."
+
+
 
 def _build_grant_context(grant: dict) -> dict:
     """Build a lean but complete grant context for the prompt."""
@@ -462,12 +502,15 @@ def draft_proposal(proposal: dict, grant: dict) -> dict:
     sections = {}
 
     for section in SECTIONS:
+        # Extract numeric/table values from proposal for table population
+        user_values = _extract_user_values(proposal)
         response = chain.invoke({
             "section_title": section["title"],
             "word_target":   section["word_target"],
             "instructions":  section["instructions"],
             "proposal":      json.dumps(proposal, indent=2),
             "grant":         json.dumps(grant_ctx, indent=2),
+            "user_values":   user_values,
         })
         sections[section["key"]] = {
             "title":   section["title"],
@@ -494,12 +537,15 @@ def draft_proposal_stream(proposal: dict, grant: dict):
     grant_ctx = _build_grant_context(grant)
 
     for i, section in enumerate(SECTIONS):
+        # Extract numeric/table values from proposal for table population
+        user_values = _extract_user_values(proposal)
         response = chain.invoke({
             "section_title": section["title"],
             "word_target":   section["word_target"],
             "instructions":  section["instructions"],
             "proposal":      json.dumps(proposal, indent=2),
             "grant":         json.dumps(grant_ctx, indent=2),
+            "user_values":   user_values,
         })
 
         yield json.dumps({

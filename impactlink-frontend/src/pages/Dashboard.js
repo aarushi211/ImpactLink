@@ -174,6 +174,7 @@ export default function Dashboard() {
     }
   };
 
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Nav />
@@ -232,7 +233,12 @@ export default function Dashboard() {
                 )}
               </div>
               <button
-                onClick={() => navigate("/grants")}
+                onClick={() => {
+                  sessionStorage.removeItem("grants_aiResults");
+                  sessionStorage.removeItem("grants_aiQuery");
+                  sessionStorage.setItem("grants_searchMode", "filter");
+                  navigate("/grants");
+                }}
                 style={{ background: "transparent", border: "1px solid var(--border)",
                   color: "var(--accent)", padding: "8px 18px", borderRadius: 8,
                   fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
@@ -418,6 +424,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

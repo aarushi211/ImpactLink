@@ -77,5 +77,15 @@ export default function useDraft() {
     setError(null);
   };
 
-  return { draft, sections, sectionOrder, activeSection, loading, done, error, reset };
+  // Load a previously saved draft directly into the editor — no streaming needed
+  const load = (savedSections, savedOrder) => {
+    setSections(savedSections || {});
+    setSectionOrder(savedOrder || Object.keys(savedSections || {}));
+    setActiveSection(null);
+    setDone(true);    // marks complete so editor panels render immediately
+    setLoading(false);
+    setError(null);
+  };
+
+  return { draft, load, sections, sectionOrder, activeSection, loading, done, error, reset };
 }
