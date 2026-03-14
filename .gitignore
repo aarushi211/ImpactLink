@@ -8,3 +8,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+test_*
+codebase_overview.md
+apitest.py
