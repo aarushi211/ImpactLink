@@ -462,8 +462,7 @@ def _extract_user_values(proposal: dict) -> str:
     if proposal.get("kpis"):
         lines.append(f"KPIs: {', '.join(proposal['kpis'])}")
     if proposal.get("budget_breakdown"):
-        for k, v in proposal["budget_breakdown"].items():
-            lines.append(f"  {k}: ${v:,}" if isinstance(v, (int, float)) else f"  {k}: {v}")
+        lines.append(f"Budget breakdown: {', '.join(proposal['budget_breakdown'])}")
     if proposal.get("geographic_focus"):
         lines.append(f"Geography: {', '.join(proposal['geographic_focus'])}")
     if proposal.get("timeline"):

@@ -47,7 +47,7 @@ def grant_to_text(grant: dict) -> str:
 
 
 def load_grants_to_vectordb():
-    with open(GRANTS_FILE, "r") as f:
+    with open(GRANTS_FILE, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
     grants = raw.get("grants", raw) if isinstance(raw, dict) else raw

@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from services.budget_generator import LocalizedBudget 
+from services.budget.models import LocalizedBudget 
 import json
 
 CHAT_BUDGET_PROMPT = ChatPromptTemplate.from_messages([

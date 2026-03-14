@@ -31,22 +31,31 @@ export default function useUpload() {
 
     try {
       const data = await uploadProposal(file);
+
+      if (!data.proposal) {
+        setError("Upload succeeded but returned no proposal data.");
+        return false;
+      }
+
       setProposal(data.proposal);
       setScoring(data.scoring);
       const matchList = data.matches || [];
       setMatches(matchList);
 
-      // Always persist in sessionStorage for immediate cross-page access
+      // Persist in sessionStorage for immediate cross-page access
       sessionStorage.setItem("proposal", JSON.stringify(data.proposal));
       sessionStorage.setItem("scoring",  JSON.stringify(data.scoring));
       sessionStorage.setItem("matches",  JSON.stringify(matchList));
 
       // Persist to backend so this upload appears in Saved Work
       if (ngoId) {
-        const matchIds   = matchList.map(m => String(m.grant_id));
-        const orgName    = data.proposal?.organization_name || "Proposal";
-        const causeArea  = data.proposal?.cause_area || "";
-        const title      = `${orgName}${causeArea ? ` — ${causeArea}` : ""}`;
+        const matchIds = matchList.map(m => String(m.grant_id));
+        // Use the uploaded filename (minus extension) as the title
+        const fileBaseName = file?.name
+          ? file.name.replace(/\.(pdf|docx)$/i, "")
+          : null;
+        const orgName  = data.proposal?.organization_name || "Proposal";
+        const title    = fileBaseName || orgName;
 
         try {
           const res = await api.post("/api/work/drafts", {
@@ -62,14 +71,17 @@ export default function useUpload() {
           });
           const saved = res.data;
           setSavedId(saved.id);
-          // Store the draft id so Draft page can link back to it
           sessionStorage.setItem("upload_draft_id", saved.id);
         } catch (saveErr) {
           console.warn("Could not save upload to work store:", saveErr);
+          // Don't fail the whole upload just because work-store save failed
         }
       }
+
+      return true;  // ✅ signal success to caller
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Is the backend running?");
+      return false; // ❌ signal failure
     } finally {
       setLoading(false);
     }

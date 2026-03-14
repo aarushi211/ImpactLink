@@ -2,9 +2,11 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import useUpload from "../hooks/useUpload";
+import { useAuth } from "../context/AuthContext";
 
 export default function Upload() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { upload, loading, error } = useUpload();
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -21,9 +23,9 @@ export default function Upload() {
 
   const handleSubmit = async () => {
     if (!selectedFile) return;
-    await upload(selectedFile);
-    // On success, go to grants page with real data
-    navigate("/grants");
+    const ok = await upload(selectedFile, profile?.id);
+    // Only navigate if the upload was successful and we have real data
+    if (ok) navigate("/grants");
   };
 
   return (

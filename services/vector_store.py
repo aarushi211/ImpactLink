@@ -66,7 +66,7 @@ def _get_resources():
     global _embedding_model, _collection
     if _embedding_model is None:
         _embedding_model = SentenceTransformer(MODEL_NAME)
-        client      = chromadb.PersistentClient(path=CHROMA_PATH)
+        client = chromadb.PersistentClient(path=CHROMA_PATH)
         _collection = client.get_collection(COLLECTION)
     return _embedding_model, _collection
 

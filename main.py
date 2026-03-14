@@ -9,7 +9,7 @@ from services.parser import parse_proposal
 from agents.scoring_agent import score_proposal
 from agents.draft_agent import draft_proposal, draft_proposal_stream
 from services.vector_store import find_similar_grants, topic_search_grants
-from services.budget_generator import generate_budget
+from services.budget import generate_budget
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, login, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
