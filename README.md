@@ -14,7 +14,6 @@
 
 </div>
 
----
 
 ## What is ImpactLink?
 
@@ -38,6 +37,10 @@ ImpactLink is an end-to-end AI platform that helps under-resourced NGOs compete 
 ---
 
 ## Architecture
+
+**Looking for the AI Engineering Deep-Dive?**  
+If you are a recruiter or developer, check out [AI_Architecture.md](./AI_Architecture.md) for detailed architecture diagrams, RAG pipeline specs, and a breakdown of our Agentic Budgeting system.
+
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -100,6 +103,13 @@ impactlink/
 │   │   ├── scoring_agent.py     # Scores proposal across 6 dimensions
 │   │   └── similarity_agent.py  # Funder similarity (legacy)
 │   ├── services/
+│   │   ├── budget.py            # Budget rules extraction
+│   │   |   ├── rules.py         # Grant rules extraction
+│   │   |   ├── compliance.py    # Validates grant rules against budget
+│   │   |   ├── models.py        # Defines structure of the data
+│   │   |   ├── personnel.py     # Calculates personnel cap
+│   │   |   └── generator.py     # Central Controller for budget generation
+│   │   ├── budget_chatbot.py    # Budget chatbot
 │   │   ├── vector_store.py      # ChromaDB RAG pipeline
 │   │   ├── ngo_collab.py        # NGO mission similarity matching
 │   │   ├── ngo_store.py         # Auth + profile CRUD
