@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+python-multipart
+langchain
+langchain-core
+langchain-community
+langchain-ollama
+langchain-groq
+pymupdf
+pypdf
+chromadb>=0.5.0
+pydantic-settings
+sentence-transformers
+pydantic>=2.0
+python-dotenv
+requests
+firebase-admin
