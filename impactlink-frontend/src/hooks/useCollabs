@@ -7,18 +7,16 @@ export default function useCollabs() {
   const [error, setError] = useState(null);
   const [hasData, setHasData] = useState(false);
 
-  /**
+    /**
    * @param {Record<string, any>} proposal
-   * @param {string|null} [ngoId]
    */
-  const fetchCollabs = useCallback(async (proposal, ngoId) => {
+  const fetchCollabs = useCallback(async (proposal) => {
     if (!proposal) return;
     setLoading(true);
     setError(null);
     try {
       const res = await api.post("/api/collab/match", {
         proposal: proposal,
-        ngo_id: ngoId || null,
         top_k: 6,
       });
       setCollabs(res.data.collabs || []);

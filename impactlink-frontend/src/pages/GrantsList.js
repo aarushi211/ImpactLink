@@ -144,8 +144,6 @@ export default function GrantsList() {
     setCollabError(null);
     api.post("/api/collab/match", {
       proposal: proposal,
-      ngo_id:      profile ? profile.id : null,
-      ngo_profile: profile || {},
       top_k: 6,
     })
       .then(function(res) {

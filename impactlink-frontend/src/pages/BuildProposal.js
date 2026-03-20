@@ -61,9 +61,15 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
     if (!feedback.trim()) return;
     setRevising(true);
     try {
+      const user = auth.currentUser;
+      const token = user ? await user.getIdToken() : null;
+
       const res = await fetch(`${API_BASE}/api/build/revise`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ current_draft: content, feedback }),
       });
       const data = await res.json();
@@ -284,9 +290,15 @@ export default function BuildProposal() {
   const callBuild = async (allAnswers) => {
     setLoading(true);
     try {
+      const user = auth.currentUser;
+      const token = user ? await user.getIdToken() : null;
+
       const res = await fetch(`${API_BASE}/api/build/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           answers:  allAnswers,
           profile:  profile || { org_name: "Your Organization" },
@@ -427,7 +439,6 @@ export default function BuildProposal() {
         if (savedBuildId) {
           // Update existing saved build with final approved content
           await api.patch("/api/work/builds", {
-            ngo_id:   profile.id,
             build_id: savedBuildId,
             sections: cleanSections,
           }).catch(() => {}); // non-fatal if patch endpoint not wired

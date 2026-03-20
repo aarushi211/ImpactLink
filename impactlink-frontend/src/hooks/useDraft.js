@@ -1,11 +1,8 @@
 import { useState } from "react";
+import { auth } from "../firebase";
 
 /**
  * useDraft — streams proposal sections from /api/draft/stream.
- * Saving is handled by the Draft page via useWorkStore after streaming completes.
- *
- * draft(proposal, grant)   — start streaming
- * sections / sectionOrder / activeSection / loading / done / error / reset
  */
 export default function useDraft() {
   const [sections,      setSections]      = useState({});
@@ -24,11 +21,17 @@ export default function useDraft() {
     setActiveSection(null);
 
     try {
+      const user = auth.currentUser;
+      const token = user ? await user.getIdToken() : null;
+
       const res = await fetch(
         `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/draft/stream`,
         {
           method:  "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+          },
           body:    JSON.stringify({ proposal, grant }),
         }
       );

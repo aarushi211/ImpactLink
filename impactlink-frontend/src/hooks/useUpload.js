@@ -1,17 +1,10 @@
 import { useState } from "react";
 import { uploadProposal } from "../services/api";
 import api from "../services/api";
+import { auth } from "../firebase";
 
 /**
  * useUpload — handles PDF upload and saves the result to the work store.
- *
- * After a successful upload we persist a "draft" record (no sections yet)
- * that carries:
- *   proposal_context  — the parsed proposal object
- *   matches_id        — array of matched grant_ids
- *
- * This lets Draft, Budget, and GrantsList pages reload the same context
- * from the DB instead of relying on ephemeral sessionStorage.
  */
 export default function useUpload() {
   const [proposal,   setProposal]   = useState(null);
@@ -21,7 +14,7 @@ export default function useUpload() {
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
 
-  const upload = async (file, ngoId = null) => {
+  const upload = async (file) => {
     setLoading(true);
     setError(null);
     setProposal(null);
@@ -47,10 +40,9 @@ export default function useUpload() {
       sessionStorage.setItem("scoring",  JSON.stringify(data.scoring));
       sessionStorage.setItem("matches",  JSON.stringify(matchList));
 
-      // Persist to backend so this upload appears in Saved Work
-      if (ngoId) {
+      // Persist to backend if user is logged in
+      if (auth.currentUser) {
         const matchIds = matchList.map(m => String(m.grant_id));
-        // Use the uploaded filename (minus extension) as the title
         const fileBaseName = file?.name
           ? file.name.replace(/\.(pdf|docx)$/i, "")
           : null;
@@ -59,7 +51,6 @@ export default function useUpload() {
 
         try {
           const res = await api.post("/api/work/drafts", {
-            ngo_id:           ngoId,
             title,
             grant_title:      "",
             grant_id:         "",
@@ -74,14 +65,13 @@ export default function useUpload() {
           sessionStorage.setItem("upload_draft_id", saved.id);
         } catch (saveErr) {
           console.warn("Could not save upload to work store:", saveErr);
-          // Don't fail the whole upload just because work-store save failed
         }
       }
 
-      return true;  // ✅ signal success to caller
+      return true;
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Is the backend running?");
-      return false; // ❌ signal failure
+      return false;
     } finally {
       setLoading(false);
     }
