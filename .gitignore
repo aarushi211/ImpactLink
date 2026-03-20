@@ -11,3 +11,4 @@ __pycache__/
 test_*
 codebase_overview.md
 apitest.py
+firebase-service-account.json
