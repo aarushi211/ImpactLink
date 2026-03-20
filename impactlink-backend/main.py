@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 
 # 1. INITIALIZE FIREBASE FIRST
-BUCKET_NAME = "impactlink-710f2.firebasestorage.app"
+BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET", "impactlink-710f2.firebasestorage.app")
 if os.path.exists("firebase-service-account.json"):
     cred = credentials.Certificate("firebase-service-account.json")
     firebase_admin.initialize_app(cred, {"storageBucket": BUCKET_NAME})
