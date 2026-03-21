@@ -4,6 +4,7 @@ import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { auth } from "../firebase";
 import useWorkStore from "../hooks/useWorkStore";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
