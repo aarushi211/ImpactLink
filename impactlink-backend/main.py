@@ -28,6 +28,7 @@ from services.ngo_store import register, get_profile, update_profile, list_colla
 from services.ngo_collab import find_similar_ngos
 from services.auth import verify_token
 from agents.build_agent import build_proposal_stream, revise_section
+from api.session import create_session, advance_session, get_session_status
 from services.work_store import (
     save_draft,   update_draft,  list_drafts,  get_draft,  delete_draft,
     save_build,   update_build,  list_builds,  get_build,  delete_build,
@@ -355,3 +356,33 @@ def work_summary(uid: str = Depends(verify_token)):
 async def grants_topic_search(req: TopicSearchRequest):
     results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k)
     return {"grants": results, "query": req.query}
+
+# ── Unified Session Routes ─────────────────────────────────────────────────
+
+@app.post("/api/session")
+async def session_create(body: dict, uid: str = Depends(verify_token)):
+    try:
+        return create_session(body, user_id=uid)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+@app.post("/api/session/{session_id}/advance")
+async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(verify_token)):
+    try:
+        return await asyncio.to_thread(advance_session, session_id, body, user_id=uid)
+    except ValueError as e:
+        if "Unauthorized" in str(e):
+            raise HTTPException(403, str(e))
+        raise HTTPException(404, str(e))
+    except Exception as e:
+        print(f"Session advance failed: {e}")
+        raise HTTPException(500, "Internal session error")
+
+@app.get("/api/session/{session_id}")
+async def session_status(session_id: str, uid: str = Depends(verify_token)):
+    try:
+        return get_session_status(session_id, user_id=uid)
+    except ValueError as e:
+        if "Unauthorized" in str(e):
+            raise HTTPException(403, str(e))
+        raise HTTPException(404, str(e))

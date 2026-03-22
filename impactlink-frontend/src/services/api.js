@@ -51,4 +51,35 @@ export const refineBudget = async (currentBudget, userRequest) => {
   return res.data;
 };
 
+// ── Unified Session API ──────────────────────────────────────────────────────
+
+/**
+ * createSession starts a gated proposal flow ("improve" or "scratch").
+ */
+export const createSession = async (flowType, grant, profile, originalSections = {}) => {
+  const res = await api.post("/api/session", {
+    flow:              flowType,
+    grant:             grant,
+    profile:           profile,
+    original_sections: originalSections,
+  });
+  return res.data; // { session_id, gate }
+};
+
+/**
+ * advanceSession moves the session forward with user input (e.g. gap confirmation, slot answer).
+ */
+export const advanceSession = async (sessionId, userInput = {}) => {
+  const res = await api.post(`/api/session/${sessionId}/advance`, userInput);
+  return res.data; // GateResponse
+};
+
+/**
+ * getSessionStatus re-hydrates the frontend state (e.g. after refresh).
+ */
+export const getSessionStatus = async (sessionId) => {
+  const res = await api.get(`/api/session/${sessionId}`);
+  return res.data;
+};
+
 export default api;

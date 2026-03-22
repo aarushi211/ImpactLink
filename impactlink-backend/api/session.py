@@ -35,6 +35,7 @@ Example (FastAPI):
 
 import uuid
 import logging
+from typing import Optional
 from db.sessions import load_state, save_state
 from state.proposal_state import new_state
 from flows.improve_flow import advance as improve_advance
@@ -45,7 +46,7 @@ log = logging.getLogger(__name__)
 
 # ── Session creation ──────────────────────────────────────────────────────────
 
-def create_session(body: dict) -> dict:
+def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     """
     Create a new proposal session.
 
@@ -88,6 +89,7 @@ def create_session(body: dict) -> dict:
 
     state = new_state(
         session_id        = session_id,
+        user_id           = user_id,
         flow              = flow,
         profile           = profile,
         grant             = grant,
@@ -101,7 +103,7 @@ def create_session(body: dict) -> dict:
 
 # ── Session advancement ───────────────────────────────────────────────────────
 
-def advance_session(session_id: str, user_input: dict | None = None) -> dict:
+def advance_session(session_id: str, user_input: dict | None = None, user_id: Optional[str] = None) -> dict:
     """
     Advance a session by one step.
 
@@ -110,17 +112,23 @@ def advance_session(session_id: str, user_input: dict | None = None) -> dict:
     Args:
         session_id: the session to advance
         user_input: gate-specific data from the frontend (see gate docs above)
+        user_id: the user attempting to advance (for security)
 
     Returns:
         GateResponse dict with at minimum: {"gate": str}
 
     Raises:
-        ValueError if session not found
+        ValueError if session not found or user_id mismatch
         RuntimeError on unexpected internal state
     """
     state = load_state(session_id)
     if state is None:
         raise ValueError(f"Session not found: {session_id}")
+
+    # Security: Ensure this session belongs to the user
+    if state.get("user_id") and user_id and state["user_id"] != user_id:
+        log.warning("User %s tried to access session %s owned by %s", user_id, session_id, state["user_id"])
+        raise ValueError("Unauthorized: Session does not belong to you.")
 
     if state["gate"] == "complete":
         return {"gate": "complete", "session_id": session_id}
@@ -138,7 +146,7 @@ def advance_session(session_id: str, user_input: dict | None = None) -> dict:
 
 # ── Session status ────────────────────────────────────────────────────────────
 
-def get_session_status(session_id: str) -> dict:
+def get_session_status(session_id: str, user_id: Optional[str] = None) -> dict:
     """
     Return lightweight session status without advancing it.
     Useful for the frontend to re-hydrate after a page refresh.
@@ -146,6 +154,10 @@ def get_session_status(session_id: str) -> dict:
     state = load_state(session_id)
     if state is None:
         raise ValueError(f"Session not found: {session_id}")
+
+    # Security: Ensure this session belongs to the user
+    if state.get("user_id") and user_id and state["user_id"] != user_id:
+        raise ValueError("Unauthorized")
 
     return {
         "session_id":       state["session_id"],

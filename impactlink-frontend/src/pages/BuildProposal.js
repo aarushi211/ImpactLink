@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { auth } from "../firebase";
 import useWorkStore from "../hooks/useWorkStore";
+import useProposalSession from "../hooks/useProposalSession";
 
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
@@ -184,6 +185,46 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
         )}
       </div>
 
+      {/* AI revision box */}
+      {showRevise && !approved && !editMode && (
+        <div style={{
+          padding: "14px 18px",
+          borderBottom: "1px solid #1e1e30",
+          background: "#0d0d16",
+        }}>
+          <p style={{ color: "#555", fontSize: 11, margin: "0 0 8px" }}>
+            Tell the AI what to change:
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              value={feedback}
+              onChange={e => setFeedback(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleRevise(); }}
+              placeholder="e.g. Make it more specific, add our Nairobi data…"
+              style={{
+                flex: 1, background: "#0a0a0f", border: "1px solid #2a2a3e",
+                borderRadius: 8, color: "#e0e0f0", padding: "8px 12px",
+                fontSize: 12, outline: "none",
+              }}
+              autoFocus
+            />
+            <button
+              onClick={handleRevise}
+              disabled={revising || !feedback.trim()}
+              style={{
+                background: revising ? "#1a1a28" : "var(--accent)",
+                border: "none", color: "#fff",
+                padding: "8px 16px", borderRadius: 8,
+                fontSize: 12, fontWeight: 700, cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              {revising ? "⟳" : "↑"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* content — editable textarea or read-only prose */}
       <div style={{ padding: "16px 18px" }}>
         {editMode ? (
@@ -208,45 +249,6 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
           </p>
         )}
       </div>
-
-      {/* AI revision box */}
-      {showRevise && !approved && !editMode && (
-        <div style={{
-          padding: "0 18px 16px",
-          borderTop: "1px solid #1e1e30",
-          paddingTop: 14,
-        }}>
-          <p style={{ color: "#555", fontSize: 11, margin: "0 0 8px" }}>
-            Tell the AI what to change:
-          </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              value={feedback}
-              onChange={e => setFeedback(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleRevise(); }}
-              placeholder="e.g. Make it more specific, add our Nairobi data…"
-              style={{
-                flex: 1, background: "#0a0a0f", border: "1px solid #2a2a3e",
-                borderRadius: 8, color: "#e0e0f0", padding: "8px 12px",
-                fontSize: 12, outline: "none",
-              }}
-            />
-            <button
-              onClick={handleRevise}
-              disabled={revising || !feedback.trim()}
-              style={{
-                background: revising ? "#1a1a28" : "var(--accent)",
-                border: "none", color: "#fff",
-                padding: "8px 16px", borderRadius: 8,
-                fontSize: 12, fontWeight: 700, cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              {revising ? "⟳" : "↑"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -264,7 +266,6 @@ export default function BuildProposal() {
   // The conversation — array of { role: "ai"|"user", type, ...data }
   const [messages,  setMessages]  = useState([]);
   const [input,     setInput]     = useState("");
-  const [loading,   setLoading]   = useState(false);
   const [pdfLoading,setPdfLoad]   = useState(false);
   const [done,      setDone]      = useState(false);
 
@@ -281,135 +282,107 @@ export default function BuildProposal() {
   const inputRef   = useRef(null);
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
 
+  const session = useProposalSession();
+
   // Scroll to bottom on new messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, session.loading]);
+
+  // Sync session data to local UI state for backwards compatibility with existing render logic
+  useEffect(() => {
+    if (session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete") {
+      if (session.data.sections) {
+        setSections(prev => {
+          let hasChanges = Object.keys(session.data.sections).length !== Object.keys(prev).length;
+          const restored = {};
+          Object.entries(session.data.sections).forEach(([k, v]) => {
+            const prevApproved = prev[k]?.approved || false;
+            restored[k] = { ...v, approved: prevApproved };
+            // Check if content or title changed
+            if (prev[k]?.content !== v.content || prev[k]?.title !== v.title) {
+              hasChanges = true;
+            }
+          });
+          if (hasChanges) setSecOrder(Object.keys(restored));
+          return hasChanges ? restored : prev;
+        });
+      }
+      if (session.gate === "complete") setDone(true);
+    }
+
+    // Identify next question if in slot_filling
+    if (session.gate === "slot_filling" && session.data.question) {
+      const nextSlotKey = session.data.slot_key;
+      const question = session.data.question;
+      const filled = session.data.slots_filled || 0;
+      const total = session.data.slots_total || 7;
+
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        if (last?.type === "question" && last.key === nextSlotKey) return prev;
+        return [...prev, {
+          role: "ai",
+          type: "question",
+          key: nextSlotKey,
+          text: question,
+          step: filled + 1,
+          total: total
+        }];
+      });
+    }
+
+    if (session.gate === "slot_confirm") {
+        setMessages(prev => {
+            if (prev[prev.length-1]?.type === "slot_confirm") return prev;
+            return [...prev, { role: "ai", type: "slot_confirm", text: "I've collected the necessary details. Please confirm they are correct before I start drafting." }];
+        });
+    }
+
+    if (session.gate === "draft_review" && !done) {
+        setMessages(prev => {
+            if (prev[prev.length-1]?.type === "complete") return prev;
+            return [...prev, { role: "ai", type: "complete", text: "✨ All sections drafted! Review and approve each one, then download your complete proposal." }];
+        });
+    }
+  }, [session.gate, session.data, done]);
 
   // ── Start / advance the build flow ──────────────────────────
 
-  const callBuild = async (allAnswers) => {
-    setLoading(true);
+  const handleStart = async () => {
+    const welcomeMsg = {
+      role: "ai", type: "intro",
+      text: `Welcome${profile ? `, ${profile.org_name}` : ""}! I'm going to guide you through building a complete grant proposal from scratch. I'll ask you a few questions, then draft each section as a professional proposal for you to review and approve.\n\nLet's begin.`,
+    };
+    setMessages([welcomeMsg]);
+    
     try {
-      const user = auth.currentUser;
-      const token = user ? await user.getIdToken() : null;
-
-      const res = await fetch(`${API_BASE}/api/build/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          answers:  allAnswers,
-          profile:  profile || { org_name: "Your Organization" },
-          grant:    selectedGrant || null,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`Server ${res.status}`);
-
-      const reader  = res.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { value, done: streamDone } = await reader.read();
-        if (streamDone) break;
-
-        const lines = decoder.decode(value).split("\n").filter(Boolean);
-        for (const line of lines) {
-          try {
-            const chunk = JSON.parse(line);
-
-            if (chunk.type === "question") {
-              // AI asks the next question
-              setMessages(prev => [...prev, { role: "ai", type: "question", ...chunk }]);
-              setTimeout(() => inputRef.current?.focus(), 100);
-
-            } else if (chunk.type === "draft") {
-              // AI shows a drafted section
-              setSections(prev => ({
-                ...prev,
-                [chunk.section_key]: { title: chunk.title, content: chunk.content, approved: false },
-              }));
-              setSecOrder(prev =>
-                prev.includes(chunk.section_key) ? prev : [...prev, chunk.section_key]
-              );
-              setMessages(prev => [...prev, {
-                role: "ai", type: "draft",
-                step: chunk.step, total: chunk.total,
-                key: chunk.key, section_key: chunk.section_key,
-                title: chunk.title, content: chunk.content,
-              }]);
-
-            } else if (chunk.type === "complete") {
-              setDone(true);
-              const finalSections = {};
-              Object.entries(chunk.sections).forEach(([k, v]) => {
-                finalSections[k] = { ...v, approved: false };
-              });
-              setSections(prev => ({ ...prev, ...finalSections }));
-              setSecOrder(chunk.section_order);
-              setMessages(prev => [...prev, {
-                role: "ai", type: "complete",
-                text: "✨ All sections drafted! Review and approve each one, then download your complete proposal.",
-              }]);
-              // Auto-save initial build to work store (sections not yet approved)
-              if (profile) {
-                const selectedG = grants.find(g => String(g.grant_id) === String(selectedGrantId));
-                saveBuild({
-                  title:         proposalName.trim() || selectedG?.title || profile?.org_name || "Built Proposal",
-                  org_name:      profile?.org_name || "",
-                  grant_title:   selectedG?.title || "",
-                  sections:      chunk.sections,
-                  section_order: chunk.section_order,
-                  answers,
-                }).then(saved => { if (saved) setSavedBuildId(saved.id); });
-              }
-            }
-          } catch (_) {}
-        }
-      }
+        await session.start("scratch", selectedGrant || { title: "New Project" }, profile || { org_name: "Your Organization" });
     } catch (err) {
-      setMessages(prev => [...prev, {
-        role: "ai", type: "error",
-        text: `Something went wrong: ${err.message}`,
-      }]);
-    } finally {
-      setLoading(false);
+        console.error("Start error:", err);
     }
   };
 
-  // ── Start the builder ─────────────────────────────────────
-
-  const handleStart = () => {
-    const welcomeMsg = {
-      role: "ai", type: "intro",
-      text: `Welcome${profile ? `, ${profile.org_name}` : ""}! I'm going to guide you through building a complete grant proposal from scratch. I'll ask you 7 questions, then draft each section as a professional proposal for you to review and approve.\n\nLet's begin.`,
-    };
-    setMessages([welcomeMsg]);
-    setTimeout(() => callBuild([]), 600);
-  };
-
-  // ── User sends an answer ──────────────────────────────────
-
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || loading || done) return;
+    if (!text || session.loading || done) return;
     setInput("");
 
-    // Find the last question message to get its step key
-    const lastQuestion = [...messages].reverse().find(m => m.type === "question");
-    if (!lastQuestion) return;
+    // If we are in slot_filling, we send an answer
+    if (session.gate === "slot_filling") {
+        const lastQuestion = [...messages].reverse().find(m => m.type === "question");
+        if (!lastQuestion) return;
 
-    const userMsg = { role: "user", type: "answer", text, stepKey: lastQuestion.key };
-    setMessages(prev => [...prev, userMsg]);
+        setMessages(prev => [...prev, { role: "user", type: "answer", text, stepKey: lastQuestion.key }]);
+        setAnswers(prev => [...prev, { step_key: lastQuestion.key, user_answer: text }]);
+        
+        await session.advance({ answer: text, slot_key: lastQuestion.key });
+    }
+  };
 
-    const newAnswers = [...answers, { step_key: lastQuestion.key, user_answer: text }];
-    setAnswers(newAnswers);
-
-    // Small delay so the message appears before loading
-    setTimeout(() => callBuild(newAnswers), 200);
+  const handleConfirmSlots = async () => {
+      setMessages(prev => [...prev, { role: "user", type: "answer", text: "Confirmed. Please proceed to drafting." }]);
+      await session.advance({ confirmed: true });
   };
 
   // ── Approve / revise section ──────────────────────────────
@@ -467,9 +440,8 @@ export default function BuildProposal() {
         project_title:     selectedG?.title || "",
       };
       sessionStorage.setItem("proposal", JSON.stringify(proposalCtx));
-
-      // Short delay so user sees "All Approved" state before redirect
-      setTimeout(() => navigate("/grants"), 1200);
+      
+      // Removed automatic redirection so user can download PDF
     }
   };
 
@@ -620,8 +592,8 @@ export default function BuildProposal() {
   const approvedCount  = Object.values(sections).filter(s => s.approved).length;
   const totalSections  = secOrder.length;
   const allApproved    = totalSections > 0 && approvedCount === totalSections;
-  const lastIsQuestion = messages.length > 0 && messages[messages.length-1]?.type === "question";
   const hasStarted     = messages.length > 0;
+  const loading        = session.loading;
 
   // ── render ────────────────────────────────────────────────
 
@@ -888,6 +860,31 @@ export default function BuildProposal() {
                           }}>
                             {msg.text}
                           </p>
+
+                          {msg.type === "slot_confirm" && (
+                            <div style={{ marginTop: 12, borderTop: "1px solid #1e3a5f", paddingTop: 12 }}>
+                              <table style={{ width: "100%", fontSize: 12, color: "#aaa", borderCollapse: "collapse" }}>
+                                <tbody>
+                                  {Object.entries(session.data.slots || {}).map(([k, s]) => (
+                                    <tr key={k}>
+                                      <td style={{ padding: "4px 0", fontWeight: 700, color: "#ddd", width: "40%" }}>{k}:</td>
+                                      <td style={{ padding: "4px 0", color: "#888" }}>{s.value || "—"}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              <button 
+                                onClick={handleConfirmSlots}
+                                style={{ 
+                                  marginTop: 14, background: "var(--accent)", border: "none", 
+                                  color: "#fff", padding: "8px 16px", borderRadius: 8, 
+                                  fontSize: 12, fontWeight: 700, cursor: "pointer", width: "100%" 
+                                }}
+                              >
+                                Confirm & Start Drafting
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -952,29 +949,31 @@ export default function BuildProposal() {
                   if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
                 }}
                 placeholder={
-                  lastIsQuestion
+                  session.gate === "slot_filling"
                     ? "Type your answer…"
-                    : loading
-                    ? "Drafting section…"
+                    : session.gate === "slot_confirm"
+                    ? "Carefully review the extracted data above"
+                    : session.loading
+                    ? "Processing..."
                     : "Waiting…"
                 }
-                disabled={loading || !lastIsQuestion}
+                disabled={session.loading || session.gate !== "slot_filling"}
                 rows={2}
                 style={{
-                  flex:1, background:"#111120",
-                  border:"1px solid var(--border)", borderRadius:10,
-                  color:"#e0e0f0", padding:"10px 14px",
-                  fontSize:13, resize:"none", outline:"none",
-                  fontFamily:"DM Sans, sans-serif",
-                  opacity: loading || !lastIsQuestion ? 0.5 : 1,
+                  flex:1, background: "#111120",
+                  border: "1px solid var(--border)", borderRadius: 10,
+                  color: "#e0e0f0", padding: "10px 14px",
+                  fontSize: 13, resize: "none", outline: "none",
+                  fontFamily: "DM Sans, sans-serif",
+                  opacity: session.loading || session.gate !== "slot_filling" ? 0.5 : 1,
                 }}
               />
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || loading || !lastIsQuestion}
+                disabled={!input.trim() || session.loading || session.gate !== "slot_filling"}
                 style={{
                   width:40, height:40, borderRadius:10, border:"none",
-                  background: input.trim() && !loading && lastIsQuestion
+                  background: input.trim() && !session.loading && session.gate === "slot_filling"
                     ? "var(--accent)" : "#1e1e30",
                   color:"#fff", fontSize:18, cursor:"pointer",
                   display:"flex", alignItems:"center", justifyContent:"center",
@@ -1051,14 +1050,24 @@ export default function BuildProposal() {
                     Your proposal is ready to download
                   </p>
                 </div>
-                <button onClick={handlePDF} disabled={pdfLoading} style={{
-                  background: pdfLoading ? "#1a1a28" : "#e63946",
-                  border:"none", color:"#fff",
-                  padding:"11px 22px", borderRadius:9,
-                  fontSize:13, fontWeight:700, cursor:"pointer",
-                }}>
-                  {pdfLoading ? "⟳ Generating…" : "↓ Download PDF"}
-                </button>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button onClick={() => navigate("/grants")} style={{
+                    background: "none",
+                    border:"1px solid #2d5a3d", color:"var(--green)",
+                    padding:"11px 22px", borderRadius:9,
+                    fontSize:13, fontWeight:700, cursor:"pointer",
+                  }}>
+                    Find Grants →
+                  </button>
+                  <button onClick={handlePDF} disabled={pdfLoading} style={{
+                    background: pdfLoading ? "#1a1a28" : "#e63946",
+                    border:"none", color:"#fff",
+                    padding:"11px 22px", borderRadius:9,
+                    fontSize:13, fontWeight:700, cursor:"pointer",
+                  }}>
+                    {pdfLoading ? "⟳ Generating…" : "↓ Download PDF"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

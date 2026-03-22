@@ -454,7 +454,7 @@ def _extract_user_values(proposal: dict) -> str:
     """Pull concrete numbers and facts from proposal for table population."""
     lines = []
     if proposal.get("total_budget"):
-        lines.append(f"Total budget: ${proposal['total_budget']:,}")
+        lines.append(f"Total budget: {proposal['total_budget']}")
     if proposal.get("target_beneficiaries"):
         lines.append(f"Target beneficiaries: {', '.join(proposal['target_beneficiaries'])}")
     if proposal.get("key_activities"):

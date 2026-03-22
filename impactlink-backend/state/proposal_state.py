@@ -40,6 +40,7 @@ class DiffToken(TypedDict):
 class ProposalState(TypedDict):
     # Identity
     session_id:         str
+    user_id:            Optional[str]
     flow:               Literal["improve", "scratch"]
 
     # Inputs
@@ -85,11 +86,13 @@ def new_state(
     flow: Literal["improve", "scratch"],
     profile: dict,
     grant: dict,
+    user_id: Optional[str] = None,
     original_sections: dict[str, str] | None = None,
 ) -> ProposalState:
     """Create a fresh ProposalState for a new session."""
     return ProposalState(
         session_id=session_id,
+        user_id=user_id,
         flow=flow,
         profile=profile,
         grant=grant,

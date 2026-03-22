@@ -161,7 +161,17 @@ def _step_rewrite(state: ProposalState, user_input: dict) -> dict:
     funder_vocab = state["funder_vocab"]
 
     # Rewrite sections in parallel
-    new_sections = dict(state["sections"])  # keep unrewritten sections as-is
+    # First, initialize new_sections with the original sections so unrewritten ones are preserved
+    new_sections = {}
+    for key, text in original_text.items():
+        new_sections[key] = {
+            "title": _section_title(key),
+            "content": text,
+            "score": 0,
+            "retries": 0,
+            "flagged": False,
+        }
+    new_sections.update(state.get("sections", {}))  # keep anything already in state["sections"]
 
     def rewrite_one(section_key: str) -> tuple[str, SectionResult]:
         title    = _section_title(section_key)

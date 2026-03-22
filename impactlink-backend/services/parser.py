@@ -141,7 +141,11 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
         # 3. Run chain (identical to your working original)
         chain = build_extraction_chain()
         result = chain.invoke({"text": context})
-        return result.model_dump()
+        
+        # Include the full text so the Improve flow has access to the actual writing
+        output = result.model_dump()
+        output["raw_text"] = full_text
+        return output
 
     except Exception as e:
         print(f"❌ Extraction Error: {e}")

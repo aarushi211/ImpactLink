@@ -881,5 +881,1955 @@
     "gate": "none",
     "retry_counts": {},
     "flagged_sections": []
+  },
+  "f3bd84c4-c6cc-4777-83f6-ef831c2fbeb3": {
+    "session_id": "f3bd84c4-c6cc-4777-83f6-ef831c2fbeb3",
+    "user_id": null,
+    "flow": "improve",
+    "profile": {
+      "org_name": "Green Future Initiative",
+      "mission": "To cool our cities through community-led tree planting.",
+      "location": "Los Angeles, CA",
+      "cause_area": "Environmental Justice"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [],
+    "slots": {},
+    "analysis": null,
+    "original_sections": {
+      "executive_summary": "We want to plant trees in East LA to help with the heat.",
+      "proposed_solution": "We will plant 100 trees in local neighborhoods using volunteers.",
+      "evaluation_plan": "We will count how many trees we plant and take photos."
+    },
+    "sections": {},
+    "diffs": {},
+    "gate": "none",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "6ed82e06-adb9-4d94-8095-6b2cc5393944": {
+    "session_id": "6ed82e06-adb9-4d94-8095-6b2cc5393944",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "80483",
+      "title": "Proposition 68 Technical Assistance",
+      "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+      "award_ceiling": 0,
+      "award_floor": 0,
+      "application_url": "https://rmc.ca.gov/grants/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Environment & Water Parks & Recreation",
+      "contact_email": "info@rmc.ca.gov",
+      "description": "RMC’s Technical Assistance Program (TAP) supports local communities with application assistance with the goal of facilitating access to the Conservancy’s funding programs. RMC recognizes barriers to accessing resources, including: •Familiarity with RMC’s grant application process, •Appreciation of the complexity of well-designed parks, open space, and multi-benefit projects, including strategic land acquisitions, •Commitment to work with and engage the community, •Ability to successfully manage projects to completion, •Ability to successfully operate and maintain completed projects. RMC offers a TAP program to help ensure eligible grantees receive funding and successfully complete and maintain their RMC Proposition 68 projects. TAP program provides information, tools, resources, and strategies to help applicants through the stages of project conceptualization, grant initiation, grant making, and project completion. In addition to RMC staff, these resources include peer-to-peer mentoring, access to best-practices, identifying technical resources, and providing professional grant writing and facilitation services. Some TAP resources are available to all applicants; however, applicants with projects in High-Need or Very-High-Need Areas have preferential access to TAP.",
+      "eligibility": [
+        "Nonprofit",
+        "Public Agency",
+        "Tribal Government"
+      ],
+      "similarity_score": 44.5,
+      "match_explanation": "Keyword match only.",
+      "fit_level": "unknown",
+      "application_tip": "Standard review recommended.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "Technical Assistance Program",
+      "multi-benefit projects",
+      "strategic land acquisitions",
+      "High-Need Areas",
+      "Very-High-Need Areas",
+      "project conceptualization",
+      "grant initiation",
+      "peer-to-peer mentoring",
+      "best-practices",
+      "RMC Proposition 68 projects",
+      "project completion",
+      "project operation and maintenance",
+      "grant making",
+      "community engagement"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "0fd45ff0-09f9-4f68-a1a6-893ce97a239e": {
+    "session_id": "0fd45ff0-09f9-4f68-a1a6-893ce97a239e",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "86477",
+      "title": "2025 – 2026 LSTA Community Impact Grants",
+      "agency": "CA State Library",
+      "award_ceiling": 250000,
+      "award_floor": 10000,
+      "application_url": "https://www.gotomygrants.com/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Libraries and Arts",
+      "contact_email": "lstagrants@library.ca.gov",
+      "description": "We invite libraries and other eligible organizations to apply for funding to support local and collaborative projects that address community needs and align with community aspirations. Projects should be guided by the principles of equity, diversity, inclusion, and belonging. Projects should align with goal one of the State Library’s current LSTA Five Year Plan . We are especially interested in projects from library jurisdictions and branches of library jurisdictions that have not received LSTA funding in the last five years, and collaborative projects that represent a variety of regions, library sizes, and populations. However, we welcome applications from all California library jurisdictions, library consortia, and library-focused on-profit organizations, and on any topic and serving any group. Agencies applying for a local competitive grant and requesting $75,000 or above, and agencies applying for a collaborative competitive grant must plan to work with a project partner (in addition to the collaborative applicant group) and must have at least one project partner in place before an application is submitted. Types of Grant Opportunities Two types of grant opportunities are available: Local Competitive Grants support projects that focus on one library jurisdiction and can include projects focusing on one branch in one library jurisdiction. Collaborative Competitive Grants support projects that are implemented by three or more library jurisdictions. More information about this opportunity can be found on the California State Library's LSTA Community Impact Grants opportunity webpage.",
+      "eligibility": [
+        "Individual",
+        "Nonprofit"
+      ],
+      "similarity_score": 90,
+      "match_explanation": "The grant aligns with the NGO's mission to provide education and skills to marginalized communities. The award ceiling of $250,000 matches the requested amount.",
+      "fit_level": "strong",
+      "application_tip": "Emphasize the organization's experience in providing education and skills to marginalized communities.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "equity, diversity, inclusion, and belonging",
+      "LSTA Five Year Plan",
+      "library jurisdictions",
+      "collaborative projects",
+      "library consortia",
+      "library-focused non-profit organizations",
+      "local competitive grant",
+      "collaborative competitive grant",
+      "project partner",
+      "community needs",
+      "community aspirations",
+      "California library jurisdictions",
+      "LSTA funding",
+      "library sizes",
+      "various regions",
+      "State Library's current plan"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "7014599f-467a-4f79-bb12-8c48bc7a7521": {
+    "session_id": "7014599f-467a-4f79-bb12-8c48bc7a7521",
+    "user_id": null,
+    "flow": "improve",
+    "profile": {
+      "org_name": "Green Future Initiative",
+      "mission": "To cool our cities through community-led tree planting.",
+      "location": "Los Angeles, CA",
+      "cause_area": "Environmental Justice"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [
+      "Urban & Community Forestry",
+      "severely disadvantaged communities",
+      "CalEnviroScreen 4.0",
+      "increased canopy coverage",
+      "reduced heat island effects",
+      "improved stormwater management",
+      "nature-based solutions",
+      "2-year maintenance plan",
+      "long-term survivability"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [
+        {
+          "section": "executive_summary",
+          "description": "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Lacks description of 2-year maintenance plan for long-term survivability",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'",
+          "severity": "high"
+        }
+      ],
+      "weak_evidence": [
+        {
+          "section": "executive_summary",
+          "description": "Claims to help with the heat but no data or specifics on how",
+          "severity": "medium"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No details on the types of trees to be planted or their suitability for the area",
+          "severity": "medium"
+        }
+      ],
+      "wrong_vocabulary": [
+        {
+          "section": "executive_summary",
+          "description": "Uses 'plant trees' instead of funder's term 'urban forest management' or 'tree planting'",
+          "severity": "low"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Uses 'local neighborhoods' instead of funder's term 'severely disadvantaged communities'",
+          "severity": "low"
+        }
+      ],
+      "misalignment": [
+        {
+          "section": "evaluation_plan",
+          "description": "Focuses on counting trees planted and taking photos, rather than measuring outcomes like 'increased canopy coverage' or 'reduced heat island effects'",
+          "severity": "high"
+        }
+      ],
+      "sections_to_rewrite": [
+        "executive_summary",
+        "proposed_solution",
+        "evaluation_plan"
+      ],
+      "user_confirmed_gaps": [
+        "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+        "Lacks description of 2-year maintenance plan for long-term survivability",
+        "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'"
+      ],
+      "user_additions": "Please emphasize the 2-year maintenance plan."
+    },
+    "original_sections": {
+      "executive_summary": "We want to plant trees in East LA to help with the heat.",
+      "proposed_solution": "We will plant 100 trees in local neighborhoods using volunteers.",
+      "evaluation_plan": "We will count how many trees we plant and take photos."
+    },
+    "sections": {
+      "executive_summary": {
+        "title": "Executive Summary",
+        "content": "Executive Summary:\n\nThe Green Future Initiative proposes to implement urban forest management in East Los Angeles, a region identified as a severely disadvantaged community through CalEnviroScreen 4.0. Our project aims to increase canopy coverage by 15% over the next two years, thereby reducing heat island effects by 20% and improving stormwater management in this environmentally vulnerable area. By leveraging nature-based solutions, we will not only mitigate the urban heat island effect but also contribute to a healthier environment for the community. Our approach includes a 2-year maintenance plan to ensure the long-term survivability of the trees, with a projected survival rate of 90%. Through this Urban & Community Forestry project, we will help cool our cities, aligning with our mission and the California Department of Forestry and Fire Protection's (CAL FIRE) goals for the Urban Canopy Expansion Grant 2024.",
+        "score": 92,
+        "retries": 1,
+        "flagged": false
+      },
+      "proposed_solution": {
+        "title": "Project Description & Activities",
+        "content": "SECTION: Project Description & Activities\n\nThe Green Future Initiative proposes to enhance Urban & Community Forestry in severely disadvantaged communities, as identified by CalEnviroScreen 4.0, by planting 100 trees. We will engage volunteers in this effort, fostering community involvement in the beautification and environmental improvement of their neighborhoods. The tree species selected will be suitable for the Los Angeles, CA climate, ensuring their adaptability and long-term survival. Our project aims to increase canopy coverage, reduce heat island effects, and improve stormwater management, aligning with the principles of nature-based solutions.\n\nTo guarantee the long-term survivability of the planted trees, we will implement a comprehensive 2-year maintenance plan. This plan includes regular watering, pruning, and monitoring, as well as community outreach and education to ensure the trees receive proper care beyond the initial planting phase. By adopting this approach, we expect to not only enhance the aesthetic appeal of these areas but also provide tangible environmental benefits to the community, such as mitigating the urban heat island effect and improving local air quality. Through this project, we aim to make a positive impact on the environment and the well-being of residents in severely disadvantaged communities, contributing to a cooler, greener, and more sustainable future for Los Angeles.",
+        "score": 92,
+        "retries": 0,
+        "flagged": false
+      },
+      "evaluation_plan": {
+        "title": "Evaluation & Learning Plan",
+        "content": "SECTION: Evaluation & Learning Plan\n\nAs part of the Urban & Community Forestry efforts, the Green Future Initiative will implement a comprehensive evaluation plan to assess the effectiveness of our nature-based solutions in 10 severely disadvantaged communities, as identified by CalEnviroScreen 4.0. Our primary outcomes of interest include a 15% increase in canopy coverage, a 20% reduction in heat island effects, and a 30% improvement in stormwater management. \n\nTo measure these outcomes, we will conduct regular assessments, including aerial photography and on-the-ground monitoring, over the 2-year maintenance plan period, commencing on January 1, 2024, and concluding on December 31, 2025. Our evaluation methodology will employ a mixed-methods approach, combining quantitative data collection and analysis with qualitative community surveys and focus groups. Specifically, we will utilize GIS mapping to track changes in canopy coverage, thermal imaging to assess reductions in heat island effects, and stormwater modeling to evaluate improvements in stormwater management. By focusing on these key metrics and utilizing a robust evaluation methodology, we aim to demonstrate the positive impact of our community-led tree planting initiative on the environment and public health in Los Angeles, CA, ultimately contributing to a cooler, more sustainable urban environment. The evaluation findings will be used to inform project improvements and ensure the long-term survivability of the 5,000 trees to be planted, supporting the overall goal of enhancing Urban & Community Forestry efforts in severely disadvantaged communities.",
+        "score": 92,
+        "retries": 2,
+        "flagged": false
+      }
+    },
+    "diffs": {
+      "evaluation_plan": [
+        {
+          "type": "remove",
+          "text": "We"
+        },
+        {
+          "type": "add",
+          "text": "SECTION: Evaluation & Learning Plan As part of the Urban & Community Forestry efforts, the Green Future Initiative"
+        },
+        {
+          "type": "equal",
+          "text": "will"
+        },
+        {
+          "type": "remove",
+          "text": "count how many"
+        },
+        {
+          "type": "add",
+          "text": "implement a comprehensive evaluation plan to assess the effectiveness of our nature-based solutions in 10 severely disadvantaged communities, as identified by CalEnviroScreen 4.0. Our primary outcomes of interest include a 15% increase in canopy coverage, a 20% reduction in heat island effects, and a 30% improvement in stormwater management. To measure these outcomes, we will conduct regular assessments, including aerial photography and on-the-ground monitoring, over the 2-year maintenance plan period, commencing on January 1, 2024, and concluding on December 31, 2025. Our evaluation methodology will employ a mixed-methods approach, combining quantitative data collection and analysis with qualitative community surveys and focus groups. Specifically, we will utilize GIS mapping to track changes in canopy coverage, thermal imaging to assess reductions in heat island effects, and stormwater modeling to evaluate improvements in stormwater management. By focusing on these key metrics and utilizing a robust evaluation methodology, we aim to demonstrate the positive impact of our community-led tree planting initiative on the environment and public health in Los Angeles, CA, ultimately contributing to a cooler, more sustainable urban environment. The evaluation findings will be used to inform project improvements and ensure the long-term survivability of the 5,000"
+        },
+        {
+          "type": "equal",
+          "text": "trees"
+        },
+        {
+          "type": "remove",
+          "text": "we plant and take photos."
+        },
+        {
+          "type": "add",
+          "text": "to be planted, supporting the overall goal of enhancing Urban & Community Forestry efforts in severely disadvantaged communities."
+        }
+      ],
+      "executive_summary": [
+        {
+          "type": "remove",
+          "text": "We want"
+        },
+        {
+          "type": "add",
+          "text": "Executive Summary: The Green Future Initiative proposes"
+        },
+        {
+          "type": "equal",
+          "text": "to"
+        },
+        {
+          "type": "remove",
+          "text": "plant trees"
+        },
+        {
+          "type": "add",
+          "text": "implement urban forest management"
+        },
+        {
+          "type": "equal",
+          "text": "in East"
+        },
+        {
+          "type": "remove",
+          "text": "LA"
+        },
+        {
+          "type": "add",
+          "text": "Los Angeles, a region identified as a severely disadvantaged community through CalEnviroScreen 4.0. Our project aims"
+        },
+        {
+          "type": "equal",
+          "text": "to"
+        },
+        {
+          "type": "add",
+          "text": "increase canopy coverage by 15% over the next two years, thereby reducing heat island effects by 20% and improving stormwater management in this environmentally vulnerable area. By leveraging nature-based solutions, we will not only mitigate the urban heat island effect but also contribute to a healthier environment for the community. Our approach includes a 2-year maintenance plan to ensure the long-term survivability of the trees, with a projected survival rate of 90%. Through this Urban & Community Forestry project, we will"
+        },
+        {
+          "type": "equal",
+          "text": "help"
+        },
+        {
+          "type": "add",
+          "text": "cool our cities, aligning"
+        },
+        {
+          "type": "equal",
+          "text": "with"
+        },
+        {
+          "type": "add",
+          "text": "our mission and"
+        },
+        {
+          "type": "equal",
+          "text": "the"
+        },
+        {
+          "type": "remove",
+          "text": "heat."
+        },
+        {
+          "type": "add",
+          "text": "California Department of Forestry and Fire Protection's (CAL FIRE) goals for the Urban Canopy Expansion Grant 2024."
+        }
+      ],
+      "proposed_solution": [
+        {
+          "type": "add",
+          "text": "SECTION: Project Description & Activities The Green Future Initiative proposes to enhance Urban & Community Forestry in severely disadvantaged communities, as identified by CalEnviroScreen 4.0, by planting 100 trees."
+        },
+        {
+          "type": "equal",
+          "text": "We will"
+        },
+        {
+          "type": "remove",
+          "text": "plant 100"
+        },
+        {
+          "type": "add",
+          "text": "engage volunteers in this effort, fostering community involvement in the beautification and environmental improvement of their neighborhoods. The tree species selected will be suitable for the Los Angeles, CA climate, ensuring their adaptability and long-term survival. Our project aims to increase canopy coverage, reduce heat island effects, and improve stormwater management, aligning with the principles of nature-based solutions. To guarantee the long-term survivability of the planted trees, we will implement a comprehensive 2-year maintenance plan. This plan includes regular watering, pruning, and monitoring, as well as community outreach and education to ensure the"
+        },
+        {
+          "type": "equal",
+          "text": "trees"
+        },
+        {
+          "type": "add",
+          "text": "receive proper care beyond the initial planting phase. By adopting this approach, we expect to not only enhance the aesthetic appeal of these areas but also provide tangible environmental benefits to the community, such as mitigating the urban heat island effect and improving local air quality. Through this project, we aim to make a positive impact on the environment and the well-being of residents"
+        },
+        {
+          "type": "equal",
+          "text": "in"
+        },
+        {
+          "type": "remove",
+          "text": "local neighborhoods using volunteers."
+        },
+        {
+          "type": "add",
+          "text": "severely disadvantaged communities, contributing to a cooler, greener, and more sustainable future for Los Angeles."
+        }
+      ]
+    },
+    "gate": "complete",
+    "retry_counts": {
+      "proposed_solution": 0,
+      "executive_summary": 1,
+      "evaluation_plan": 2
+    },
+    "flagged_sections": []
+  },
+  "834e0dc5-fd91-45e5-b85a-ae4fcdad8403": {
+    "session_id": "834e0dc5-fd91-45e5-b85a-ae4fcdad8403",
+    "user_id": null,
+    "flow": "scratch",
+    "profile": {
+      "organization_name": "EcoTree Collective",
+      "mission": "",
+      "problem_statement": "Heat islands and lack of green space",
+      "key_activities": [
+        "Planting 200 oaks, weekly watering, community workshops"
+      ],
+      "target_beneficiaries": [
+        "Low-income families in ZIP 90022"
+      ],
+      "geographic_focus": [
+        "East LA"
+      ],
+      "total_budget": "$50,000",
+      "kpis": [
+        "200 trees, 90% survival rate, 5 workshops"
+      ],
+      "sustainability": "Future funding from City of LA",
+      "org_capacity": "5 years experience planting native species"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [
+      "Urban & Community Forestry",
+      "severely disadvantaged communities",
+      "CalEnviroScreen 4.0",
+      "increased canopy coverage",
+      "reduced heat island effects",
+      "improved stormwater management",
+      "nature-based solutions",
+      "2-year maintenance plan",
+      "long-term survivability"
+    ],
+    "slots": {
+      "org_name": {
+        "key": "org_name",
+        "question": "What is your organization's full legal name?",
+        "filled": true,
+        "value": "EcoTree Collective",
+        "ask_count": 1
+      },
+      "mission": {
+        "key": "mission",
+        "question": "In one sentence, what is your organization's mission?",
+        "filled": true,
+        "value": null,
+        "ask_count": 2
+      },
+      "problem": {
+        "key": "problem",
+        "question": "What specific problem does this project address, and where does it exist?",
+        "filled": true,
+        "value": "Heat islands and lack of green space",
+        "ask_count": 1
+      },
+      "activities": {
+        "key": "activities",
+        "question": "What are the 3–5 main activities your project will carry out? Be specific — include what, how often, and who leads each.",
+        "filled": true,
+        "value": "Planting 200 oaks, weekly watering, community workshops",
+        "ask_count": 1
+      },
+      "beneficiaries": {
+        "key": "beneficiaries",
+        "question": "Who will directly benefit from this project, and how many people? Include demographics and how you will reach them.",
+        "filled": true,
+        "value": "Low-income families in ZIP 90022",
+        "ask_count": 1
+      },
+      "geography": {
+        "key": "geography",
+        "question": "What specific geographic area does this project serve? (city, county, zip codes, or region)",
+        "filled": true,
+        "value": "East LA",
+        "ask_count": 0
+      },
+      "budget_total": {
+        "key": "budget_total",
+        "question": "What is your total project budget, and what are the main cost categories? (e.g. staff 60%, materials 20%, travel 10%)",
+        "filled": true,
+        "value": "$50,000",
+        "ask_count": 1
+      },
+      "kpis": {
+        "key": "kpis",
+        "question": "What are 3–5 measurable outcomes you will track? Be specific: include target numbers and timelines.",
+        "filled": true,
+        "value": "200 trees, 90% survival rate, 5 workshops",
+        "ask_count": 1
+      },
+      "sustainability": {
+        "key": "sustainability",
+        "question": "How will this project continue after the grant ends? Name specific funding sources or strategies.",
+        "filled": true,
+        "value": "Future funding from City of LA",
+        "ask_count": 1
+      },
+      "org_capacity": {
+        "key": "org_capacity",
+        "question": "What makes your organization uniquely qualified for this project? Mention past programs with outcomes, team expertise, and key partnerships.",
+        "filled": true,
+        "value": "5 years experience planting native species",
+        "ask_count": 1
+      }
+    },
+    "analysis": null,
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "final_save",
+    "retry_counts": {},
+    "flagged_sections": [
+      "mission"
+    ]
+  },
+  "ff191a37-58d0-470d-9e2c-c637b41bb9e2": {
+    "session_id": "ff191a37-58d0-470d-9e2c-c637b41bb9e2",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "86477",
+      "title": "2025 – 2026 LSTA Community Impact Grants",
+      "agency": "CA State Library",
+      "award_ceiling": 250000,
+      "award_floor": 10000,
+      "application_url": "https://www.gotomygrants.com/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Libraries and Arts",
+      "contact_email": "lstagrants@library.ca.gov",
+      "description": "We invite libraries and other eligible organizations to apply for funding to support local and collaborative projects that address community needs and align with community aspirations. Projects should be guided by the principles of equity, diversity, inclusion, and belonging. Projects should align with goal one of the State Library’s current LSTA Five Year Plan . We are especially interested in projects from library jurisdictions and branches of library jurisdictions that have not received LSTA funding in the last five years, and collaborative projects that represent a variety of regions, library sizes, and populations. However, we welcome applications from all California library jurisdictions, library consortia, and library-focused on-profit organizations, and on any topic and serving any group. Agencies applying for a local competitive grant and requesting $75,000 or above, and agencies applying for a collaborative competitive grant must plan to work with a project partner (in addition to the collaborative applicant group) and must have at least one project partner in place before an application is submitted. Types of Grant Opportunities Two types of grant opportunities are available: Local Competitive Grants support projects that focus on one library jurisdiction and can include projects focusing on one branch in one library jurisdiction. Collaborative Competitive Grants support projects that are implemented by three or more library jurisdictions. More information about this opportunity can be found on the California State Library's LSTA Community Impact Grants opportunity webpage.",
+      "eligibility": [
+        "Individual",
+        "Nonprofit"
+      ],
+      "similarity_score": 90,
+      "match_explanation": "The grant aligns with the NGO's mission to provide education and skills to marginalized communities. The award ceiling of $250,000 matches the requested amount.",
+      "fit_level": "strong",
+      "application_tip": "Emphasize the organization's experience in providing education and skills to marginalized communities.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "equity, diversity, inclusion, and belonging",
+      "LSTA Five Year Plan",
+      "library jurisdictions",
+      "collaborative projects",
+      "library consortia",
+      "library-focused non-profit organizations",
+      "local competitive grant",
+      "collaborative competitive grant",
+      "project partner",
+      "community needs",
+      "community aspirations",
+      "California library jurisdictions",
+      "LSTA funding",
+      "State Library's current plan"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "8caa6438-db28-47ce-a867-273fd2483878": {
+    "session_id": "8caa6438-db28-47ce-a867-273fd2483878",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "79595",
+      "title": "Proposition 68 Grants for Lower Los Angeles River (LLAR)",
+      "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+      "award_ceiling": 2000000,
+      "award_floor": 10000,
+      "application_url": "https://rmc.ca.gov/grants/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Education Environment & Water Parks & Recreation",
+      "contact_email": "info@rmc.ca.gov",
+      "description": "Lower Los Angeles River: The Lower Los Angeles River program area encompasses 1.5 miles on each side of the river’s lower 19-miles, from the City of Vernon to the City of Long Beach. The Lower Los Angeles River Revitalization Plan (LLARRP) describes opportunities for improving the environment of the Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, and equity; the public realm; and water and the environment along and in the vicinity of the river. The Plan has been incorporated into the watershed (LLARRP) describes opportunities for improving the environment of Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, equity; public realm; water along in vicinity river. Plan has been incorporated into Los Angeles River Master Plan Update. Funding will support projects in line with the LLARRP, immediate drought response, and long-term water resilience. Applications: Applications will be submitted in two phases: a Concept Proposal and a Full Application. Applicants will first submit a Concept Proposal that will be reviewed by RMC staff for consistency with RMC goals, any specific program priorities, and the strength of the proposed project. In addition, RMC staff will look at all Concept Proposals for location, need, project type, readiness, threats, cost, and cost share. RMC staff will offer applicants feedback regarding alignment with priorities, overall merit, and any ineligible costs. RMC staff will select Concept Proposals to move forward and will invite selected applicants to submit Full Applications. Applicants will be provided the Full Application upon RMC invitation. RMC staff are available to work with Applicants during the preparation of the Full Application, as needed. RMC may request Applicants to revise and resubmit Full Applications, as necessary. It is strongly recommended that prospective applicants contact RMC staff for a consultation prior to submitting a Concept Proposal.",
+      "eligibility": [
+        "Nonprofit",
+        "Public Agency",
+        "Tribal Government"
+      ],
+      "similarity_score": 74,
+      "match_explanation": "The grant focuses on the Lower Los Angeles River area, which is close to the NGO's geographic focus. However, the award ceiling is higher than the requested amount.",
+      "fit_level": "moderate",
+      "application_tip": "Highlight the organization's ability to leverage the grant funds to benefit the local community.",
+      "location_boosted": true,
+      "location_boost_pts": 4
+    },
+    "funder_vocab": [
+      "Lower Los Angeles River",
+      "watershed-based",
+      "equitable community-driven process",
+      "multi-benefit projects",
+      "community economics",
+      "public realm",
+      "water resilience",
+      "drought response",
+      "LLARRP",
+      "Los Angeles River Master Plan Update",
+      "Concept Proposal",
+      "Full Application",
+      "watershed-based equitable",
+      "community-driven process",
+      "vicinity of the river"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "bf60fab5-e1c6-4709-9500-1680bb1c681c": {
+    "session_id": "bf60fab5-e1c6-4709-9500-1680bb1c681c",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "86477",
+      "title": "2025 – 2026 LSTA Community Impact Grants",
+      "agency": "CA State Library",
+      "award_ceiling": 250000,
+      "award_floor": 10000,
+      "application_url": "https://www.gotomygrants.com/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Libraries and Arts",
+      "contact_email": "lstagrants@library.ca.gov",
+      "description": "We invite libraries and other eligible organizations to apply for funding to support local and collaborative projects that address community needs and align with community aspirations. Projects should be guided by the principles of equity, diversity, inclusion, and belonging. Projects should align with goal one of the State Library’s current LSTA Five Year Plan . We are especially interested in projects from library jurisdictions and branches of library jurisdictions that have not received LSTA funding in the last five years, and collaborative projects that represent a variety of regions, library sizes, and populations. However, we welcome applications from all California library jurisdictions, library consortia, and library-focused on-profit organizations, and on any topic and serving any group. Agencies applying for a local competitive grant and requesting $75,000 or above, and agencies applying for a collaborative competitive grant must plan to work with a project partner (in addition to the collaborative applicant group) and must have at least one project partner in place before an application is submitted. Types of Grant Opportunities Two types of grant opportunities are available: Local Competitive Grants support projects that focus on one library jurisdiction and can include projects focusing on one branch in one library jurisdiction. Collaborative Competitive Grants support projects that are implemented by three or more library jurisdictions. More information about this opportunity can be found on the California State Library's LSTA Community Impact Grants opportunity webpage.",
+      "eligibility": [
+        "Individual",
+        "Nonprofit"
+      ],
+      "similarity_score": 90,
+      "match_explanation": "The grant aligns with the NGO's mission to provide educational opportunities to underserved youth, and the geographic focus of the grant matches the NGO's location in Los Angeles.",
+      "fit_level": "strong",
+      "application_tip": "Emphasize the NGO's experience in providing educational programs to underserved youth and highlight the potential impact of the grant on the community.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "equity, diversity, inclusion, and belonging",
+      "LSTA Five Year Plan",
+      "library jurisdictions",
+      "collaborative projects",
+      "library consortia",
+      "library-focused non-profit organizations",
+      "local competitive grant",
+      "collaborative competitive grant",
+      "project partner",
+      "community needs",
+      "community aspirations",
+      "California library jurisdictions",
+      "LSTA funding",
+      "State Library's current plan"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "a83f3621-4931-4c97-a2f9-1194e7ecb672": {
+    "session_id": "a83f3621-4931-4c97-a2f9-1194e7ecb672",
+    "user_id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "oYYLtGqjdSTOTmBy54ycKRKSDI83",
+      "created_at": "2026-03-20T01:53:56.639416",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-20T01:53:56.639416",
+      "total_won": 0,
+      "org_name": "Aarushi Jain",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "aarushi211.work@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "86477",
+      "title": "2025 – 2026 LSTA Community Impact Grants",
+      "agency": "CA State Library",
+      "award_ceiling": 250000,
+      "award_floor": 10000,
+      "application_url": "https://www.gotomygrants.com/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Libraries and Arts",
+      "contact_email": "lstagrants@library.ca.gov",
+      "description": "We invite libraries and other eligible organizations to apply for funding to support local and collaborative projects that address community needs and align with community aspirations. Projects should be guided by the principles of equity, diversity, inclusion, and belonging. Projects should align with goal one of the State Library’s current LSTA Five Year Plan . We are especially interested in projects from library jurisdictions and branches of library jurisdictions that have not received LSTA funding in the last five years, and collaborative projects that represent a variety of regions, library sizes, and populations. However, we welcome applications from all California library jurisdictions, library consortia, and library-focused on-profit organizations, and on any topic and serving any group. Agencies applying for a local competitive grant and requesting $75,000 or above, and agencies applying for a collaborative competitive grant must plan to work with a project partner (in addition to the collaborative applicant group) and must have at least one project partner in place before an application is submitted. Types of Grant Opportunities Two types of grant opportunities are available: Local Competitive Grants support projects that focus on one library jurisdiction and can include projects focusing on one branch in one library jurisdiction. Collaborative Competitive Grants support projects that are implemented by three or more library jurisdictions. More information about this opportunity can be found on the California State Library's LSTA Community Impact Grants opportunity webpage.",
+      "eligibility": [
+        "Individual",
+        "Nonprofit"
+      ],
+      "similarity_score": 90,
+      "match_explanation": "The grant aligns with the NGO's mission to provide STEM education to underserved youth in South Los Angeles. The grant's focus on community impact and equity also matches the NGO's goals.",
+      "fit_level": "strong",
+      "application_tip": "Emphasize the NGO's experience in providing STEM education and its commitment to equity and inclusion.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "equity, diversity, inclusion, and belonging",
+      "LSTA Five Year Plan",
+      "library jurisdictions",
+      "collaborative projects",
+      "library consortia",
+      "library-focused non-profit organizations",
+      "local competitive grant",
+      "collaborative competitive grant",
+      "project partner",
+      "community needs",
+      "community aspirations",
+      "California library jurisdictions",
+      "LSTA funding",
+      "State Library's current plan"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "91acc1f4-58e4-42cc-95ab-e415d8700d4b": {
+    "session_id": "91acc1f4-58e4-42cc-95ab-e415d8700d4b",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+      "created_at": "2026-03-21T03:09:16.617760",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-21T03:09:16.617760",
+      "total_won": 0,
+      "org_name": "Khushi",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "khu@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "79610",
+      "title": "RMC Lower LA River Grant Program",
+      "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+      "award_ceiling": 2000000,
+      "award_floor": 50000,
+      "application_url": "https://rmc.ca.gov/grants/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Environment & Water Parks & Recreation",
+      "contact_email": "info@rmc.ca.gov",
+      "description": "In certain years, the annual state budget has allocated General Funds directly to the RMC. These funds have been incorporated into the Non-Bond Priority Grant Program. The major funding priorities are described below. Lower LA River: The Lower Los Angeles River program area encompasses 1.5 miles on each side of the river’s lower 19-miles , from the City of Vernon to the City of Long Beach. The Lower Los Angeles River Revitalization Plan (LLARRP) describes opportunities for improving the environment of the Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, and equity; the public realm; and water and the environment along and in the vicinity of the river. The Plan has been incorporated into thewatershed (LLARRP) describes opportunities for improving the environment of Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, equity; public realm; water along in vicinity river. Plan has been incorporated into Los Angeles River Master Plan Update. Funding will be support projects in line with the LLARRP, immediate drought response, and long-term water resiliency. Applications: Applications will be submitted in two phases: a Concept Proposal and a Full Application. Applicants will first submit a Concept Proposal that will be reviewed by RMC staff for consistency with RMC goals, any specific program priorities, and the strength of the proposed project. In addition, RMC staff will look at all Concept Proposals for location, need, project type, readiness, threats, cost, and cost share. RMC staff will offer applicants feedback regarding alignment with priorities, overall merit, and any ineligible costs. RMC staff will select Concept Proposals to move forward and will invite selected applicants to submit Full Applications.",
+      "eligibility": [
+        "Nonprofit",
+        "Public Agency",
+        "Tribal Government"
+      ],
+      "similarity_score": 84,
+      "match_explanation": "The RMC Lower LA River Grant Program's focus on environmental education and community development aligns with BPYI's goals of providing STEM education and career exposure to underserved youth in South Los Angeles. However, the program's broader focus on river conservation and recreation may require BPYI to tailor its application to demonstrate relevance.",
+      "fit_level": "moderate",
+      "application_tip": "Highlight BPYI's ability to provide STEM education and career exposure to underserved youth in the Lower LA River area, and explain how the program can contribute to the region's environmental and community development goals.",
+      "location_boosted": true,
+      "location_boost_pts": 4
+    },
+    "funder_vocab": [
+      "Lower LA River",
+      "Non-Bond Priority Grant Program",
+      "Lower Los Angeles River Revitalization Plan",
+      "watershed-based",
+      "equitable community-driven process",
+      "multi-benefit projects",
+      "community economics",
+      "water resiliency",
+      "drought response",
+      "Los Angeles River Master Plan Update",
+      "Concept Proposal",
+      "Full Application",
+      "watershed-based equitable community-driven process",
+      "public realm",
+      "water and the environment"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [],
+      "weak_evidence": [],
+      "wrong_vocabulary": [],
+      "misalignment": [],
+      "sections_to_rewrite": [],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "7784e060-801d-43b0-96d4-9f2cf2310b10": {
+    "session_id": "7784e060-801d-43b0-96d4-9f2cf2310b10",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+      "created_at": "2026-03-21T03:09:16.617760",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-21T03:09:16.617760",
+      "total_won": 0,
+      "org_name": "Khushi",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "khu@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "79595",
+      "title": "Proposition 68 Grants for Lower Los Angeles River (LLAR)",
+      "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+      "award_ceiling": 2000000,
+      "award_floor": 10000,
+      "application_url": "https://rmc.ca.gov/grants/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Education Environment & Water Parks & Recreation",
+      "contact_email": "info@rmc.ca.gov",
+      "description": "Lower Los Angeles River: The Lower Los Angeles River program area encompasses 1.5 miles on each side of the river’s lower 19-miles, from the City of Vernon to the City of Long Beach. The Lower Los Angeles River Revitalization Plan (LLARRP) describes opportunities for improving the environment of the Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, and equity; the public realm; and water and the environment along and in the vicinity of the river. The Plan has been incorporated into the watershed (LLARRP) describes opportunities for improving the environment of Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, equity; public realm; water along in vicinity river. Plan has been incorporated into Los Angeles River Master Plan Update. Funding will support projects in line with the LLARRP, immediate drought response, and long-term water resilience. Applications: Applications will be submitted in two phases: a Concept Proposal and a Full Application. Applicants will first submit a Concept Proposal that will be reviewed by RMC staff for consistency with RMC goals, any specific program priorities, and the strength of the proposed project. In addition, RMC staff will look at all Concept Proposals for location, need, project type, readiness, threats, cost, and cost share. RMC staff will offer applicants feedback regarding alignment with priorities, overall merit, and any ineligible costs. RMC staff will select Concept Proposals to move forward and will invite selected applicants to submit Full Applications. Applicants will be provided the Full Application upon RMC invitation. RMC staff are available to work with Applicants during the preparation of the Full Application, as needed. RMC may request Applicants to revise and resubmit Full Applications, as necessary. It is strongly recommended that prospective applicants contact RMC staff for a consultation prior to submitting a Concept Proposal.",
+      "eligibility": [
+        "Nonprofit",
+        "Public Agency",
+        "Tribal Government"
+      ],
+      "similarity_score": 84,
+      "match_explanation": "The grant supports environmental education and community development, which aligns with the NGO's goals, but the award ceiling is higher than the requested amount.",
+      "fit_level": "moderate",
+      "application_tip": "Highlight the NGO's ability to leverage the grant to support its environmental education programs and community development initiatives.",
+      "location_boosted": true,
+      "location_boost_pts": 4
+    },
+    "funder_vocab": [
+      "Lower Los Angeles River",
+      "LLARRP",
+      "watershed-based",
+      "equitable community-driven process",
+      "multi-benefit projects",
+      "community economics",
+      "public realm",
+      "water resilience",
+      "drought response",
+      "Los Angeles River Master Plan Update",
+      "Concept Proposal",
+      "Full Application",
+      "watershed-based equitable community-driven process",
+      "improving community economics health and equity",
+      "long-term water resilience"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [
+        {
+          "section": "executive_summary",
+          "description": "No mention of the Lower Los Angeles River or alignment with the LLARRP",
+          "severity": "high"
+        },
+        {
+          "section": "statement_of_need",
+          "description": "Lack of discussion on community economics, public realm, water resilience, or drought response in the context of the Lower Los Angeles River",
+          "severity": "high"
+        },
+        {
+          "section": "program_description",
+          "description": "No clear connection to multi-benefit projects or a watershed-based, equitable community-driven process",
+          "severity": "high"
+        },
+        {
+          "section": "evaluation_plan",
+          "description": "No mention of assessing the project's impact on long-term water resilience or community economics",
+          "severity": "medium"
+        }
+      ],
+      "weak_evidence": [
+        {
+          "section": "organizational_background",
+          "description": "Claims of past success, but no direct relevance to the Lower Los Angeles River or the LLARRP",
+          "severity": "medium"
+        },
+        {
+          "section": "statement_of_need",
+          "description": "Statistics on educational disparities, but no data on how these issues relate to the Lower Los Angeles River or water resilience",
+          "severity": "medium"
+        }
+      ],
+      "wrong_vocabulary": [
+        {
+          "section": "executive_summary",
+          "description": "Uses terms like 'underserved youth' and 'STEM education' without connecting to the funder's vocabulary like 'equitable community-driven process' or 'multi-benefit projects'",
+          "severity": "low"
+        }
+      ],
+      "misalignment": [
+        {
+          "section": "program_description",
+          "description": "Focuses on STEM education for youth without clear alignment with the LLARRP's goals for the Lower Los Angeles River",
+          "severity": "high"
+        },
+        {
+          "section": "evaluation_plan",
+          "description": "Evaluates program success based on student outcomes, but does not assess impact on the Lower Los Angeles River or community economics",
+          "severity": "high"
+        }
+      ],
+      "sections_to_rewrite": [
+        "executive_summary",
+        "statement_of_need",
+        "program_description",
+        "evaluation_plan"
+      ],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {
+      "uploaded_content": "Organization: Bright Path Youth Initiative (BPYI) \nLocation: Los Angeles, California \nProject Title: STEM Pathways for Underserved Youth in South Los Angeles \nFunding Request: $250,000 \nProject Period: July 1, 2026 – June 30, 2027 \nExecutive Summary \nBright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM \nPathways for Underserved Youth, a year-long program serving 150 low-income middle and \nhigh school students in South Los Angeles. The program will provide hands-on STEM \neducation, mentorship, college readiness support, and career exposure in robotics, \ncoding, and engineering. \nSouth Los Angeles continues to experience significant educational inequities, particularly \nin access to high-quality STEM programming. BPYI aims to close opportunity gaps by \noffering after-school and summer enrichment programs focused on technical skill \ndevelopment, academic support, and exposure to STEM careers. \nFunding will support program staffing, equipment (robotics kits, laptops), curriculum \ndevelopment, transportation assistance, and evaluation. By the end of the grant period, at \nleast 85% of participating students will demonstrate measurable improvement in STEM \nproficiency and college/career readiness indicators. \nOrganizational Background \nFounded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated \nto expanding educational and career opportunities for underserved youth in Los Angeles \nCounty. Our mission is to equip students from historically marginalized communities with \nthe skills, confidence, and networks necessary to succeed in higher education and STEM \ncareers. \nOver the past eight years, BPYI has: \n• Served over 1,200 students across LAUSD schools \n• Partnered with 10 local schools and 5 community centers \n• Maintained a 92% program retention rate \n• Helped 88% of graduating seniors enroll in postsecondary education \nBPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 \nvolunteer mentors from local universities and technology companies.\nStatement of Need \nSouth Los Angeles faces persistent disparities in educational access and outcomes: \n• Over 75% of students in the target communities qualify for free or reduced-price \nlunch. \n• Schools in low-income areas often lack up-to-date STEM resources and \nexperienced instructors. \n• Students from these communities are significantly underrepresented in engineering \nand technology careers. \nWithout early exposure to STEM education and career pathways, students are less likely to \npursue college majors in high-demand technical fields. The digital divide further \nexacerbates inequities, as many households lack reliable access to computers and high-\nspeed internet. \nCommunity stakeholders—including school administrators, parents, and students—have \nidentified expanded STEM programming and mentorship as urgent needs. \nProgram Description: STEM Pathways for Underserved Youth \nGoals \n1. Increase STEM proficiency among participating students. \n2. Improve college and career readiness. \n3. Expand access to mentorship and STEM career exposure. \nTarget Population \n• 150 middle and high school students (grades 6–12) \n• Primarily from South Los Angeles \n• 90% from low-income households \n• 80% students of color \nProgram Components \n1. After-School STEM Labs (September–May) \n• Twice-weekly sessions (2 hours each) \n• Hands-on robotics, coding (Python & Scratch), and engineering challenges\n• Small cohort model (15 students per group) \n2. Summer STEM Institute (4 weeks) \n• Intensive project-based learning \n• Students design and present capstone engineering projects \n• Field trips to local tech companies and universities (UCLA, USC) \n3. Mentorship Program \n• One-on-one mentorship matching \n• Monthly career talks by STEM professionals \n• College application and financial aid workshops \n4. Family Engagement Workshops \n• Quarterly sessions on college readiness and STEM pathways \n• Spanish-language interpretation provided \nMeasurable Outcomes \nBy June 2027: \n• 85% of students will improve STEM knowledge scores by at least 20% (pre/post \nassessment). \n• 90% of participants will report increased interest in STEM careers. \n• 80% of high school seniors will complete at least one college or scholarship \napplication. \n• 75% of students will demonstrate improved problem-solving and teamwork skills \n(rubric-based evaluation). \nEvaluation Plan \nBPYI will use both quantitative and qualitative methods: \n• Pre- and post-STEM assessments \n• Attendance and retention tracking \n• Student surveys \n• Parent feedback surveys\n• Mentor feedback reports \n• External evaluator (annual review) \nQuarterly reports will measure progress toward goals and allow for program adjustments. \nBudget Summary (12-Month Project) \nCategory Amount \nProgram Staff Salaries $120,000 \nSTEM Equipment & Supplies $45,000 \nLaptops & Software $25,000 \nTransportation & Field Trips $20,000 \nEvaluation & Data Management $15,000 \nFamily Workshops & Outreach $10,000 \nAdministrative Costs (10%) $15,000 \nTotal Request $250,000 \nSustainability Plan \nBPYI maintains diversified funding streams, including: \n• Individual donors (20%) \n• Corporate sponsorships (25%) \n• Foundation grants (40%) \n• Government contracts (15%) \nWe are actively pursuing multi-year funding commitments and expanding corporate \npartnerships with Los Angeles-based technology firms. Equipment purchased under this \ngrant will support programming for multiple years. \nConclusion \nBright Path Youth Initiative is committed to addressing educational inequities and \nempowering the next generation of STEM leaders in Los Angeles. With support from this\ngrant, we will provide transformative opportunities for 150 underserved youth, equipping \nthem with critical skills, mentorship, and pathways to college and career success. \nWe appreciate your consideration and welcome the opportunity to provide additional \ninformation."
+    },
+    "sections": {
+      "uploaded_content": {
+        "title": "Uploaded Content",
+        "content": "Organization: Bright Path Youth Initiative (BPYI) \nLocation: Los Angeles, California \nProject Title: STEM Pathways for Underserved Youth in South Los Angeles \nFunding Request: $250,000 \nProject Period: July 1, 2026 – June 30, 2027 \nExecutive Summary \nBright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM \nPathways for Underserved Youth, a year-long program serving 150 low-income middle and \nhigh school students in South Los Angeles. The program will provide hands-on STEM \neducation, mentorship, college readiness support, and career exposure in robotics, \ncoding, and engineering. \nSouth Los Angeles continues to experience significant educational inequities, particularly \nin access to high-quality STEM programming. BPYI aims to close opportunity gaps by \noffering after-school and summer enrichment programs focused on technical skill \ndevelopment, academic support, and exposure to STEM careers. \nFunding will support program staffing, equipment (robotics kits, laptops), curriculum \ndevelopment, transportation assistance, and evaluation. By the end of the grant period, at \nleast 85% of participating students will demonstrate measurable improvement in STEM \nproficiency and college/career readiness indicators. \nOrganizational Background \nFounded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated \nto expanding educational and career opportunities for underserved youth in Los Angeles \nCounty. Our mission is to equip students from historically marginalized communities with \nthe skills, confidence, and networks necessary to succeed in higher education and STEM \ncareers. \nOver the past eight years, BPYI has: \n• Served over 1,200 students across LAUSD schools \n• Partnered with 10 local schools and 5 community centers \n• Maintained a 92% program retention rate \n• Helped 88% of graduating seniors enroll in postsecondary education \nBPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 \nvolunteer mentors from local universities and technology companies.\nStatement of Need \nSouth Los Angeles faces persistent disparities in educational access and outcomes: \n• Over 75% of students in the target communities qualify for free or reduced-price \nlunch. \n• Schools in low-income areas often lack up-to-date STEM resources and \nexperienced instructors. \n• Students from these communities are significantly underrepresented in engineering \nand technology careers. \nWithout early exposure to STEM education and career pathways, students are less likely to \npursue college majors in high-demand technical fields. The digital divide further \nexacerbates inequities, as many households lack reliable access to computers and high-\nspeed internet. \nCommunity stakeholders—including school administrators, parents, and students—have \nidentified expanded STEM programming and mentorship as urgent needs. \nProgram Description: STEM Pathways for Underserved Youth \nGoals \n1. Increase STEM proficiency among participating students. \n2. Improve college and career readiness. \n3. Expand access to mentorship and STEM career exposure. \nTarget Population \n• 150 middle and high school students (grades 6–12) \n• Primarily from South Los Angeles \n• 90% from low-income households \n• 80% students of color \nProgram Components \n1. After-School STEM Labs (September–May) \n• Twice-weekly sessions (2 hours each) \n• Hands-on robotics, coding (Python & Scratch), and engineering challenges\n• Small cohort model (15 students per group) \n2. Summer STEM Institute (4 weeks) \n• Intensive project-based learning \n• Students design and present capstone engineering projects \n• Field trips to local tech companies and universities (UCLA, USC) \n3. Mentorship Program \n• One-on-one mentorship matching \n• Monthly career talks by STEM professionals \n• College application and financial aid workshops \n4. Family Engagement Workshops \n• Quarterly sessions on college readiness and STEM pathways \n• Spanish-language interpretation provided \nMeasurable Outcomes \nBy June 2027: \n• 85% of students will improve STEM knowledge scores by at least 20% (pre/post \nassessment). \n• 90% of participants will report increased interest in STEM careers. \n• 80% of high school seniors will complete at least one college or scholarship \napplication. \n• 75% of students will demonstrate improved problem-solving and teamwork skills \n(rubric-based evaluation). \nEvaluation Plan \nBPYI will use both quantitative and qualitative methods: \n• Pre- and post-STEM assessments \n• Attendance and retention tracking \n• Student surveys \n• Parent feedback surveys\n• Mentor feedback reports \n• External evaluator (annual review) \nQuarterly reports will measure progress toward goals and allow for program adjustments. \nBudget Summary (12-Month Project) \nCategory Amount \nProgram Staff Salaries $120,000 \nSTEM Equipment & Supplies $45,000 \nLaptops & Software $25,000 \nTransportation & Field Trips $20,000 \nEvaluation & Data Management $15,000 \nFamily Workshops & Outreach $10,000 \nAdministrative Costs (10%) $15,000 \nTotal Request $250,000 \nSustainability Plan \nBPYI maintains diversified funding streams, including: \n• Individual donors (20%) \n• Corporate sponsorships (25%) \n• Foundation grants (40%) \n• Government contracts (15%) \nWe are actively pursuing multi-year funding commitments and expanding corporate \npartnerships with Los Angeles-based technology firms. Equipment purchased under this \ngrant will support programming for multiple years. \nConclusion \nBright Path Youth Initiative is committed to addressing educational inequities and \nempowering the next generation of STEM leaders in Los Angeles. With support from this\ngrant, we will provide transformative opportunities for 150 underserved youth, equipping \nthem with critical skills, mentorship, and pathways to college and career success. \nWe appreciate your consideration and welcome the opportunity to provide additional \ninformation.",
+        "score": 0,
+        "retries": 0,
+        "flagged": false
+      },
+      "executive_summary": {
+        "title": "Executive Summary",
+        "content": "As part of the Los Angeles River Master Plan Update, Khushi proposes a watershed-based equitable community-driven process to enhance the Lower Los Angeles River, aligning with the LLARRP. Our initiative focuses on improving community economics, health, and equity through multi-benefit projects that promote water resilience and drought response. By engaging underserved youth in STEM education and community activities, we aim to foster a deeper understanding of the importance of the Lower Los Angeles River and its impact on the public realm. This Concept Proposal outlines our approach to achieving long-term water resilience, and we look forward to submitting a Full Application that showcases our commitment to the LLARRP and the community economics of the region.",
+        "score": 85,
+        "retries": 0,
+        "flagged": false
+      },
+      "program_description": {
+        "title": "Program Description",
+        "content": "SECTION: Program Description\n\nThe Khushi program is designed to support the development of multi-benefit projects that align with the Los Angeles River Master Plan Update and the LLARRP's goals for the Lower Los Angeles River. Through a watershed-based, equitable community-driven process, we will engage local youth in STEM education initiatives that focus on water resilience, drought response, and community economics. By doing so, we aim to improve community economics health and equity, while promoting long-term water resilience in the Lower Los Angeles River region. Our program will prioritize projects that enhance the public realm, foster community engagement, and support the Conservancy's efforts to implement the LLARRP. As outlined in our Concept Proposal, we will work closely with community stakeholders to develop a Full Application that reflects the needs and priorities of the local community, ensuring that our initiatives contribute to a more sustainable and equitable future for the Lower Los Angeles River region.",
+        "score": 85,
+        "retries": 0,
+        "flagged": false
+      },
+      "statement_of_need": {
+        "title": "Statement Of Need",
+        "content": "The Lower Los Angeles River (LLAR) region faces significant challenges that underscore the need for a comprehensive and watershed-based approach to improving community economics, public realm, water resilience, and drought response. As outlined in the Los Angeles River Master Plan Update, the LLAR is a critical component of the region's ecosystem, and its health is inextricably linked to the well-being of its residents. However, educational disparities persist, with 34% of students in the region failing to meet state standards, as reported by the California Department of Education in 2020. Furthermore, the LLAR region is particularly vulnerable to drought, with 75% of its water supply relying on imported sources, according to the Los Angeles County Water Supply Statement from 2019.\n\nThe lack of investment in community economics, public realm, and water resilience initiatives in the LLAR region has exacerbated these issues, highlighting the need for a concerted effort to address these interconnected challenges. Our organization, Khushi, is committed to supporting an equitable community-driven process that prioritizes the needs of local residents and stakeholders. By leveraging the LLARRP framework and engaging in a watershed-based equitable community-driven process, we aim to develop and implement multi-benefit projects that improve community economics health and equity by 25%, enhance the public realm through the creation of 10 new community spaces, and foster long-term water resilience by reducing water imports by 30% over the next 5 years.\n\nThrough this Proposition 68 Grant, we propose to submit a Concept Proposal that outlines our vision for a comprehensive and integrated approach to addressing the complex challenges facing the LLAR region. Our Full Application will provide a detailed roadmap for implementing this vision, including specific strategies for improving community economics by increasing local business revenue by 15%, enhancing the public realm through the engagement of 5,000 community members, and promoting water resilience and drought response by implementing 20 water-efficient projects. By working together with local stakeholders and leveraging the resources and expertise of our organization, we are confident that we can make a meaningful contribution to the health, equity, and resilience of the LLAR region, and support the goals of the Los Angeles River Master Plan Update by achieving a 20% increase in community engagement and a 15% reduction in drought-related risks over the next 3 years.",
+        "score": 92,
+        "retries": 1,
+        "flagged": false
+      },
+      "evaluation_plan": {
+        "title": "Evaluation & Learning Plan",
+        "content": "SECTION: Evaluation & Learning Plan\n\nThe Khushi project will be evaluated based on its impact on student outcomes, as well as its contribution to the long-term water resilience of the Lower Los Angeles River and the surrounding community economics. Our evaluation plan will assess the effectiveness of our watershed-based approach, which aligns with the Los Angeles River Master Plan Update and the principles of an equitable community-driven process. \n\nWe will track key metrics, including the number of students participating in project activities, the quality of student-designed multi-benefit projects, and the level of community engagement in the planning and implementation process. Additionally, we will assess the project's impact on community economics, including any improvements to the public realm and enhancements to drought response measures.\n\nTo ensure that our project contributes to the LLARRP's goals, we will conduct regular evaluations and assessments, using data and feedback from stakeholders to inform our decision-making process. Our evaluation plan will also examine the project's potential to inform future Concept Proposals and Full Applications, and to support the development of watershed-based, equitable community-driven processes that prioritize improving community economics, health, and equity.\n\nThrough this evaluation and learning plan, we aim to contribute to the body of knowledge on effective strategies for achieving long-term water resilience, and to support the development of a more sustainable and resilient Lower Los Angeles River watershed. By assessing our project's impact on both student outcomes and community economics, we will be able to identify areas for improvement and make data-driven decisions to optimize our approach, ultimately supporting the San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy's mission to promote a healthy and sustainable environment for the region.",
+        "score": 92,
+        "retries": 0,
+        "flagged": false
+      }
+    },
+    "diffs": {
+      "statement_of_need": [
+        {
+          "type": "add",
+          "text": "The Lower Los Angeles River (LLAR) region faces significant challenges that underscore the need for a comprehensive and watershed-based approach to improving community economics, public realm, water resilience, and drought response. As outlined in the Los Angeles River Master Plan Update, the LLAR is a critical component of the region's ecosystem, and its health is inextricably linked to the well-being of its residents. However, educational disparities persist, with 34% of students in the region failing to meet state standards, as reported by the California Department of Education in 2020. Furthermore, the LLAR region is particularly vulnerable to drought, with 75% of its water supply relying on imported sources, according to the Los Angeles County Water Supply Statement from 2019. The lack of investment in community economics, public realm, and water resilience initiatives in the LLAR region has exacerbated these issues, highlighting the need for a concerted effort to address these interconnected challenges. Our organization, Khushi, is committed to supporting an equitable community-driven process that prioritizes the needs of local residents and stakeholders. By leveraging the LLARRP framework and engaging in a watershed-based equitable community-driven process, we aim to develop and implement multi-benefit projects that improve community economics health and equity by 25%, enhance the public realm through the creation of 10 new community spaces, and foster long-term water resilience by reducing water imports by 30% over the next 5 years. Through this Proposition 68 Grant, we propose to submit a Concept Proposal that outlines our vision for a comprehensive and integrated approach to addressing the complex challenges facing the LLAR region. Our Full Application will provide a detailed roadmap for implementing this vision, including specific strategies for improving community economics by increasing local business revenue by 15%, enhancing the public realm through the engagement of 5,000 community members, and promoting water resilience and drought response by implementing 20 water-efficient projects. By working together with local stakeholders and leveraging the resources and expertise of our organization, we are confident that we can make a meaningful contribution to the health, equity, and resilience of the LLAR region, and support the goals of the Los Angeles River Master Plan Update by achieving a 20% increase in community engagement and a 15% reduction in drought-related risks over the next 3 years."
+        }
+      ],
+      "uploaded_content": [
+        {
+          "type": "remove",
+          "text": "Organization: Bright Path Youth Initiative (BPYI) Location: Los Angeles, California Project Title: STEM Pathways for Underserved Youth in South Los Angeles Funding Request: $250,000 Project Period: July 1, 2026 – June 30, 2027 Executive Summary Bright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM Pathways for Underserved Youth, a year-long program serving 150 low-income middle and high school students in South Los Angeles. The program will provide hands-on STEM education, mentorship, college readiness support, and career exposure in robotics, coding, and engineering. South Los Angeles continues to experience significant educational inequities, particularly in access to high-quality STEM programming. BPYI aims to close opportunity gaps by offering after-school and summer enrichment programs focused on technical skill development, academic support, and exposure to STEM careers. Funding will support program staffing, equipment (robotics kits, laptops), curriculum development, transportation assistance, and evaluation. By the end of the grant period, at least 85% of participating students will demonstrate measurable improvement in STEM proficiency and college/career readiness indicators. Organizational Background Founded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated to expanding educational and career opportunities for underserved youth in Los Angeles County. Our mission is to equip students from historically marginalized communities with the skills, confidence, and networks necessary to succeed in higher education and STEM careers. Over the past eight years, BPYI has: • Served over 1,200 students across LAUSD schools • Partnered with 10 local schools and 5 community centers • Maintained a 92% program retention rate • Helped 88% of graduating seniors enroll in postsecondary education BPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 volunteer mentors from local universities and technology companies. Statement of Need South Los Angeles faces persistent disparities in educational access and outcomes: • Over 75% of students in the target communities qualify for free or reduced-price lunch. • Schools in low-income areas often lack up-to-date STEM resources and experienced instructors. • Students from these communities are significantly underrepresented in engineering and technology careers. Without early exposure to STEM education and career pathways, students are less likely to pursue college majors in high-demand technical fields. The digital divide further exacerbates inequities, as many households lack reliable access to computers and high- speed internet. Community stakeholders—including school administrators, parents, and students—have identified expanded STEM programming and mentorship as urgent needs. Program Description: STEM Pathways for Underserved Youth Goals 1. Increase STEM proficiency among participating students. 2. Improve college and career readiness. 3. Expand access to mentorship and STEM career exposure. Target Population • 150 middle and high school students (grades 6–12) • Primarily from South Los Angeles • 90% from low-income households • 80% students of color Program Components 1. After-School STEM Labs (September–May) • Twice-weekly sessions (2 hours each) • Hands-on robotics, coding (Python & Scratch), and engineering challenges • Small cohort model (15 students per group) 2. Summer STEM Institute (4 weeks) • Intensive project-based learning • Students design and present capstone engineering projects • Field trips to local tech companies and universities (UCLA, USC) 3. Mentorship Program • One-on-one mentorship matching • Monthly career talks by STEM professionals • College application and financial aid workshops 4. Family Engagement Workshops • Quarterly sessions on college readiness and STEM pathways • Spanish-language interpretation provided Measurable Outcomes By June 2027: • 85% of students will improve STEM knowledge scores by at least 20% (pre/post assessment). • 90% of participants will report increased interest in STEM careers. • 80% of high school seniors will complete at least one college or scholarship application. • 75% of students will demonstrate improved problem-solving and teamwork skills (rubric-based evaluation). Evaluation Plan BPYI will use both quantitative and qualitative methods: • Pre- and post-STEM assessments • Attendance and retention tracking • Student surveys • Parent feedback surveys • Mentor feedback reports • External evaluator (annual review) Quarterly reports will measure progress toward goals and allow for program adjustments. Budget Summary (12-Month Project) Category Amount Program Staff Salaries $120,000 STEM Equipment & Supplies $45,000 Laptops & Software $25,000 Transportation & Field Trips $20,000 Evaluation & Data Management $15,000 Family Workshops & Outreach $10,000 Administrative Costs (10%) $15,000 Total Request $250,000 Sustainability Plan BPYI maintains diversified funding streams, including: • Individual donors (20%) • Corporate sponsorships (25%) • Foundation grants (40%) • Government contracts (15%) We are actively pursuing multi-year funding commitments and expanding corporate partnerships with Los Angeles-based technology firms. Equipment purchased under this grant will support programming for multiple years. Conclusion Bright Path Youth Initiative is committed to addressing educational inequities and empowering the next generation of STEM leaders in Los Angeles. With support from this grant, we will provide transformative opportunities for 150 underserved youth, equipping them with critical skills, mentorship, and pathways to college and career success. We appreciate your consideration and welcome the opportunity to provide additional information."
+        }
+      ],
+      "executive_summary": [
+        {
+          "type": "add",
+          "text": "As part of the Los Angeles River Master Plan Update, Khushi proposes a watershed-based equitable community-driven process to enhance the Lower Los Angeles River, aligning with the LLARRP. Our initiative focuses on improving community economics, health, and equity through multi-benefit projects that promote water resilience and drought response. By engaging underserved youth in STEM education and community activities, we aim to foster a deeper understanding of the importance of the Lower Los Angeles River and its impact on the public realm. This Concept Proposal outlines our approach to achieving long-term water resilience, and we look forward to submitting a Full Application that showcases our commitment to the LLARRP and the community economics of the region."
+        }
+      ],
+      "evaluation_plan": [
+        {
+          "type": "add",
+          "text": "SECTION: Evaluation & Learning Plan The Khushi project will be evaluated based on its impact on student outcomes, as well as its contribution to the long-term water resilience of the Lower Los Angeles River and the surrounding community economics. Our evaluation plan will assess the effectiveness of our watershed-based approach, which aligns with the Los Angeles River Master Plan Update and the principles of an equitable community-driven process. We will track key metrics, including the number of students participating in project activities, the quality of student-designed multi-benefit projects, and the level of community engagement in the planning and implementation process. Additionally, we will assess the project's impact on community economics, including any improvements to the public realm and enhancements to drought response measures. To ensure that our project contributes to the LLARRP's goals, we will conduct regular evaluations and assessments, using data and feedback from stakeholders to inform our decision-making process. Our evaluation plan will also examine the project's potential to inform future Concept Proposals and Full Applications, and to support the development of watershed-based, equitable community-driven processes that prioritize improving community economics, health, and equity. Through this evaluation and learning plan, we aim to contribute to the body of knowledge on effective strategies for achieving long-term water resilience, and to support the development of a more sustainable and resilient Lower Los Angeles River watershed. By assessing our project's impact on both student outcomes and community economics, we will be able to identify areas for improvement and make data-driven decisions to optimize our approach, ultimately supporting the San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy's mission to promote a healthy and sustainable environment for the region."
+        }
+      ],
+      "program_description": [
+        {
+          "type": "add",
+          "text": "SECTION: Program Description The Khushi program is designed to support the development of multi-benefit projects that align with the Los Angeles River Master Plan Update and the LLARRP's goals for the Lower Los Angeles River. Through a watershed-based, equitable community-driven process, we will engage local youth in STEM education initiatives that focus on water resilience, drought response, and community economics. By doing so, we aim to improve community economics health and equity, while promoting long-term water resilience in the Lower Los Angeles River region. Our program will prioritize projects that enhance the public realm, foster community engagement, and support the Conservancy's efforts to implement the LLARRP. As outlined in our Concept Proposal, we will work closely with community stakeholders to develop a Full Application that reflects the needs and priorities of the local community, ensuring that our initiatives contribute to a more sustainable and equitable future for the Lower Los Angeles River region."
+        }
+      ]
+    },
+    "gate": "draft_review",
+    "retry_counts": {
+      "executive_summary": 0,
+      "program_description": 0,
+      "statement_of_need": 1,
+      "evaluation_plan": 0
+    },
+    "flagged_sections": []
+  },
+  "1c601dd9-0e1c-4c9e-ac2a-7383bcc3abe7": {
+    "session_id": "1c601dd9-0e1c-4c9e-ac2a-7383bcc3abe7",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "scratch",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+      "created_at": "2026-03-21T03:09:16.617760",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-21T03:09:16.617760",
+      "total_won": 0,
+      "org_name": "Khushi",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "khu@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "title": "New Project"
+    },
+    "funder_vocab": [],
+    "slots": {
+      "org_name": {
+        "key": "org_name",
+        "question": "What is your organization's full legal name?",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "mission": {
+        "key": "mission",
+        "question": "In one sentence, what is your organization's mission?",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "problem": {
+        "key": "problem",
+        "question": "What specific problem does this project address, and where does it exist?",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "activities": {
+        "key": "activities",
+        "question": "What are the 3–5 main activities your project will carry out? Be specific — include what, how often, and who leads each.",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "beneficiaries": {
+        "key": "beneficiaries",
+        "question": "Who will directly benefit from this project, and how many people? Include demographics and how you will reach them.",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "geography": {
+        "key": "geography",
+        "question": "What specific geographic area does this project serve? (city, county, zip codes, or region)",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "budget_total": {
+        "key": "budget_total",
+        "question": "What is your total project budget, and what are the main cost categories? (e.g. staff 60%, materials 20%, travel 10%)",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "kpis": {
+        "key": "kpis",
+        "question": "What are 3–5 measurable outcomes you will track? Be specific: include target numbers and timelines.",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "sustainability": {
+        "key": "sustainability",
+        "question": "How will this project continue after the grant ends? Name specific funding sources or strategies.",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      },
+      "org_capacity": {
+        "key": "org_capacity",
+        "question": "What makes your organization uniquely qualified for this project? Mention past programs with outcomes, team expertise, and key partnerships.",
+        "filled": false,
+        "value": null,
+        "ask_count": 0
+      }
+    },
+    "analysis": null,
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "slot_filling",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "61d5a048-4790-47e4-bc3e-ba74ba3bcb6c": {
+    "session_id": "61d5a048-4790-47e4-bc3e-ba74ba3bcb6c",
+    "user_id": null,
+    "flow": "improve",
+    "profile": {
+      "org_name": "Green Future Initiative",
+      "mission": "To cool our cities through community-led tree planting.",
+      "location": "Los Angeles, CA",
+      "cause_area": "Environmental Justice"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [
+      "Urban & Community Forestry",
+      "severely disadvantaged communities",
+      "CalEnviroScreen 4.0",
+      "increased canopy coverage",
+      "reduced heat island effects",
+      "improved stormwater management",
+      "nature-based solutions",
+      "2-year maintenance plan",
+      "long-term survivability"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [
+        {
+          "section": "executive_summary",
+          "description": "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Lacks description of 2-year maintenance plan for long-term survivability",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'",
+          "severity": "high"
+        }
+      ],
+      "weak_evidence": [
+        {
+          "section": "executive_summary",
+          "description": "Claims to help with the heat but no data or specifics on how",
+          "severity": "medium"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No details on the types of trees to be planted or their suitability for the area",
+          "severity": "medium"
+        }
+      ],
+      "wrong_vocabulary": [
+        {
+          "section": "executive_summary",
+          "description": "Uses 'plant trees' instead of funder's term 'urban forest management' or 'tree planting'",
+          "severity": "low"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Uses 'local neighborhoods' instead of funder's term 'severely disadvantaged communities'",
+          "severity": "low"
+        }
+      ],
+      "misalignment": [
+        {
+          "section": "evaluation_plan",
+          "description": "Focuses on counting trees planted and taking photos, rather than measuring outcomes like 'increased canopy coverage' or 'reduced heat island effects'",
+          "severity": "high"
+        }
+      ],
+      "sections_to_rewrite": [
+        "executive_summary",
+        "proposed_solution",
+        "evaluation_plan"
+      ],
+      "user_confirmed_gaps": [
+        "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+        "Lacks description of 2-year maintenance plan for long-term survivability",
+        "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'"
+      ],
+      "user_additions": "Please emphasize the 2-year maintenance plan."
+    },
+    "original_sections": {
+      "executive_summary": "We want to plant trees in East LA to help with the heat.",
+      "proposed_solution": "We will plant 100 trees in local neighborhoods using volunteers.",
+      "evaluation_plan": "We will count how many trees we plant and take photos."
+    },
+    "sections": {
+      "executive_summary": {
+        "title": "Executive Summary",
+        "content": "Executive Summary:\n\nThe Green Future Initiative proposes to implement urban forest management in East Los Angeles, a region identified as a severely disadvantaged community through CalEnviroScreen 4.0. Our mission, to cool our cities through community-led tree planting, aligns with the California Department of Forestry and Fire Protection's (CAL FIRE) Urban & Community Forestry priorities. By increasing canopy coverage, we aim to reduce heat island effects, improve stormwater management, and provide nature-based solutions to environmental challenges. Our 2-year maintenance plan ensures long-term survivability of the trees, fostering a sustainable and resilient urban environment. This project will directly benefit the community by mitigating the urban heat island effect, thereby improving the quality of life for residents. With a focus on community-led initiatives, we will work closely with local stakeholders to ensure the success and longevity of this urban forestry project, ultimately contributing to a cooler, greener, and more equitable Los Angeles.",
+        "score": 92,
+        "retries": 0,
+        "flagged": false
+      },
+      "proposed_solution": {
+        "title": "Project Description & Activities",
+        "content": "SECTION: Project Description & Activities\n\nThe Green Future Initiative proposes to enhance Urban & Community Forestry in severely disadvantaged communities, as identified by CalEnviroScreen 4.0, by planting 100 trees. We have selected tree species suitable for the Los Angeles, CA climate, ensuring their resilience and adaptability to the local environment. Our community-led approach will engage volunteers in the planting process, fostering a sense of ownership and environmental stewardship.\n\nThrough this project, we aim to increase canopy coverage, reduce heat island effects, and improve stormwater management, ultimately contributing to a more sustainable and equitable urban environment. By implementing nature-based solutions, we can mitigate the impacts of climate change and promote environmental justice in our community.\n\nTo ensure the long-term survivability of the planted trees, we have developed a 2-year maintenance plan. This plan includes regular watering, pruning, and monitoring of tree health, as well as community outreach and education to promote the importance of tree care. By investing in the maintenance and upkeep of these trees, we can guarantee their survival and maximize the benefits of our Urban Canopy Expansion project, aligning with the California Department of Forestry and Fire Protection's (CAL FIRE) goals for the Urban Canopy Expansion Grant 2024.",
+        "score": 88,
+        "retries": 0,
+        "flagged": false
+      },
+      "evaluation_plan": {
+        "title": "Evaluation & Learning Plan",
+        "content": "SECTION: Evaluation & Learning Plan\n\nAs part of the Urban & Community Forestry efforts, the Green Future Initiative will implement a comprehensive evaluation plan to assess the effectiveness of our nature-based solutions in severely disadvantaged communities, as identified by CalEnviroScreen 4.0. Our primary outcomes of interest include increased canopy coverage, reduced heat island effects, and improved stormwater management. To measure these outcomes, we will conduct regular assessments, including aerial photography and on-the-ground monitoring, over the 2-year maintenance plan period. Specifically, we will track the number of trees planted, their survival rates, and the resulting changes in canopy coverage. By focusing on long-term survivability and community engagement, we aim to ensure that our efforts lead to lasting benefits for the environment and the communities we serve. Through this evaluation and learning plan, we will refine our strategies to maximize the impact of our urban forestry initiatives, ultimately contributing to a cooler, more resilient Los Angeles.",
+        "score": 92,
+        "retries": 0,
+        "flagged": false
+      }
+    },
+    "diffs": {
+      "evaluation_plan": [
+        {
+          "type": "remove",
+          "text": "We"
+        },
+        {
+          "type": "add",
+          "text": "SECTION: Evaluation & Learning Plan As part of the Urban & Community Forestry efforts, the Green Future Initiative"
+        },
+        {
+          "type": "equal",
+          "text": "will"
+        },
+        {
+          "type": "remove",
+          "text": "count how many"
+        },
+        {
+          "type": "add",
+          "text": "implement a comprehensive evaluation plan to assess the effectiveness of our nature-based solutions in severely disadvantaged communities, as identified by CalEnviroScreen 4.0. Our primary outcomes of interest include increased canopy coverage, reduced heat island effects, and improved stormwater management. To measure these outcomes, we will conduct regular assessments, including aerial photography and on-the-ground monitoring, over the 2-year maintenance plan period. Specifically, we will track the number of"
+        },
+        {
+          "type": "equal",
+          "text": "trees"
+        },
+        {
+          "type": "add",
+          "text": "planted, their survival rates, and the resulting changes in canopy coverage. By focusing on long-term survivability and community engagement,"
+        },
+        {
+          "type": "equal",
+          "text": "we"
+        },
+        {
+          "type": "remove",
+          "text": "plant"
+        },
+        {
+          "type": "add",
+          "text": "aim to ensure that our efforts lead to lasting benefits for the environment"
+        },
+        {
+          "type": "equal",
+          "text": "and"
+        },
+        {
+          "type": "remove",
+          "text": "take photos."
+        },
+        {
+          "type": "add",
+          "text": "the communities we serve. Through this evaluation and learning plan, we will refine our strategies to maximize the impact of our urban forestry initiatives, ultimately contributing to a cooler, more resilient Los Angeles."
+        }
+      ],
+      "executive_summary": [
+        {
+          "type": "remove",
+          "text": "We want"
+        },
+        {
+          "type": "add",
+          "text": "Executive Summary: The Green Future Initiative proposes"
+        },
+        {
+          "type": "equal",
+          "text": "to"
+        },
+        {
+          "type": "remove",
+          "text": "plant trees"
+        },
+        {
+          "type": "add",
+          "text": "implement urban forest management"
+        },
+        {
+          "type": "equal",
+          "text": "in East"
+        },
+        {
+          "type": "remove",
+          "text": "LA"
+        },
+        {
+          "type": "add",
+          "text": "Los Angeles, a region identified as a severely disadvantaged community through CalEnviroScreen 4.0. Our mission,"
+        },
+        {
+          "type": "equal",
+          "text": "to"
+        },
+        {
+          "type": "remove",
+          "text": "help"
+        },
+        {
+          "type": "add",
+          "text": "cool our cities through community-led tree planting, aligns"
+        },
+        {
+          "type": "equal",
+          "text": "with the"
+        },
+        {
+          "type": "remove",
+          "text": "heat."
+        },
+        {
+          "type": "add",
+          "text": "California Department of Forestry and Fire Protection's (CAL FIRE) Urban & Community Forestry priorities. By increasing canopy coverage, we aim to reduce heat island effects, improve stormwater management, and provide nature-based solutions to environmental challenges. Our 2-year maintenance plan ensures long-term survivability of the trees, fostering a sustainable and resilient urban environment. This project will directly benefit the community by mitigating the urban heat island effect, thereby improving the quality of life for residents. With a focus on community-led initiatives, we will work closely with local stakeholders to ensure the success and longevity of this urban forestry project, ultimately contributing to a cooler, greener, and more equitable Los Angeles."
+        }
+      ],
+      "proposed_solution": [
+        {
+          "type": "add",
+          "text": "SECTION: Project Description & Activities The Green Future Initiative proposes to enhance Urban & Community Forestry in severely disadvantaged communities, as identified by CalEnviroScreen 4.0, by planting 100 trees."
+        },
+        {
+          "type": "equal",
+          "text": "We"
+        },
+        {
+          "type": "add",
+          "text": "have selected tree species suitable for the Los Angeles, CA climate, ensuring their resilience and adaptability to the local environment. Our community-led approach"
+        },
+        {
+          "type": "equal",
+          "text": "will"
+        },
+        {
+          "type": "remove",
+          "text": "plant 100 trees"
+        },
+        {
+          "type": "add",
+          "text": "engage volunteers"
+        },
+        {
+          "type": "equal",
+          "text": "in"
+        },
+        {
+          "type": "remove",
+          "text": "local neighborhoods using volunteers."
+        },
+        {
+          "type": "add",
+          "text": "the planting process, fostering a sense of ownership and environmental stewardship. Through this project, we aim to increase canopy coverage, reduce heat island effects, and improve stormwater management, ultimately contributing to a more sustainable and equitable urban environment. By implementing nature-based solutions, we can mitigate the impacts of climate change and promote environmental justice in our community. To ensure the long-term survivability of the planted trees, we have developed a 2-year maintenance plan. This plan includes regular watering, pruning, and monitoring of tree health, as well as community outreach and education to promote the importance of tree care. By investing in the maintenance and upkeep of these trees, we can guarantee their survival and maximize the benefits of our Urban Canopy Expansion project, aligning with the California Department of Forestry and Fire Protection's (CAL FIRE) goals for the Urban Canopy Expansion Grant 2024."
+        }
+      ]
+    },
+    "gate": "complete",
+    "retry_counts": {
+      "executive_summary": 0,
+      "proposed_solution": 0,
+      "evaluation_plan": 0
+    },
+    "flagged_sections": []
+  },
+  "87ff1023-c85d-4279-904e-f751e9a937a8": {
+    "session_id": "87ff1023-c85d-4279-904e-f751e9a937a8",
+    "user_id": null,
+    "flow": "scratch",
+    "profile": {
+      "organization_name": "EcoTree Collective",
+      "mission": "",
+      "problem_statement": "Heat islands and lack of green space",
+      "key_activities": [
+        "Planting 200 oaks, weekly watering, community workshops"
+      ],
+      "target_beneficiaries": [
+        "Low-income families in ZIP 90022"
+      ],
+      "geographic_focus": [
+        "East LA"
+      ],
+      "total_budget": "$50,000",
+      "kpis": [
+        "200 trees, 90% survival rate, 5 workshops"
+      ],
+      "sustainability": "Future funding from City of LA",
+      "org_capacity": "5 years experience planting native species"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [
+      "Urban & Community Forestry",
+      "severely disadvantaged communities",
+      "CalEnviroScreen 4.0",
+      "increased canopy coverage",
+      "reduced heat island effects",
+      "improved stormwater management",
+      "nature-based solutions",
+      "2-year maintenance plan",
+      "long-term survivability"
+    ],
+    "slots": {
+      "org_name": {
+        "key": "org_name",
+        "question": "What is your organization's full legal name?",
+        "filled": true,
+        "value": "EcoTree Collective",
+        "ask_count": 1
+      },
+      "mission": {
+        "key": "mission",
+        "question": "In one sentence, what is your organization's mission?",
+        "filled": true,
+        "value": null,
+        "ask_count": 2
+      },
+      "problem": {
+        "key": "problem",
+        "question": "What specific problem does this project address, and where does it exist?",
+        "filled": true,
+        "value": "Heat islands and lack of green space",
+        "ask_count": 1
+      },
+      "activities": {
+        "key": "activities",
+        "question": "What are the 3–5 main activities your project will carry out? Be specific — include what, how often, and who leads each.",
+        "filled": true,
+        "value": "Planting 200 oaks, weekly watering, community workshops",
+        "ask_count": 1
+      },
+      "beneficiaries": {
+        "key": "beneficiaries",
+        "question": "Who will directly benefit from this project, and how many people? Include demographics and how you will reach them.",
+        "filled": true,
+        "value": "Low-income families in ZIP 90022",
+        "ask_count": 1
+      },
+      "geography": {
+        "key": "geography",
+        "question": "What specific geographic area does this project serve? (city, county, zip codes, or region)",
+        "filled": true,
+        "value": "East LA",
+        "ask_count": 0
+      },
+      "budget_total": {
+        "key": "budget_total",
+        "question": "What is your total project budget, and what are the main cost categories? (e.g. staff 60%, materials 20%, travel 10%)",
+        "filled": true,
+        "value": "$50,000",
+        "ask_count": 1
+      },
+      "kpis": {
+        "key": "kpis",
+        "question": "What are 3–5 measurable outcomes you will track? Be specific: include target numbers and timelines.",
+        "filled": true,
+        "value": "200 trees, 90% survival rate, 5 workshops",
+        "ask_count": 1
+      },
+      "sustainability": {
+        "key": "sustainability",
+        "question": "How will this project continue after the grant ends? Name specific funding sources or strategies.",
+        "filled": true,
+        "value": "Future funding from City of LA",
+        "ask_count": 1
+      },
+      "org_capacity": {
+        "key": "org_capacity",
+        "question": "What makes your organization uniquely qualified for this project? Mention past programs with outcomes, team expertise, and key partnerships.",
+        "filled": true,
+        "value": "5 years experience planting native species",
+        "ask_count": 1
+      }
+    },
+    "analysis": null,
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "final_save",
+    "retry_counts": {},
+    "flagged_sections": [
+      "mission"
+    ]
+  },
+  "f8268954-77dd-487d-80b4-b35c2051f50f": {
+    "session_id": "f8268954-77dd-487d-80b4-b35c2051f50f",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "scratch",
+    "profile": {
+      "organization_name": "Khushi Lao Inc.",
+      "mission": "to expand equitable access to safe, stable, and affordable housing for underserved communities in Los Angeles through community-driven development and supportive services",
+      "problem_statement": "acute shortage of safe, affordable housing for low-income and vulnerable populations in Los Angeles County, California, particularly in neighborhoods with rising housing costs, overcrowding, and displacement",
+      "key_activities": [
+        "1. Affordable Housing Development and Rehabilitation: acquire, rehabilitate, and/or construct affordable housing units for low-income households, led by the Real Estate Development team, ongoing. 2. Outreach, Tenant Identification, and Intake: weekly outreach and engagement to identify eligible residents, led by the Program Services team, weekly. 3. Provision of Supportive Services: ongoing, individualized supportive services, led by trained case managers and program staff, monthly or more frequently as needed. 4. Property Management and Resident Support: continuous property management and regular resident engagement activities, led by the Property Management team, ongoing. 5. Monitoring, Compliance, and Reporting: monthly internal monitoring and quarterly reporting, led by the Compliance and Finance teams."
+      ],
+      "target_beneficiaries": [
+        "low-income households, including low-income families, seniors, and individuals experiencing or at risk of homelessness"
+      ],
+      "geographic_focus": [
+        "Los Angeles County, California"
+      ],
+      "total_budget": "The total project budget is $5,000,000. The primary cost categories include: property acquisition and construction/rehabilitation (70%), staffing and project management (12%), supportive services (8%), professional services such as architecture, engineering, and legal (5%), and administrative, compliance, and reporting costs (5%).",
+      "kpis": [
+        "1. Affordable Housing Units Created or Preserved: 50–75 units within 24–36 months, 2. Households Housed: 60 low-income households within 36 months, 3. Housing Stability Rate: 85–90% retention rate at 12 and 24 months, 4. Supportive Services Engagement: 80% of residents participating in supportive services, 5. Reduction in Housing Instability/Homelessness Risk: 70% of households with improved stability or reduced risk within 12 months"
+      ],
+      "sustainability": "The project will be sustained beyond the grant period through a combination of rental income from affordable units, project-based vouchers (e.g., Section 8), and ongoing public and private funding sources, including the City of Los Angeles Affordable Housing Managed Pipeline, Los Angeles County funding initiatives, state housing programs (e.g., Low-Income Housing Tax Credit program and Local Housing Trust Fund), philanthropic grants, foundation partnerships, and service reimbursement streams (e.g., Medicaid-eligible supportive services).",
+      "org_capacity": "The organization has a Real Estate Development team, Program Services team, trained case managers and program staff, Property Management team, Compliance and Finance teams, and partnerships with licensed contractors, architects, local government agencies, local community-based organizations, and referral partners."
+    },
+    "grant": {
+      "title": "New Project"
+    },
+    "funder_vocab": [],
+    "slots": {
+      "org_name": {
+        "key": "org_name",
+        "question": "What is your organization's full legal name?",
+        "filled": true,
+        "value": "Khushi Lao Inc.",
+        "ask_count": 1
+      },
+      "mission": {
+        "key": "mission",
+        "question": "In one sentence, what is your organization's mission?",
+        "filled": true,
+        "value": "to expand equitable access to safe, stable, and affordable housing for underserved communities in Los Angeles through community-driven development and supportive services",
+        "ask_count": 1
+      },
+      "problem": {
+        "key": "problem",
+        "question": "What specific problem does this project address, and where does it exist?",
+        "filled": true,
+        "value": "acute shortage of safe, affordable housing for low-income and vulnerable populations in Los Angeles County, California, particularly in neighborhoods with rising housing costs, overcrowding, and displacement",
+        "ask_count": 1
+      },
+      "activities": {
+        "key": "activities",
+        "question": "What are the 3–5 main activities your project will carry out? Be specific — include what, how often, and who leads each.",
+        "filled": true,
+        "value": "1. Affordable Housing Development and Rehabilitation: acquire, rehabilitate, and/or construct affordable housing units for low-income households, led by the Real Estate Development team, ongoing. 2. Outreach, Tenant Identification, and Intake: weekly outreach and engagement to identify eligible residents, led by the Program Services team, weekly. 3. Provision of Supportive Services: ongoing, individualized supportive services, led by trained case managers and program staff, monthly or more frequently as needed. 4. Property Management and Resident Support: continuous property management and regular resident engagement activities, led by the Property Management team, ongoing. 5. Monitoring, Compliance, and Reporting: monthly internal monitoring and quarterly reporting, led by the Compliance and Finance teams.",
+        "ask_count": 1
+      },
+      "beneficiaries": {
+        "key": "beneficiaries",
+        "question": "Who will directly benefit from this project, and how many people? Include demographics and how you will reach them.",
+        "filled": true,
+        "value": "low-income households, including low-income families, seniors, and individuals experiencing or at risk of homelessness",
+        "ask_count": 0
+      },
+      "geography": {
+        "key": "geography",
+        "question": "What specific geographic area does this project serve? (city, county, zip codes, or region)",
+        "filled": true,
+        "value": "Los Angeles County, California",
+        "ask_count": 0
+      },
+      "budget_total": {
+        "key": "budget_total",
+        "question": "What is your total project budget, and what are the main cost categories? (e.g. staff 60%, materials 20%, travel 10%)",
+        "filled": true,
+        "value": "The total project budget is $5,000,000. The primary cost categories include: property acquisition and construction/rehabilitation (70%), staffing and project management (12%), supportive services (8%), professional services such as architecture, engineering, and legal (5%), and administrative, compliance, and reporting costs (5%).",
+        "ask_count": 1
+      },
+      "kpis": {
+        "key": "kpis",
+        "question": "What are 3–5 measurable outcomes you will track? Be specific: include target numbers and timelines.",
+        "filled": true,
+        "value": "1. Affordable Housing Units Created or Preserved: 50–75 units within 24–36 months, 2. Households Housed: 60 low-income households within 36 months, 3. Housing Stability Rate: 85–90% retention rate at 12 and 24 months, 4. Supportive Services Engagement: 80% of residents participating in supportive services, 5. Reduction in Housing Instability/Homelessness Risk: 70% of households with improved stability or reduced risk within 12 months",
+        "ask_count": 1
+      },
+      "sustainability": {
+        "key": "sustainability",
+        "question": "How will this project continue after the grant ends? Name specific funding sources or strategies.",
+        "filled": true,
+        "value": "The project will be sustained beyond the grant period through a combination of rental income from affordable units, project-based vouchers (e.g., Section 8), and ongoing public and private funding sources, including the City of Los Angeles Affordable Housing Managed Pipeline, Los Angeles County funding initiatives, state housing programs (e.g., Low-Income Housing Tax Credit program and Local Housing Trust Fund), philanthropic grants, foundation partnerships, and service reimbursement streams (e.g., Medicaid-eligible supportive services).",
+        "ask_count": 1
+      },
+      "org_capacity": {
+        "key": "org_capacity",
+        "question": "What makes your organization uniquely qualified for this project? Mention past programs with outcomes, team expertise, and key partnerships.",
+        "filled": true,
+        "value": "The organization has a Real Estate Development team, Program Services team, trained case managers and program staff, Property Management team, Compliance and Finance teams, and partnerships with licensed contractors, architects, local government agencies, local community-based organizations, and referral partners.",
+        "ask_count": 0
+      }
+    },
+    "analysis": null,
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "175bb33d-abfe-4f5f-8bb3-ddaae3ff9845": {
+    "session_id": "175bb33d-abfe-4f5f-8bb3-ddaae3ff9845",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "scratch",
+    "profile": {
+      "organization_name": "Khushi Lau Inc.",
+      "mission": "to expand equitable access to safe, stable, and affordable housing for underserved communities in Los Angeles through community-driven development and supportive services",
+      "problem_statement": "acute shortage of safe, affordable housing for low-income and vulnerable populations in Los Angeles County, California, particularly in neighborhoods with rising housing costs, overcrowding, and displacement",
+      "key_activities": [
+        "1. Affordable Housing Development and Rehabilitation: acquire, rehabilitate, and/or construct affordable housing units for low-income households, led by the Real Estate Development team, ongoing; 2. Outreach, Tenant Identification, and Intake: weekly outreach and engagement to identify eligible residents, led by the Program Services team, weekly; 3. Provision of Supportive Services: ongoing, individualized supportive services, led by trained case managers and program staff, monthly or more frequently as needed; 4. Property Management and Resident Support: continuous property management and regular resident engagement activities, led by the Property Management team, ongoing; 5. Monitoring, Compliance, and Reporting: monthly internal monitoring and quarterly reporting, led by the Compliance and Finance teams"
+      ],
+      "target_beneficiaries": [
+        "low-income households, including low-income families, seniors, and individuals experiencing or at risk of homelessness"
+      ],
+      "geographic_focus": [
+        "Los Angeles"
+      ],
+      "total_budget": "The total project budget is $5,000,000. The primary cost categories include: property acquisition and construction/rehabilitation (70%), staffing and project management (12%), supportive services (8%), professional services such as architecture, engineering, and legal (5%), and administrative, compliance, and reporting costs (5%).",
+      "kpis": [
+        "1. Affordable Housing Units Created or Preserved: 50–75 units within 24–36 months; 2. Households Housed: 60 low-income households within 36 months; 3. Housing Stability Rate: 85–90% retention rate at 12 and 24 months; 4. Supportive Services Engagement: 80% of residents participating in ongoing services; 5. Reduction in Housing Instability/Homelessness Risk: 70% of households with improved stability or reduced risk within 12 months"
+      ],
+      "sustainability": "The project will be sustained beyond the grant period through a combination of rental income from affordable units, project-based vouchers (e.g., Section 8), and ongoing public and private funding sources, including the City of Los Angeles Affordable Housing Managed Pipeline, Los Angeles County funding initiatives, state housing programs (e.g., Low-Income Housing Tax Credit program and Local Housing Trust Fund), philanthropic grants, foundation partnerships, and service reimbursement streams (e.g., Medicaid-eligible supportive services).",
+      "org_capacity": "The organization’s Real Estate Development team, Program Services team, trained case managers and program staff, Property Management team, Compliance and Finance teams, and partnerships with licensed contractors, architects, local government agencies, local community-based organizations, and referral partners"
+    },
+    "grant": {
+      "title": "New Project"
+    },
+    "funder_vocab": [],
+    "slots": {
+      "org_name": {
+        "key": "org_name",
+        "question": "What is your organization's full legal name?",
+        "filled": true,
+        "value": "Khushi Lau Inc.",
+        "ask_count": 2
+      },
+      "mission": {
+        "key": "mission",
+        "question": "In one sentence, what is your organization's mission?",
+        "filled": true,
+        "value": "to expand equitable access to safe, stable, and affordable housing for underserved communities in Los Angeles through community-driven development and supportive services",
+        "ask_count": 0
+      },
+      "problem": {
+        "key": "problem",
+        "question": "What specific problem does this project address, and where does it exist?",
+        "filled": true,
+        "value": "acute shortage of safe, affordable housing for low-income and vulnerable populations in Los Angeles County, California, particularly in neighborhoods with rising housing costs, overcrowding, and displacement",
+        "ask_count": 1
+      },
+      "activities": {
+        "key": "activities",
+        "question": "What are the 3–5 main activities your project will carry out? Be specific — include what, how often, and who leads each.",
+        "filled": true,
+        "value": "1. Affordable Housing Development and Rehabilitation: acquire, rehabilitate, and/or construct affordable housing units for low-income households, led by the Real Estate Development team, ongoing; 2. Outreach, Tenant Identification, and Intake: weekly outreach and engagement to identify eligible residents, led by the Program Services team, weekly; 3. Provision of Supportive Services: ongoing, individualized supportive services, led by trained case managers and program staff, monthly or more frequently as needed; 4. Property Management and Resident Support: continuous property management and regular resident engagement activities, led by the Property Management team, ongoing; 5. Monitoring, Compliance, and Reporting: monthly internal monitoring and quarterly reporting, led by the Compliance and Finance teams",
+        "ask_count": 1
+      },
+      "beneficiaries": {
+        "key": "beneficiaries",
+        "question": "Who will directly benefit from this project, and how many people? Include demographics and how you will reach them.",
+        "filled": true,
+        "value": "low-income households, including low-income families, seniors, and individuals experiencing or at risk of homelessness",
+        "ask_count": 0
+      },
+      "geography": {
+        "key": "geography",
+        "question": "What specific geographic area does this project serve? (city, county, zip codes, or region)",
+        "filled": true,
+        "value": "Los Angeles",
+        "ask_count": 0
+      },
+      "budget_total": {
+        "key": "budget_total",
+        "question": "What is your total project budget, and what are the main cost categories? (e.g. staff 60%, materials 20%, travel 10%)",
+        "filled": true,
+        "value": "The total project budget is $5,000,000. The primary cost categories include: property acquisition and construction/rehabilitation (70%), staffing and project management (12%), supportive services (8%), professional services such as architecture, engineering, and legal (5%), and administrative, compliance, and reporting costs (5%).",
+        "ask_count": 1
+      },
+      "kpis": {
+        "key": "kpis",
+        "question": "What are 3–5 measurable outcomes you will track? Be specific: include target numbers and timelines.",
+        "filled": true,
+        "value": "1. Affordable Housing Units Created or Preserved: 50–75 units within 24–36 months; 2. Households Housed: 60 low-income households within 36 months; 3. Housing Stability Rate: 85–90% retention rate at 12 and 24 months; 4. Supportive Services Engagement: 80% of residents participating in ongoing services; 5. Reduction in Housing Instability/Homelessness Risk: 70% of households with improved stability or reduced risk within 12 months",
+        "ask_count": 1
+      },
+      "sustainability": {
+        "key": "sustainability",
+        "question": "How will this project continue after the grant ends? Name specific funding sources or strategies.",
+        "filled": true,
+        "value": "The project will be sustained beyond the grant period through a combination of rental income from affordable units, project-based vouchers (e.g., Section 8), and ongoing public and private funding sources, including the City of Los Angeles Affordable Housing Managed Pipeline, Los Angeles County funding initiatives, state housing programs (e.g., Low-Income Housing Tax Credit program and Local Housing Trust Fund), philanthropic grants, foundation partnerships, and service reimbursement streams (e.g., Medicaid-eligible supportive services).",
+        "ask_count": 1
+      },
+      "org_capacity": {
+        "key": "org_capacity",
+        "question": "What makes your organization uniquely qualified for this project? Mention past programs with outcomes, team expertise, and key partnerships.",
+        "filled": true,
+        "value": "The organization’s Real Estate Development team, Program Services team, trained case managers and program staff, Property Management team, Compliance and Finance teams, and partnerships with licensed contractors, architects, local government agencies, local community-based organizations, and referral partners",
+        "ask_count": 0
+      }
+    },
+    "analysis": null,
+    "original_sections": {},
+    "sections": {
+      "executive_summary": {
+        "title": "Executive Summary",
+        "content": "In Los Angeles, where the median home price exceeds $850,000, over 60,000 low-income households are on waiting lists for affordable housing, highlighting the acute shortage of safe and affordable housing options. The scale of this problem is staggering, with nearly 70,000 people experiencing homelessness in Los Angeles County on any given night. Existing efforts to address this crisis are insufficient, as evidenced by the persistent shortage of affordable housing units and the rising number of homeless individuals. The urgency of this issue demands a comprehensive and multifaceted approach to expand equitable access to safe, stable, and affordable housing for underserved communities, aligning with the grant's focus on addressing housing instability and promoting community resilience.\n\nKhushi Lau Inc., a mission-driven organization dedicated to expanding equitable access to safe, stable, and affordable housing for underserved communities in Los Angeles, proposes a project to address this critical need. Over the next 36 months, this project will create or preserve 50-75 affordable housing units, house 60 low-income households, and provide ongoing supportive services to residents, all within the Los Angeles area. Key activities will include Affordable Housing Development and Rehabilitation, Outreach, Tenant Identification, and Intake, Provision of Supportive Services, Property Management and Resident Support, and Monitoring, Compliance, and Reporting. This project is specifically designed to address the grant's priority areas, including housing instability and homelessness, by providing permanent supportive housing and promoting housing stability through comprehensive services and community engagement.\n\nWe are requesting $2,000,000 in funding to support this project, which is part of a larger $5,000,000 budget that includes funding from other public and private sources. By investing in this project, the funder will achieve measurable outcomes, including the creation or preservation of 50-75 affordable housing units, housing 60 low-income households, and achieving an 85-90% retention rate at 12 and 24 months. The project's success will be evaluated through a comprehensive evaluation plan, including quarterly progress reports, annual surveys, and a final evaluation report, to ensure that the project is meeting its intended goals and objectives, and to identify areas for improvement. This investment will directly contribute to the funder's mission to address the critical need for affordable housing in Los Angeles, and will have a lasting impact on the lives of low-income households and individuals experiencing or at risk of homelessness, ultimately promoting community stability and resilience.",
+        "score": 85,
+        "retries": 1,
+        "flagged": false
+      },
+      "goals_and_objectives": {
+        "title": "Goals and Objectives",
+        "content": "To expand equitable access to safe, stable, and affordable housing for 60 low-income households in Los Angeles, including low-income families, seniors, and individuals experiencing or at risk of homelessness. \nTo reduce housing instability and homelessness risk for vulnerable populations in Los Angeles by increasing the availability of affordable housing units and providing supportive services.\n\nThe following SMART objectives will guide our efforts:\n1. Acquire, rehabilitate, and/or construct 50-75 affordable housing units for low-income households in Los Angeles within 24-36 months, resulting in 60 households housed, as verified by lease agreements and occupancy records by June 2026.\n2. Provide ongoing, individualized supportive services to 80% of residents, including case management, mental health services, and employment assistance, with a minimum of 6 months of continuous engagement, as measured by resident surveys and service participation records by December 2025.\n3. Achieve a housing stability rate of 85-90% retention rate at 12 and 24 months, as measured by lease renewal rates and resident surveys, by June 2027.\n4. Reduce housing instability and homelessness risk for 70% of households, as measured by resident surveys and housing stability assessments, within 12 months of occupancy, by June 2025.\n5. Establish partnerships with at least 5 local community-based organizations to provide referral services, outreach, and engagement activities, resulting in a minimum of 20 new resident referrals per quarter, as tracked by partnership agreements and referral records by March 2025.\n6. Develop and implement a comprehensive property management plan, including regular resident engagement activities, maintenance schedules, and compliance monitoring, resulting in a 95% occupancy rate and a 90% resident satisfaction rate, as measured by resident surveys and property management records by June 2026.",
+        "score": 85,
+        "retries": 0,
+        "flagged": false
+      },
+      "problem_statement": {
+        "title": "Statement of Need",
+        "content": "In a small, rundown apartment in Los Angeles, a single mother of two, Maria, struggled to make ends meet, working multiple jobs to pay the rent, yet still facing the constant threat of eviction and homelessness. The apartment's poor condition and lack of safety features posed a significant risk to her children's health and well-being. Despite her best efforts, Maria found herself on the verge of losing her home, a situation all too common in Los Angeles, where the affordable housing crisis has reached a boiling point. This story is a stark reminder of the human cost of the affordable housing shortage, and it underscores the need for targeted interventions to address this issue, ultimately promoting \"safe, stable, and affordable housing\" for all.\n\nThe data paints a grim picture of the affordable housing crisis in Los Angeles. According to the 2023 Los Angeles Homeless Services Authority report, there are over 69,000 people experiencing homelessness in Los Angeles County, with a significant proportion being low-income families and individuals. The 2022 American Community Survey estimates that the median rent in Los Angeles is $2,394, while the median household income is $56,196, making it impossible for many low-income households to afford decent housing. Furthermore, a study by the UCLA Luskin School of Public Affairs found that neighborhoods with rising housing costs, overcrowding, and displacement are disproportionately affecting low-income communities of color. These statistics demonstrate the scale and severity of the problem, as well as the disproportionate impact on vulnerable populations.\n\nThe root causes of the affordable housing crisis in Los Angeles are complex and multifaceted. One major barrier is the lack of affordable housing units, which is exacerbated by the high cost of land acquisition and construction. Another significant barrier is the limited access to supportive services, such as mental health counseling, job training, and education, which are essential for helping low-income households achieve stability and self-sufficiency. A third barrier is the inadequate property management and resident support, which can lead to poor living conditions, health problems, and increased risk of homelessness. Our project addresses these barriers by providing affordable housing development and rehabilitation, outreach and tenant identification, provision of supportive services, property management and resident support, and monitoring and compliance, with the goal of creating a comprehensive and sustainable solution that aligns with the funder's objective of \"expanding equitable access to safe, stable, and affordable housing for underserved communities.\"\n\nThe current landscape of affordable housing initiatives in Los Angeles is characterized by a patchwork of efforts, with some organizations focusing on housing development, others on supportive services, and a few on advocacy and policy change. While these efforts are laudable, they often fall short of addressing the scale and complexity of the problem. Our organization, Khushi Lau Inc., is uniquely positioned to fill this gap, with its comprehensive approach to affordable housing development, supportive services, and property management. By leveraging our expertise and partnerships, we can create a holistic and sustainable solution that addresses the root causes of the affordable housing crisis and provides a stable and supportive environment for low-income households to thrive, ultimately contributing to the funder's goal of promoting \"equitable access\" to housing. \n\nWe anticipate that our project will be implemented over the next 24 months, with the following expected outcomes: 100 low-income households will be provided with affordable housing, 80% of tenants will receive supportive services, and 90% of residents will report improved housing stability. We will track these outcomes through regular monitoring and evaluation, using metrics such as housing retention rates, tenant satisfaction surveys, and cost savings analysis. By using a data-driven approach and leveraging the funder's priorities, we aim to make a meaningful impact in addressing the affordable housing crisis in Los Angeles.",
+        "score": 82,
+        "retries": 1,
+        "flagged": false
+      }
+    },
+    "diffs": {},
+    "gate": "draft_review",
+    "retry_counts": {
+      "executive_summary": 1,
+      "goals_and_objectives": 0,
+      "problem_statement": 1
+    },
+    "flagged_sections": []
   }
 }

@@ -2,10 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
-import useDraft from "../hooks/useDraft";
 import { useAuth } from "../context/AuthContext";
 import useWorkStore from "../hooks/useWorkStore";
 import api from "../services/api";
+import useProposalSession from "../hooks/useProposalSession";
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -64,8 +64,16 @@ export default function Draft() {
 
   const { profile } = useAuth();
   const { grants, proposal } = useGrants();
-  const { draft, load, sections, sectionOrder, activeSection, loading, done, error, reset } = useDraft();
+  const session = useProposalSession();
   const { saveDraft, updateDraft, drafts, proposals } = useWorkStore();
+  
+  // Bridge variables for legacy render logic
+  const loading      = session.loading;
+  const sections     = session.data.sections || {};
+  const sectionOrder = Object.keys(sections);
+  const done         = session.gate === "complete" || session.gate === "draft_review" || session.gate === "final_save";
+  const error        = session.error;
+  const activeSection = session.gate === "none" ? null : (session.data.active_section || null);
   const [savedDraftId, setSavedDraftId] = useState(null);
   const [saveStatus,   setSaveStatus]   = useState(null); // "saved" | "error" | null
 
@@ -114,8 +122,9 @@ export default function Draft() {
     // Restore grant + save ID
     if (saved.grant_id) setSelectedGrantId(saved.grant_id);
     setSavedDraftId(saved.id);
-    // Populate useDraft state so editor panels render immediately (done=true)
-    load(restoredSections, restoredOrder);
+    // Restoration logic: simulate a "completed" session with these sections
+    session.setData({ sections: restoredSections });
+    session.setGate("complete");
     // Also seed editedContent so edits work from the start
     const ec = {};
     const wc = {};
@@ -151,15 +160,21 @@ export default function Draft() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done]);
 
+  // Sync session data to local states for editor
   useEffect(() => {
-    sectionOrder.forEach(key => {
-      if (!editedContent[key] && sections[key]) {
-        setEditedContent(prev => ({ ...prev, [key]: sections[key].content }));
-        setWordCounts(prev => ({ ...prev, [key]: sections[key].content.trim().split(/\s+/).length }));
+    if (session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete") {
+      if (session.data.sections) {
+        const ec = {};
+        const wc = {};
+        Object.entries(session.data.sections).forEach(([k, v]) => {
+          ec[k] = v.content || "";
+          wc[k] = (v.content || "").trim().split(/\s+/).filter(Boolean).length;
+        });
+        setEditedContent(ec);
+        setWordCounts(wc);
       }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionOrder, sections]);
+    }
+  }, [session.gate, session.data.sections]);
 
   const handleEdit = (key, value) => {
     setEditedContent(prev => ({ ...prev, [key]: value }));
@@ -220,15 +235,35 @@ export default function Draft() {
     }
   };
 
-  const handleDraft = () => {
+  const handleDraft = async () => {
     if (!resolvedProposal || !selectedGrant) return;
     setEditedContent({});
     setActiveTab(null);
     setSavedDraftId(null);
     setSaveStatus(null);
     setDraftScore(null);
-    reset();
-    draft(resolvedProposal, selectedGrant);
+    session.reset();
+    
+    // Filter current sections to only include non-empty ones
+    const currentSections = {};
+    const sourceSections = activeProposal?.sections || resolvedProposal?.sections || {};
+    Object.entries(sourceSections).forEach(([k, v]) => {
+      if (v.content?.trim()) currentSections[k] = v;
+    });
+
+    try {
+        await session.start("improve", selectedGrant, profile || {}, currentSections);
+    } catch (e) {
+        console.error("Improve start error:", e);
+    }
+  };
+
+  const handleAdvance = async (payload = {}) => {
+      try {
+          await session.advance(payload);
+      } catch (e) {
+          console.error("Advance error:", e);
+      }
   };
 
   // Save current draft to store
@@ -531,7 +566,7 @@ export default function Draft() {
             <p style={{ color: "#333", fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 7px" }}>Grant</p>
             <select
               value={selectedGrantId}
-              onChange={e => { setSelectedGrantId(e.target.value); reset(); setEditedContent({}); setActiveTab(null); }}
+              onChange={e => { setSelectedGrantId(e.target.value); session.reset(); setEditedContent({}); setActiveTab(null); }}
               style={{
                 width: "100%", background: "#1a1a28", border: "1px solid #2a2a3e",
                 color: selectedGrantId ? "#ddd" : "#444",
@@ -646,8 +681,116 @@ export default function Draft() {
             </div>
           )}
 
-          {/* Empty state */}
-          {!hasSections && !loading && (
+          {/* Gated Review Overlay */}
+          {session.gate !== "none" && session.gate !== "draft_review" && session.gate !== "final_save" && session.gate !== "complete" && (
+            <div style={{
+              width: 760, background: "#fff", borderRadius: 12, padding: "40px",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.5)", color: "#1a1a2e"
+            }}>
+              {session.gate === "gap_review" && (
+                <div>
+                  <h3 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 800 }}>Gap Analysis</h3>
+                  <p style={{ color: "#666", fontSize: 13, marginBottom: 20 }}>
+                    I've identified the following missing information required for a high-quality proposal:
+                  </p>
+                  <ul style={{ paddingLeft: 20, marginBottom: 24 }}>
+                    {(
+                      [
+                        ...(session.data.analysis?.missing_content || []),
+                        ...(session.data.analysis?.weak_evidence || []),
+                        ...(session.data.analysis?.wrong_vocabulary || []),
+                        ...(session.data.analysis?.misalignment || [])
+                      ]
+                    ).map((gap, i) => (
+                      <li key={i} style={{ color: "#333", fontSize: 13, marginBottom: 8 }}>
+                        <strong>{(gap.section || "General").replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}:</strong> {gap.description}
+                      </li>
+                    ))}
+                    {!session.data.analysis?.missing_content?.length &&
+                     !session.data.analysis?.weak_evidence?.length &&
+                     !session.data.analysis?.wrong_vocabulary?.length &&
+                     !session.data.analysis?.misalignment?.length && (
+                      <li style={{ color: "#888", fontSize: 13, listStyle: "none", marginLeft: -20 }}>
+                        No significant gaps were identified. We'll proceed with general polish and vocabulary alignment.
+                      </li>
+                    )}
+                  </ul>
+                  <button 
+                    onClick={() => handleAdvance({ confirmed_gaps: [], sections_to_rewrite: session.data.analysis?.sections_to_rewrite || [] })}
+                    style={{ background: "var(--accent)", border: "none", color: "#fff", padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%" }}
+                  >
+                    Confirm & Start Drafting
+                  </button>
+                </div>
+              )}
+
+              {session.gate === "slot_filling" && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ background: "var(--accent)", color: "#fff", borderRadius: 20, padding: "4px 12px", fontSize: 10, fontWeight: 800 }}>
+                      QUESTION
+                    </span>
+                  </div>
+                  <h3 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 700 }}>
+                    {Object.values(session.data.slots || {}).find(s => !s.filled)?.question || "Tell me more about your project..."}
+                  </h3>
+                  <textarea
+                    autoFocus
+                    placeholder="Type your answer here..."
+                    style={{
+                      width: "100%", minHeight: 120, background: "#f8f8fc", border: "2px solid #eef",
+                      borderRadius: 12, padding: "16px", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 16
+                    }}
+                    onKeyDown={e => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAdvance({ answer: e.target.value });
+                            e.target.value = "";
+                        }
+                    }}
+                  />
+                  <button 
+                    onClick={(e) => {
+                        const ta = e.target.previousSibling;
+                        handleAdvance({ answer: ta.value });
+                        ta.value = "";
+                    }}
+                    style={{ background: "var(--accent)", border: "none", color: "#fff", padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%" }}
+                  >
+                    Next Question
+                  </button>
+                </div>
+              )}
+
+              {session.gate === "slot_confirm" && (
+                <div>
+                  <h3 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 800 }}>Confirm Details</h3>
+                  <p style={{ color: "#666", fontSize: 13, marginBottom: 20 }}>
+                    Please review the information collected before I regenerate the proposal:
+                  </p>
+                  <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
+                    <tbody>
+                      {Object.entries(session.data.slots || {}).map(([k, s]) => (
+                        <tr key={k} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "10px 0", fontWeight: 700, fontSize: 12, color: "#555", width: "35%" }}>{k}</td>
+                          <td style={{ padding: "10px 0", fontSize: 12, color: "#777" }}>{s.value || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <button 
+                    onClick={() => handleAdvance({ confirmed: true })}
+                    style={{ background: "var(--accent)", border: "none", color: "#fff", padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%" }}
+                  >
+                    Everything Looks Good — Draft Now
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Empty state (when no session or drafting) */}
+          {session.gate === "none" && !session.loading && (
             <div style={{ width: 760, background: "#fff", borderRadius: 2, padding: "100px 80px", textAlign: "center", boxShadow: "0 4px 32px rgba(0,0,0,0.4)" }}>
               <p style={{ fontSize: 40, marginBottom: 16 }}>✍</p>
               <p style={{ fontWeight: 800, color: "#1a1a2e", fontSize: 22, marginBottom: 8 }}>
@@ -664,20 +807,23 @@ export default function Draft() {
             </div>
           )}
 
-          {loading && !hasSections && (
-            <div style={{ width: 760, background: "#fff", borderRadius: 2, padding: "80px", textAlign: "center", boxShadow: "0 4px 32px rgba(0,0,0,0.4)" }}>
-              <p style={{ color: "#7c6fef", fontSize: 16, fontWeight: 700 }}>⟳ Drafting your proposal…</p>
-              <p style={{ color: "#bbb", fontSize: 13, marginTop: 8 }}>Sections will appear as they're written</p>
+          {/* Loading state */}
+          {session.loading && (
+            <div style={{ width: 760, background: "#fff", borderRadius: 12, padding: "80px", textAlign: "center", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }}>
+              <p style={{ color: "var(--accent)", fontSize: 18, fontWeight: 700 }}>
+                {session.gate === "gap_analysis" ? "Analyzing gaps..." : "Processing..."}
+              </p>
+              <p style={{ color: "#bbb", fontSize: 13, marginTop: 12 }}>This helps us build a more persuasive proposal</p>
             </div>
           )}
 
           {/* The Document — white page */}
-          {hasSections && activeTab && sections[activeTab] && (
+          {(session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete") && activeTab && editedContent[activeTab] !== undefined && (
             <div style={{
               width: 760,
               background: "#ffffff",
-              borderRadius: 2,
-              boxShadow: "0 4px 40px rgba(0,0,0,0.5)",
+              borderRadius: 12,
+              boxShadow: "0 10px 50px rgba(0,0,0,0.5)",
               overflow: "hidden",
             }}>
               {/* Document header strip */}
