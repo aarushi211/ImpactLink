@@ -30,7 +30,7 @@ from agents.slot_extractor import (
     apply_extractions, is_slot_exhausted, slots_to_profile,
 )
 from agents.scoring_agent_v2 import score_section, needs_retry, is_flagged, MAX_RETRIES
-from agents.draft_agent import SECTIONS, _build_grant_context, _extract_user_values
+from agents.prompts import SECTIONS, _build_grant_context, _extract_user_values
 from agents.rewriter_agent import retry_rewrite
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
@@ -145,13 +145,11 @@ def _step_slot_filling(state: ProposalState, user_input: dict) -> dict:
     # Extract slots from the answer
     extracted = extract_slots(answer, state["slots"])
     state["slots"] = apply_extractions(state["slots"], extracted, asked_key)
-
-    if extracted:
+    
+    if extracted: 
         log.info("[%s] filled slots: %s", state["session_id"], list(extracted.keys()))
     else:
         log.info("[%s] no slots confidently filled from answer to '%s'", state["session_id"], asked_key)
-
-    save_state(state)
 
     # Check if the slot we just asked is exhausted (asked MAX times, still unfilled)
     asked_slot = state["slots"].get(asked_key, {})
@@ -159,6 +157,8 @@ def _step_slot_filling(state: ProposalState, user_input: dict) -> dict:
         log.warning("[%s] slot '%s' exhausted — flagging for human review", state["session_id"], asked_key)
         if asked_key not in state["flagged_sections"]:
             state["flagged_sections"].append(asked_key)
+
+    save_state(state)
 
     # Find next unfilled, non-exhausted slot
     nxt = next_question(state["slots"])
@@ -236,8 +236,8 @@ def _step_draft(state: ProposalState, user_input: dict) -> dict:
     from agents.vocab_extractor import vocab_to_prompt_str
     vocab_str = vocab_to_prompt_str(vocab)
 
-    # Import section prompt from draft_agent for consistency
-    from agents.draft_agent import SECTION_PROMPT, _inject_budget_calculator
+    # Import section prompt from prompts for consistency
+    from agents.prompts import SECTION_PROMPT, _inject_budget_calculator
     chain = SECTION_PROMPT | llm
 
     def draft_one(section: dict) -> tuple[str, SectionResult]:

@@ -1,19 +1,9 @@
-"""
-agents/draft_agent.py
-
-Multi-section proposal drafting agent.
-Rebuilt with expert grant-writing best practices baked into every prompt.
-Target: CA state/foundation grants — 15–25 pages total.
-"""
-
+import re
 import json
-from langchain_groq import ChatGroq
+import logging
 from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
 
-load_dotenv()
-
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3)
+log = logging.getLogger(__name__)
 
 # ── Master system prompt ──────────────────────────────────────────────────────
 # This is the single most important thing. Every section inherits this context.
@@ -51,7 +41,6 @@ FATAL ERRORS TO NEVER MAKE:
 - Overpromising: if you claim 10,000 beneficiaries on a $100K grant, credibility collapses
 - Requesting more than the funder's stated maximum
 - Forgetting to explain sustainability after grant period ends"""
-
 
 # ── Section definitions with deep expert instructions ────────────────────────
 
@@ -447,8 +436,7 @@ Writing instructions:
 Write the section now:""")
 ])
 
-
-# ── Draft functions ───────────────────────────────────────────────────────────
+# ── Draft Utility Functions ───────────────────────────────────────────────────────────
 
 def _extract_user_values(proposal: dict) -> str:
     """Pull concrete numbers and facts from proposal for table population."""
@@ -472,9 +460,7 @@ def _extract_user_values(proposal: dict) -> str:
     return "\n".join(lines) if lines else "Use reasonable estimates based on proposal context."
 
 
-
 def _parse_budget_string(val: str) -> int:
-    import re
     if not val:
         return 0
     clean = re.sub(r'[$,]', '', str(val).lower())
@@ -505,8 +491,7 @@ def _inject_budget_calculator(section_key: str, instructions: str, proposal: dic
         budget_data = generate_budget(proposal, max_budget, grant_doc)
         
         if "error" in budget_data:
-            import logging
-            logging.getLogger(__name__).warning("Budget script failed. LLM will estimate natively.")
+            log.warning("Budget script failed. LLM will estimate natively.")
             return instructions, user_values
             
         budget_table = "Here is a strictly calculated, mathematically correct, grant-compliant budget table for this project. YOU MUST BASE YOUR NARRATIVE ON IT EXACTLY:\n\n"
@@ -518,8 +503,7 @@ def _inject_budget_calculator(section_key: str, instructions: str, proposal: dic
         user_values += "\n\n" + budget_table
         instructions = "CRITICAL INSTRUCTION: Analyze the calculated budget table provided in the User's Data Inputs below. Base your narrative strictly on its mathematically validated line items.\n\n" + instructions
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Failed to generate budget script: {e}")
+        log.error(f"Failed to generate budget script: {e}")
         
     return instructions, user_values
 
@@ -540,80 +524,3 @@ def _build_grant_context(grant: dict) -> dict:
         "match_required":  grant.get("cost_sharing_required", False),
         "application_tip": grant.get("application_tip", ""),
     }
-
-
-def draft_proposal(proposal: dict, grant: dict) -> dict:
-    """
-    Draft a complete proposal. Returns dict with all sections.
-    Non-streaming — waits for each section before moving to next.
-    """
-    chain = SECTION_PROMPT | llm
-    grant_ctx = _build_grant_context(grant)
-    sections = {}
-
-    for section in SECTIONS:
-        # Extract numeric/table values from proposal for table population
-        user_values = _extract_user_values(proposal)
-        instructions, user_values = _inject_budget_calculator(
-            section["key"], section["instructions"], proposal, grant, user_values
-        )
-        response = chain.invoke({
-            "section_title": section["title"],
-            "word_target":   section["word_target"],
-            "instructions":  instructions,
-            "proposal":      json.dumps(proposal, indent=2),
-            "grant":         json.dumps(grant_ctx, indent=2),
-            "user_values":   user_values,
-        })
-        sections[section["key"]] = {
-            "title":   section["title"],
-            "content": response.content.strip(),
-        }
-
-    return {
-        "grant_id":      grant.get("grant_id", ""),
-        "grant_title":   grant.get("title", ""),
-        "agency":        grant.get("agency", ""),
-        "org_name":      proposal.get("organization_name", ""),
-        "sections":      sections,
-        "section_order": [s["key"] for s in SECTIONS],
-        "total_sections": len(SECTIONS),
-    }
-
-
-def draft_proposal_stream(proposal: dict, grant: dict):
-    """
-    Generator — yields one JSON line per completed section.
-    Frontend reads via ReadableStream or EventSource.
-    """
-    chain = SECTION_PROMPT | llm
-    grant_ctx = _build_grant_context(grant)
-
-    for i, section in enumerate(SECTIONS):
-        # Extract numeric/table values from proposal for table population
-        user_values = _extract_user_values(proposal)
-        instructions, user_values = _inject_budget_calculator(
-            section["key"], section["instructions"], proposal, grant, user_values
-        )
-        response = chain.invoke({
-            "section_title": section["title"],
-            "word_target":   section["word_target"],
-            "instructions":  instructions,
-            "proposal":      json.dumps(proposal, indent=2),
-            "grant":         json.dumps(grant_ctx, indent=2),
-            "user_values":   user_values,
-        })
-
-        yield json.dumps({
-            "key":      section["key"],
-            "title":    section["title"],
-            "content":  response.content.strip(),
-            "index":    i + 1,
-            "total":    len(SECTIONS),
-            "done":     False,
-        }) + "\n"
-
-    yield json.dumps({
-        "done":          True,
-        "total_sections": len(SECTIONS),
-    }) + "\n"

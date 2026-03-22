@@ -20,20 +20,16 @@ import asyncio
 
 from services.parser import parse_proposal
 from agents.scoring_agent import score_proposal
-from agents.draft_agent import draft_proposal, draft_proposal_stream
+
 from services.vector_store import find_similar_grants, topic_search_grants
 from services.budget import generate_budget
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
 from services.auth import verify_token
-from agents.build_agent import build_proposal_stream, revise_section
+
 from api.session import create_session, advance_session, get_session_status
-from services.work_store import (
-    save_draft,   update_draft,  list_drafts,  get_draft,  delete_draft,
-    save_build,   update_build,  list_builds,  get_build,  delete_build,
-    save_budget, list_budgets, get_budget, delete_budget, get_summary,
-)
+
 
 app = FastAPI(title="ImpactLink AI Backend")
 
@@ -172,16 +168,7 @@ def match(req: ProposalRequest):
 def score(req: ProposalRequest):
     return {"scoring": score_proposal(req.proposal)}
 
-@app.post("/api/draft")
-def draft(req: DraftRequest):
-    return draft_proposal(req.proposal, req.grant)
 
-@app.post("/api/draft/stream")
-def draft_stream(req: DraftRequest):
-    return StreamingResponse(
-        (chunk for chunk in draft_proposal_stream(req.proposal, req.grant)),
-        media_type="text/plain",
-    )
 
 
 # ── Budget routes ──────────────────────────────────────────────
@@ -243,112 +230,10 @@ async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_token)
     return {"collabs": results}
 
 
-# ── Build routes ───────────────────────────────────────────────
-
-@app.post("/api/build/stream")
-def build_stream(req: BuildRequest):
-    return StreamingResponse(
-        (chunk for chunk in build_proposal_stream(req.answers, req.profile, req.grant)),
-        media_type="text/plain",
-    )
-
-@app.post("/api/build/revise")
-async def build_revise(req: ReviseRequest):
-    result = await asyncio.to_thread(revise_section, req.current_draft, req.feedback)
-    return {"content": result}
 
 
-# ── Work Store — Drafts ────────────────────────────────────────
-
-@app.post("/api/work/drafts")
-def work_save_draft(req: SaveDraftRequest, uid: str = Depends(verify_token)):
-    req.ngo_id = uid 
-    return save_draft(uid, req.dict())
-
-@app.patch("/api/work/drafts")
-def work_update_draft(req: UpdateDraftRequest, uid: str = Depends(verify_token)):
-    try:
-        return update_draft(uid, req.draft_id, req.sections, req.budget_id)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
-
-@app.get("/api/work/drafts/me")
-def work_list_drafts(uid: str = Depends(verify_token)):
-    return {"items": list_drafts(uid)}
-
-@app.get("/api/work/drafts/{draft_id}")
-def work_get_draft(draft_id: str, uid: str = Depends(verify_token)):
-    try:
-        return get_draft(uid, draft_id)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
-
-@app.delete("/api/work/drafts/{draft_id}")
-def work_delete_draft(draft_id: str, uid: str = Depends(verify_token)):
-    delete_draft(uid, draft_id)
-    return {"ok": True}
 
 
-# ── Work Store — Builds ────────────────────────────────────────
-
-@app.post("/api/work/builds")
-def work_save_build(req: SaveBuildRequest, uid: str = Depends(verify_token)):
-    req.ngo_id = uid
-    return save_build(uid, req.dict())
-
-@app.patch("/api/work/builds")
-def work_update_build(req: UpdateBuildRequest, uid: str = Depends(verify_token)):
-    try:
-        return update_build(uid, req.build_id, req.sections, req.budget_id)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
-
-@app.get("/api/work/builds/me")
-def work_list_builds(uid: str = Depends(verify_token)):
-    return {"items": list_builds(uid)}
-
-@app.get("/api/work/builds/{build_id}")
-def work_get_build(build_id: str, uid: str = Depends(verify_token)):
-    try:
-        return get_build(uid, build_id)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
-
-@app.delete("/api/work/builds/{build_id}")
-def work_delete_build(build_id: str, uid: str = Depends(verify_token)):
-    delete_build(uid, build_id)
-    return {"ok": True}
-
-
-# ── Work Store — Budgets ───────────────────────────────────────
-
-@app.post("/api/work/budgets")
-def work_save_budget(req: SaveBudgetRequest, uid: str = Depends(verify_token)):
-    req.ngo_id = uid
-    return save_budget(uid, req.dict())
-
-@app.get("/api/work/budgets/me")
-def work_list_budgets(uid: str = Depends(verify_token)):
-    return {"items": list_budgets(uid)}
-
-@app.get("/api/work/budgets/{budget_id}")
-def work_get_budget(budget_id: str, uid: str = Depends(verify_token)):
-    try:
-        return get_budget(uid, budget_id)
-    except ValueError as e:
-        raise HTTPException(404, str(e))
-
-@app.delete("/api/work/budgets/{budget_id}")
-def work_delete_budget(budget_id: str, uid: str = Depends(verify_token)):
-    delete_budget(uid, budget_id)
-    return {"ok": True}
-
-
-# ── Work Store — Summary ───────────────────────────────────────
-
-@app.get("/api/work/summary/me")
-def work_summary(uid: str = Depends(verify_token)):
-    return get_summary(uid)
 
 # ── Agentic Topic Search ───────────────────────────────────────────────────
 

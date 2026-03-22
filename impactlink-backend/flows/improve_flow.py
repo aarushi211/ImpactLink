@@ -329,7 +329,7 @@ def _step_complete(state: ProposalState, user_input: dict) -> dict:
     return {
         "gate":       "complete",
         "session_id": state["session_id"],
-        "org_name":   state["profile"].get("org_name", ""),
+        "org_name":   state["profile"].get("organization_name", ""),
         "grant_title": state["grant"].get("title", ""),
         "sections":   state["sections"],
     }
@@ -338,10 +338,10 @@ def _step_complete(state: ProposalState, user_input: dict) -> dict:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 # Section key → human-readable title map.
-# Imported from draft_agent.py's SECTIONS list to stay in sync.
+# Imported from prompts.py's SECTIONS list to stay in sync.
 def _section_title(key: str) -> str:
     try:
-        from agents.draft_agent import SECTIONS
+        from agents.prompts import SECTIONS
         mapping = {s["key"]: s["title"] for s in SECTIONS}
         return mapping.get(key, key.replace("_", " ").title())
     except ImportError:

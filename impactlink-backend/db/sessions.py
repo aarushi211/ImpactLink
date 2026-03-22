@@ -9,6 +9,7 @@ import json
 import os
 import logging
 from state.proposal_state import ProposalState
+import fcntl
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +31,9 @@ def _save_db(db: dict[str, ProposalState]) -> None:
     """Internal: Save the entire sessions database to disk."""
     try:
         with open(DB_FILE, "w", encoding="utf-8") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
             json.dump(db, f, indent=2, ensure_ascii=False)
+            fcntl.flock(f, fcntl.LOCK_UN)
     except Exception as e:
         log.error("Failed to save sessions JSON: %s", e)
 
