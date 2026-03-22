@@ -212,9 +212,20 @@ def build_proposal_stream(answers: list, profile: dict, grant: dict = None):
 
         # This step has an answer — draft the section
         user_values = _extract_user_values(profile, answered)
+        instructions = step["draft_instructions"]
+
+        # Intercept budget generation to use the strict budget calculator script
+        if step["section_map"] == "budget_narrative":
+            from agents.draft_agent import _inject_budget_calculator
+            temp_profile = dict(profile)
+            temp_profile["total_budget"] = answered.get("budget", "")
+            instructions, user_values = _inject_budget_calculator(
+                "budget_narrative", instructions, temp_profile, grant or {}, user_values
+            )
+
         response = chain.invoke({
             "section_title": step["title"],
-            "instructions":  step["draft_instructions"],
+            "instructions":  instructions,
             "org_context":   org_ctx,
             "user_values":   user_values,
             "user_answer":   answered[key],

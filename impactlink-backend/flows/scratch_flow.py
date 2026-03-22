@@ -237,15 +237,19 @@ def _step_draft(state: ProposalState, user_input: dict) -> dict:
     vocab_str = vocab_to_prompt_str(vocab)
 
     # Import section prompt from draft_agent for consistency
-    from agents.draft_agent import SECTION_PROMPT
+    from agents.draft_agent import SECTION_PROMPT, _inject_budget_calculator
     chain = SECTION_PROMPT | llm
 
     def draft_one(section: dict) -> tuple[str, SectionResult]:
         user_values = _extract_user_values(profile)
+        instructions, user_values = _inject_budget_calculator(
+            section["key"], section["instructions"], profile, grant, user_values
+        )
+        
         response = chain.invoke({
             "section_title": section["title"],
             "word_target":   section["word_target"],
-            "instructions":  section["instructions"],
+            "instructions":  instructions,
             "proposal":      str(profile),
             "grant":         str(grant_ctx),
             "user_values":   user_values + f"\n\nFunder vocabulary to use:\n{vocab_str}",

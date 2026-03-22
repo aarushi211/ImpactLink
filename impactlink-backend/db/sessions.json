@@ -2831,5 +2831,372 @@
       "problem_statement": 1
     },
     "flagged_sections": []
+  },
+  "49a55a79-a916-48f6-acec-3e54acedd50b": {
+    "session_id": "49a55a79-a916-48f6-acec-3e54acedd50b",
+    "user_id": null,
+    "flow": "improve",
+    "profile": {
+      "org_name": "Green Future Initiative",
+      "mission": "To cool our cities through community-led tree planting.",
+      "location": "Los Angeles, CA",
+      "cause_area": "Environmental Justice"
+    },
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [
+      "Urban & Community Forestry",
+      "severely disadvantaged communities",
+      "CalEnviroScreen 4.0",
+      "increased canopy coverage",
+      "reduced heat island effects",
+      "improved stormwater management",
+      "nature-based solutions",
+      "2-year maintenance plan",
+      "long-term survivability"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [
+        {
+          "section": "executive_summary",
+          "description": "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Lacks description of 2-year maintenance plan for long-term survivability",
+          "severity": "high"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'",
+          "severity": "high"
+        }
+      ],
+      "weak_evidence": [
+        {
+          "section": "executive_summary",
+          "description": "Claims to help with the heat but no data or specifics on how",
+          "severity": "medium"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "No details on how volunteers will be managed or trained",
+          "severity": "medium"
+        }
+      ],
+      "wrong_vocabulary": [
+        {
+          "section": "executive_summary",
+          "description": "Uses 'plant trees' instead of funder's term 'urban forest management' or 'tree planting'",
+          "severity": "low"
+        },
+        {
+          "section": "proposed_solution",
+          "description": "Does not use funder's term 'nature-based solutions'",
+          "severity": "low"
+        }
+      ],
+      "misalignment": [
+        {
+          "section": "evaluation_plan",
+          "description": "Focuses on counting trees and taking photos, but does not mention measuring outcomes such as 'increased canopy coverage' or 'reduced heat island effects'",
+          "severity": "high"
+        }
+      ],
+      "sections_to_rewrite": [
+        "executive_summary",
+        "proposed_solution",
+        "evaluation_plan"
+      ],
+      "user_confirmed_gaps": [
+        "No mention of 'severely disadvantaged communities' or CalEnviroScreen 4.0, which is a stated priority",
+        "Lacks description of 2-year maintenance plan for long-term survivability",
+        "No mention of expected outcomes such as 'increased canopy coverage', 'reduced heat island effects', or 'improved stormwater management'"
+      ],
+      "user_additions": "Please emphasize the 2-year maintenance plan."
+    },
+    "original_sections": {
+      "executive_summary": "We want to plant trees in East LA to help with the heat.",
+      "proposed_solution": "We will plant 100 trees in local neighborhoods using volunteers.",
+      "evaluation_plan": "We will count how many trees we plant and take photos."
+    },
+    "sections": {
+      "executive_summary": {
+        "title": "Executive Summary",
+        "content": "We want to plant trees in East LA to help with the heat.",
+        "score": 0,
+        "retries": 0,
+        "flagged": false
+      },
+      "proposed_solution": {
+        "title": "Project Description & Activities",
+        "content": "We will plant 100 trees in local neighborhoods using volunteers.",
+        "score": 0,
+        "retries": 0,
+        "flagged": false
+      },
+      "evaluation_plan": {
+        "title": "Evaluation & Learning Plan",
+        "content": "We will count how many trees we plant and take photos.",
+        "score": 0,
+        "retries": 0,
+        "flagged": false
+      }
+    },
+    "diffs": {
+      "evaluation_plan": [
+        {
+          "type": "equal",
+          "text": "We will count how many trees we plant and take photos."
+        }
+      ],
+      "proposed_solution": [
+        {
+          "type": "equal",
+          "text": "We will plant 100 trees in local neighborhoods using volunteers."
+        }
+      ],
+      "executive_summary": [
+        {
+          "type": "equal",
+          "text": "We want to plant trees in East LA to help with the heat."
+        }
+      ]
+    },
+    "gate": "complete",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "27cf918c-837d-4b8d-b50a-6d0d4dd045a8": {
+    "session_id": "27cf918c-837d-4b8d-b50a-6d0d4dd045a8",
+    "user_id": null,
+    "flow": "scratch",
+    "profile": {},
+    "grant": {
+      "title": "Urban Canopy Expansion Grant 2024",
+      "agency": "California Department of Forestry and Fire Protection (CAL FIRE)",
+      "description": "\n    The Urban & Community Forestry Program provides funding for tree planting, \n    urban forest management, and community engagement. \n    Priority is given to projects in 'severely disadvantaged communities' \n    as defined by CalEnviroScreen 4.0. \n    Expected outcomes include increased canopy coverage, reduced heat island effects, \n    and improved stormwater management through nature-based solutions.\n    Applicants must show a 2-year maintenance plan for long-term survivability.\n    ",
+      "focus_areas": "Urban forestry, climate resilience, disadvantaged communities."
+    },
+    "funder_vocab": [],
+    "slots": {},
+    "analysis": null,
+    "original_sections": {},
+    "sections": {},
+    "diffs": {},
+    "gate": "none",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "4f5307c0-a8e0-4e0f-bd6f-c866dc764828": {
+    "session_id": "4f5307c0-a8e0-4e0f-bd6f-c866dc764828",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+      "created_at": "2026-03-21T03:09:16.617760",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-21T03:09:16.617760",
+      "total_won": 0,
+      "org_name": "Khushi",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "khu@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "86477",
+      "title": "2025 – 2026 LSTA Community Impact Grants",
+      "agency": "CA State Library",
+      "award_ceiling": 250000,
+      "award_floor": 10000,
+      "application_url": "https://www.gotomygrants.com/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Libraries and Arts",
+      "contact_email": "lstagrants@library.ca.gov",
+      "description": "We invite libraries and other eligible organizations to apply for funding to support local and collaborative projects that address community needs and align with community aspirations. Projects should be guided by the principles of equity, diversity, inclusion, and belonging. Projects should align with goal one of the State Library’s current LSTA Five Year Plan . We are especially interested in projects from library jurisdictions and branches of library jurisdictions that have not received LSTA funding in the last five years, and collaborative projects that represent a variety of regions, library sizes, and populations. However, we welcome applications from all California library jurisdictions, library consortia, and library-focused on-profit organizations, and on any topic and serving any group. Agencies applying for a local competitive grant and requesting $75,000 or above, and agencies applying for a collaborative competitive grant must plan to work with a project partner (in addition to the collaborative applicant group) and must have at least one project partner in place before an application is submitted. Types of Grant Opportunities Two types of grant opportunities are available: Local Competitive Grants support projects that focus on one library jurisdiction and can include projects focusing on one branch in one library jurisdiction. Collaborative Competitive Grants support projects that are implemented by three or more library jurisdictions. More information about this opportunity can be found on the California State Library's LSTA Community Impact Grants opportunity webpage.",
+      "eligibility": [
+        "Individual",
+        "Nonprofit"
+      ],
+      "similarity_score": 90,
+      "match_explanation": "The grant aligns with the NGO's mission to provide education and career opportunities for underserved youth, and the geographic focus on California matches the NGO's location.",
+      "fit_level": "strong",
+      "application_tip": "Emphasize the NGO's experience in providing education and career opportunities for underserved youth in California.",
+      "location_boosted": false,
+      "location_boost_pts": 0
+    },
+    "funder_vocab": [
+      "equity, diversity, inclusion, and belonging",
+      "LSTA Five Year Plan",
+      "library jurisdictions",
+      "collaborative projects",
+      "library consortia",
+      "library-focused non-profit organizations",
+      "local competitive grant",
+      "collaborative competitive grant",
+      "project partner",
+      "community needs",
+      "community aspirations",
+      "California library jurisdictions",
+      "LSTA funding",
+      "State Library's current plan"
+    ],
+    "slots": {},
+    "analysis": {
+      "missing_content": [
+        {
+          "section": "executive_summary",
+          "description": "No mention of alignment with the State Library's current LSTA Five Year Plan",
+          "severity": "high"
+        },
+        {
+          "section": "program_description",
+          "description": "Lack of explicit mention of 'equity, diversity, inclusion, and belonging' principles in project design",
+          "severity": "medium"
+        },
+        {
+          "section": "community_needs",
+          "description": "No discussion of how the project addresses 'community aspirations'",
+          "severity": "medium"
+        },
+        {
+          "section": "project_partner",
+          "description": "No mention of a project partner, which is required for grants over $75,000",
+          "severity": "high"
+        }
+      ],
+      "weak_evidence": [
+        {
+          "section": "target_population",
+          "description": "Claims 90% of students are from low-income households, but no source is cited for this statistic",
+          "severity": "medium"
+        },
+        {
+          "section": "program_components",
+          "description": "Mentorship program details are provided, but no data on the effectiveness of similar programs is presented",
+          "severity": "medium"
+        }
+      ],
+      "wrong_vocabulary": [
+        {
+          "section": "organization_background",
+          "description": "Uses 'underserved youth' instead of funder's term 'historically marginalized communities'",
+          "severity": "low"
+        }
+      ],
+      "misalignment": [
+        {
+          "section": "evaluation_plan",
+          "description": "While the plan mentions measurable outcomes, it does not explicitly state how these outcomes align with the funder's priorities",
+          "severity": "medium"
+        }
+      ],
+      "sections_to_rewrite": [
+        "executive_summary",
+        "program_description",
+        "evaluation_plan"
+      ],
+      "user_confirmed_gaps": [],
+      "user_additions": ""
+    },
+    "original_sections": {
+      "uploaded_content": "Organization: Bright Path Youth Initiative (BPYI) \nLocation: Los Angeles, California \nProject Title: STEM Pathways for Underserved Youth in South Los Angeles \nFunding Request: $250,000 \nProject Period: July 1, 2026 – June 30, 2027 \nExecutive Summary \nBright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM \nPathways for Underserved Youth, a year-long program serving 150 low-income middle and \nhigh school students in South Los Angeles. The program will provide hands-on STEM \neducation, mentorship, college readiness support, and career exposure in robotics, \ncoding, and engineering. \nSouth Los Angeles continues to experience significant educational inequities, particularly \nin access to high-quality STEM programming. BPYI aims to close opportunity gaps by \noffering after-school and summer enrichment programs focused on technical skill \ndevelopment, academic support, and exposure to STEM careers. \nFunding will support program staffing, equipment (robotics kits, laptops), curriculum \ndevelopment, transportation assistance, and evaluation. By the end of the grant period, at \nleast 85% of participating students will demonstrate measurable improvement in STEM \nproficiency and college/career readiness indicators. \nOrganizational Background \nFounded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated \nto expanding educational and career opportunities for underserved youth in Los Angeles \nCounty. Our mission is to equip students from historically marginalized communities with \nthe skills, confidence, and networks necessary to succeed in higher education and STEM \ncareers. \nOver the past eight years, BPYI has: \n• Served over 1,200 students across LAUSD schools \n• Partnered with 10 local schools and 5 community centers \n• Maintained a 92% program retention rate \n• Helped 88% of graduating seniors enroll in postsecondary education \nBPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 \nvolunteer mentors from local universities and technology companies.\nStatement of Need \nSouth Los Angeles faces persistent disparities in educational access and outcomes: \n• Over 75% of students in the target communities qualify for free or reduced-price \nlunch. \n• Schools in low-income areas often lack up-to-date STEM resources and \nexperienced instructors. \n• Students from these communities are significantly underrepresented in engineering \nand technology careers. \nWithout early exposure to STEM education and career pathways, students are less likely to \npursue college majors in high-demand technical fields. The digital divide further \nexacerbates inequities, as many households lack reliable access to computers and high-\nspeed internet. \nCommunity stakeholders—including school administrators, parents, and students—have \nidentified expanded STEM programming and mentorship as urgent needs. \nProgram Description: STEM Pathways for Underserved Youth \nGoals \n1. Increase STEM proficiency among participating students. \n2. Improve college and career readiness. \n3. Expand access to mentorship and STEM career exposure. \nTarget Population \n• 150 middle and high school students (grades 6–12) \n• Primarily from South Los Angeles \n• 90% from low-income households \n• 80% students of color \nProgram Components \n1. After-School STEM Labs (September–May) \n• Twice-weekly sessions (2 hours each) \n• Hands-on robotics, coding (Python & Scratch), and engineering challenges\n• Small cohort model (15 students per group) \n2. Summer STEM Institute (4 weeks) \n• Intensive project-based learning \n• Students design and present capstone engineering projects \n• Field trips to local tech companies and universities (UCLA, USC) \n3. Mentorship Program \n• One-on-one mentorship matching \n• Monthly career talks by STEM professionals \n• College application and financial aid workshops \n4. Family Engagement Workshops \n• Quarterly sessions on college readiness and STEM pathways \n• Spanish-language interpretation provided \nMeasurable Outcomes \nBy June 2027: \n• 85% of students will improve STEM knowledge scores by at least 20% (pre/post \nassessment). \n• 90% of participants will report increased interest in STEM careers. \n• 80% of high school seniors will complete at least one college or scholarship \napplication. \n• 75% of students will demonstrate improved problem-solving and teamwork skills \n(rubric-based evaluation). \nEvaluation Plan \nBPYI will use both quantitative and qualitative methods: \n• Pre- and post-STEM assessments \n• Attendance and retention tracking \n• Student surveys \n• Parent feedback surveys\n• Mentor feedback reports \n• External evaluator (annual review) \nQuarterly reports will measure progress toward goals and allow for program adjustments. \nBudget Summary (12-Month Project) \nCategory Amount \nProgram Staff Salaries $120,000 \nSTEM Equipment & Supplies $45,000 \nLaptops & Software $25,000 \nTransportation & Field Trips $20,000 \nEvaluation & Data Management $15,000 \nFamily Workshops & Outreach $10,000 \nAdministrative Costs (10%) $15,000 \nTotal Request $250,000 \nSustainability Plan \nBPYI maintains diversified funding streams, including: \n• Individual donors (20%) \n• Corporate sponsorships (25%) \n• Foundation grants (40%) \n• Government contracts (15%) \nWe are actively pursuing multi-year funding commitments and expanding corporate \npartnerships with Los Angeles-based technology firms. Equipment purchased under this \ngrant will support programming for multiple years. \nConclusion \nBright Path Youth Initiative is committed to addressing educational inequities and \nempowering the next generation of STEM leaders in Los Angeles. With support from this\ngrant, we will provide transformative opportunities for 150 underserved youth, equipping \nthem with critical skills, mentorship, and pathways to college and career success. \nWe appreciate your consideration and welcome the opportunity to provide additional \ninformation."
+    },
+    "sections": {
+      "uploaded_content": {
+        "title": "Uploaded Content",
+        "content": "Organization: Bright Path Youth Initiative (BPYI) \nLocation: Los Angeles, California \nProject Title: STEM Pathways for Underserved Youth in South Los Angeles \nFunding Request: $250,000 \nProject Period: July 1, 2026 – June 30, 2027 \nExecutive Summary \nBright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM \nPathways for Underserved Youth, a year-long program serving 150 low-income middle and \nhigh school students in South Los Angeles. The program will provide hands-on STEM \neducation, mentorship, college readiness support, and career exposure in robotics, \ncoding, and engineering. \nSouth Los Angeles continues to experience significant educational inequities, particularly \nin access to high-quality STEM programming. BPYI aims to close opportunity gaps by \noffering after-school and summer enrichment programs focused on technical skill \ndevelopment, academic support, and exposure to STEM careers. \nFunding will support program staffing, equipment (robotics kits, laptops), curriculum \ndevelopment, transportation assistance, and evaluation. By the end of the grant period, at \nleast 85% of participating students will demonstrate measurable improvement in STEM \nproficiency and college/career readiness indicators. \nOrganizational Background \nFounded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated \nto expanding educational and career opportunities for underserved youth in Los Angeles \nCounty. Our mission is to equip students from historically marginalized communities with \nthe skills, confidence, and networks necessary to succeed in higher education and STEM \ncareers. \nOver the past eight years, BPYI has: \n• Served over 1,200 students across LAUSD schools \n• Partnered with 10 local schools and 5 community centers \n• Maintained a 92% program retention rate \n• Helped 88% of graduating seniors enroll in postsecondary education \nBPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 \nvolunteer mentors from local universities and technology companies.\nStatement of Need \nSouth Los Angeles faces persistent disparities in educational access and outcomes: \n• Over 75% of students in the target communities qualify for free or reduced-price \nlunch. \n• Schools in low-income areas often lack up-to-date STEM resources and \nexperienced instructors. \n• Students from these communities are significantly underrepresented in engineering \nand technology careers. \nWithout early exposure to STEM education and career pathways, students are less likely to \npursue college majors in high-demand technical fields. The digital divide further \nexacerbates inequities, as many households lack reliable access to computers and high-\nspeed internet. \nCommunity stakeholders—including school administrators, parents, and students—have \nidentified expanded STEM programming and mentorship as urgent needs. \nProgram Description: STEM Pathways for Underserved Youth \nGoals \n1. Increase STEM proficiency among participating students. \n2. Improve college and career readiness. \n3. Expand access to mentorship and STEM career exposure. \nTarget Population \n• 150 middle and high school students (grades 6–12) \n• Primarily from South Los Angeles \n• 90% from low-income households \n• 80% students of color \nProgram Components \n1. After-School STEM Labs (September–May) \n• Twice-weekly sessions (2 hours each) \n• Hands-on robotics, coding (Python & Scratch), and engineering challenges\n• Small cohort model (15 students per group) \n2. Summer STEM Institute (4 weeks) \n• Intensive project-based learning \n• Students design and present capstone engineering projects \n• Field trips to local tech companies and universities (UCLA, USC) \n3. Mentorship Program \n• One-on-one mentorship matching \n• Monthly career talks by STEM professionals \n• College application and financial aid workshops \n4. Family Engagement Workshops \n• Quarterly sessions on college readiness and STEM pathways \n• Spanish-language interpretation provided \nMeasurable Outcomes \nBy June 2027: \n• 85% of students will improve STEM knowledge scores by at least 20% (pre/post \nassessment). \n• 90% of participants will report increased interest in STEM careers. \n• 80% of high school seniors will complete at least one college or scholarship \napplication. \n• 75% of students will demonstrate improved problem-solving and teamwork skills \n(rubric-based evaluation). \nEvaluation Plan \nBPYI will use both quantitative and qualitative methods: \n• Pre- and post-STEM assessments \n• Attendance and retention tracking \n• Student surveys \n• Parent feedback surveys\n• Mentor feedback reports \n• External evaluator (annual review) \nQuarterly reports will measure progress toward goals and allow for program adjustments. \nBudget Summary (12-Month Project) \nCategory Amount \nProgram Staff Salaries $120,000 \nSTEM Equipment & Supplies $45,000 \nLaptops & Software $25,000 \nTransportation & Field Trips $20,000 \nEvaluation & Data Management $15,000 \nFamily Workshops & Outreach $10,000 \nAdministrative Costs (10%) $15,000 \nTotal Request $250,000 \nSustainability Plan \nBPYI maintains diversified funding streams, including: \n• Individual donors (20%) \n• Corporate sponsorships (25%) \n• Foundation grants (40%) \n• Government contracts (15%) \nWe are actively pursuing multi-year funding commitments and expanding corporate \npartnerships with Los Angeles-based technology firms. Equipment purchased under this \ngrant will support programming for multiple years. \nConclusion \nBright Path Youth Initiative is committed to addressing educational inequities and \nempowering the next generation of STEM leaders in Los Angeles. With support from this\ngrant, we will provide transformative opportunities for 150 underserved youth, equipping \nthem with critical skills, mentorship, and pathways to college and career success. \nWe appreciate your consideration and welcome the opportunity to provide additional \ninformation.",
+        "score": 0,
+        "retries": 0,
+        "flagged": false
+      }
+    },
+    "diffs": {
+      "uploaded_content": [
+        {
+          "type": "remove",
+          "text": "Organization: Bright Path Youth Initiative (BPYI) Location: Los Angeles, California Project Title: STEM Pathways for Underserved Youth in South Los Angeles Funding Request: $250,000 Project Period: July 1, 2026 – June 30, 2027 Executive Summary Bright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM Pathways for Underserved Youth, a year-long program serving 150 low-income middle and high school students in South Los Angeles. The program will provide hands-on STEM education, mentorship, college readiness support, and career exposure in robotics, coding, and engineering. South Los Angeles continues to experience significant educational inequities, particularly in access to high-quality STEM programming. BPYI aims to close opportunity gaps by offering after-school and summer enrichment programs focused on technical skill development, academic support, and exposure to STEM careers. Funding will support program staffing, equipment (robotics kits, laptops), curriculum development, transportation assistance, and evaluation. By the end of the grant period, at least 85% of participating students will demonstrate measurable improvement in STEM proficiency and college/career readiness indicators. Organizational Background Founded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated to expanding educational and career opportunities for underserved youth in Los Angeles County. Our mission is to equip students from historically marginalized communities with the skills, confidence, and networks necessary to succeed in higher education and STEM careers. Over the past eight years, BPYI has: • Served over 1,200 students across LAUSD schools • Partnered with 10 local schools and 5 community centers • Maintained a 92% program retention rate • Helped 88% of graduating seniors enroll in postsecondary education BPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 volunteer mentors from local universities and technology companies. Statement of Need South Los Angeles faces persistent disparities in educational access and outcomes: • Over 75% of students in the target communities qualify for free or reduced-price lunch. • Schools in low-income areas often lack up-to-date STEM resources and experienced instructors. • Students from these communities are significantly underrepresented in engineering and technology careers. Without early exposure to STEM education and career pathways, students are less likely to pursue college majors in high-demand technical fields. The digital divide further exacerbates inequities, as many households lack reliable access to computers and high- speed internet. Community stakeholders—including school administrators, parents, and students—have identified expanded STEM programming and mentorship as urgent needs. Program Description: STEM Pathways for Underserved Youth Goals 1. Increase STEM proficiency among participating students. 2. Improve college and career readiness. 3. Expand access to mentorship and STEM career exposure. Target Population • 150 middle and high school students (grades 6–12) • Primarily from South Los Angeles • 90% from low-income households • 80% students of color Program Components 1. After-School STEM Labs (September–May) • Twice-weekly sessions (2 hours each) • Hands-on robotics, coding (Python & Scratch), and engineering challenges • Small cohort model (15 students per group) 2. Summer STEM Institute (4 weeks) • Intensive project-based learning • Students design and present capstone engineering projects • Field trips to local tech companies and universities (UCLA, USC) 3. Mentorship Program • One-on-one mentorship matching • Monthly career talks by STEM professionals • College application and financial aid workshops 4. Family Engagement Workshops • Quarterly sessions on college readiness and STEM pathways • Spanish-language interpretation provided Measurable Outcomes By June 2027: • 85% of students will improve STEM knowledge scores by at least 20% (pre/post assessment). • 90% of participants will report increased interest in STEM careers. • 80% of high school seniors will complete at least one college or scholarship application. • 75% of students will demonstrate improved problem-solving and teamwork skills (rubric-based evaluation). Evaluation Plan BPYI will use both quantitative and qualitative methods: • Pre- and post-STEM assessments • Attendance and retention tracking • Student surveys • Parent feedback surveys • Mentor feedback reports • External evaluator (annual review) Quarterly reports will measure progress toward goals and allow for program adjustments. Budget Summary (12-Month Project) Category Amount Program Staff Salaries $120,000 STEM Equipment & Supplies $45,000 Laptops & Software $25,000 Transportation & Field Trips $20,000 Evaluation & Data Management $15,000 Family Workshops & Outreach $10,000 Administrative Costs (10%) $15,000 Total Request $250,000 Sustainability Plan BPYI maintains diversified funding streams, including: • Individual donors (20%) • Corporate sponsorships (25%) • Foundation grants (40%) • Government contracts (15%) We are actively pursuing multi-year funding commitments and expanding corporate partnerships with Los Angeles-based technology firms. Equipment purchased under this grant will support programming for multiple years. Conclusion Bright Path Youth Initiative is committed to addressing educational inequities and empowering the next generation of STEM leaders in Los Angeles. With support from this grant, we will provide transformative opportunities for 150 underserved youth, equipping them with critical skills, mentorship, and pathways to college and career success. We appreciate your consideration and welcome the opportunity to provide additional information."
+        }
+      ]
+    },
+    "gate": "draft_review",
+    "retry_counts": {},
+    "flagged_sections": []
+  },
+  "7ce0a89b-90db-46c4-852e-8e7914626598": {
+    "session_id": "7ce0a89b-90db-46c4-852e-8e7914626598",
+    "user_id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+    "flow": "improve",
+    "profile": {
+      "website": "",
+      "team_size": "",
+      "id": "WmP7zpCih1M1YlSisFWAP6KEukj2",
+      "created_at": "2026-03-21T03:09:16.617760",
+      "collab_interests": [],
+      "sdgs": [],
+      "key_activities": [],
+      "mission": "",
+      "funding_secured": 0,
+      "updated_at": "2026-03-21T03:09:16.617760",
+      "total_won": 0,
+      "org_name": "Khushi",
+      "founding_year": null,
+      "total_applied": 0,
+      "email": "khu@gmail.com",
+      "location": "",
+      "cause_area": "",
+      "collab_open": true,
+      "geographic_focus": []
+    },
+    "grant": {
+      "grant_id": "79595",
+      "title": "Proposition 68 Grants for Lower Los Angeles River (LLAR)",
+      "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+      "award_ceiling": 2000000,
+      "award_floor": 10000,
+      "application_url": "https://rmc.ca.gov/grants/",
+      "close_date": "Ongoing",
+      "focus_areas": "Disadvantaged Communities Education Environment & Water Parks & Recreation",
+      "contact_email": "info@rmc.ca.gov",
+      "description": "Lower Los Angeles River: The Lower Los Angeles River program area encompasses 1.5 miles on each side of the river’s lower 19-miles, from the City of Vernon to the City of Long Beach. The Lower Los Angeles River Revitalization Plan (LLARRP) describes opportunities for improving the environment of the Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, and equity; the public realm; and water and the environment along and in the vicinity of the river. The Plan has been incorporated into the watershed (LLARRP) describes opportunities for improving the environment of Lower Los Angeles River. The plan was developed through a watershed-based, equitable, community-driven process and it identified 155 potential multi-benefit projects that would improve community economics, health, equity; public realm; water along in vicinity river. Plan has been incorporated into Los Angeles River Master Plan Update. Funding will support projects in line with the LLARRP, immediate drought response, and long-term water resilience. Applications: Applications will be submitted in two phases: a Concept Proposal and a Full Application. Applicants will first submit a Concept Proposal that will be reviewed by RMC staff for consistency with RMC goals, any specific program priorities, and the strength of the proposed project. In addition, RMC staff will look at all Concept Proposals for location, need, project type, readiness, threats, cost, and cost share. RMC staff will offer applicants feedback regarding alignment with priorities, overall merit, and any ineligible costs. RMC staff will select Concept Proposals to move forward and will invite selected applicants to submit Full Applications. Applicants will be provided the Full Application upon RMC invitation. RMC staff are available to work with Applicants during the preparation of the Full Application, as needed. RMC may request Applicants to revise and resubmit Full Applications, as necessary. It is strongly recommended that prospective applicants contact RMC staff for a consultation prior to submitting a Concept Proposal.",
+      "eligibility": [
+        "Nonprofit",
+        "Public Agency",
+        "Tribal Government"
+      ],
+      "similarity_score": 84,
+      "match_explanation": "The grant focuses on the Lower Los Angeles River area, which matches the NGO's geographic focus, and the grant's emphasis on environmental education aligns with the NGO's mission.",
+      "fit_level": "moderate",
+      "application_tip": "Highlight the NGO's experience in providing environmental education and its connection to the Lower Los Angeles River area.",
+      "location_boosted": true,
+      "location_boost_pts": 4
+    },
+    "funder_vocab": [],
+    "slots": {},
+    "analysis": null,
+    "original_sections": {
+      "uploaded_content": "Organization: Bright Path Youth Initiative (BPYI) \nLocation: Los Angeles, California \nProject Title: STEM Pathways for Underserved Youth in South Los Angeles \nFunding Request: $250,000 \nProject Period: July 1, 2026 – June 30, 2027 \nExecutive Summary \nBright Path Youth Initiative (BPYI) respectfully requests $250,000 to implement STEM \nPathways for Underserved Youth, a year-long program serving 150 low-income middle and \nhigh school students in South Los Angeles. The program will provide hands-on STEM \neducation, mentorship, college readiness support, and career exposure in robotics, \ncoding, and engineering. \nSouth Los Angeles continues to experience significant educational inequities, particularly \nin access to high-quality STEM programming. BPYI aims to close opportunity gaps by \noffering after-school and summer enrichment programs focused on technical skill \ndevelopment, academic support, and exposure to STEM careers. \nFunding will support program staffing, equipment (robotics kits, laptops), curriculum \ndevelopment, transportation assistance, and evaluation. By the end of the grant period, at \nleast 85% of participating students will demonstrate measurable improvement in STEM \nproficiency and college/career readiness indicators. \nOrganizational Background \nFounded in 2016, Bright Path Youth Initiative is a 501(c)(3) nonprofit organization dedicated \nto expanding educational and career opportunities for underserved youth in Los Angeles \nCounty. Our mission is to equip students from historically marginalized communities with \nthe skills, confidence, and networks necessary to succeed in higher education and STEM \ncareers. \nOver the past eight years, BPYI has: \n• Served over 1,200 students across LAUSD schools \n• Partnered with 10 local schools and 5 community centers \n• Maintained a 92% program retention rate \n• Helped 88% of graduating seniors enroll in postsecondary education \nBPYI operates with a staff of 8 full-time employees, 15 part-time instructors, and over 40 \nvolunteer mentors from local universities and technology companies.\nStatement of Need \nSouth Los Angeles faces persistent disparities in educational access and outcomes: \n• Over 75% of students in the target communities qualify for free or reduced-price \nlunch. \n• Schools in low-income areas often lack up-to-date STEM resources and \nexperienced instructors. \n• Students from these communities are significantly underrepresented in engineering \nand technology careers. \nWithout early exposure to STEM education and career pathways, students are less likely to \npursue college majors in high-demand technical fields. The digital divide further \nexacerbates inequities, as many households lack reliable access to computers and high-\nspeed internet. \nCommunity stakeholders—including school administrators, parents, and students—have \nidentified expanded STEM programming and mentorship as urgent needs. \nProgram Description: STEM Pathways for Underserved Youth \nGoals \n1. Increase STEM proficiency among participating students. \n2. Improve college and career readiness. \n3. Expand access to mentorship and STEM career exposure. \nTarget Population \n• 150 middle and high school students (grades 6–12) \n• Primarily from South Los Angeles \n• 90% from low-income households \n• 80% students of color \nProgram Components \n1. After-School STEM Labs (September–May) \n• Twice-weekly sessions (2 hours each) \n• Hands-on robotics, coding (Python & Scratch), and engineering challenges\n• Small cohort model (15 students per group) \n2. Summer STEM Institute (4 weeks) \n• Intensive project-based learning \n• Students design and present capstone engineering projects \n• Field trips to local tech companies and universities (UCLA, USC) \n3. Mentorship Program \n• One-on-one mentorship matching \n• Monthly career talks by STEM professionals \n• College application and financial aid workshops \n4. Family Engagement Workshops \n• Quarterly sessions on college readiness and STEM pathways \n• Spanish-language interpretation provided \nMeasurable Outcomes \nBy June 2027: \n• 85% of students will improve STEM knowledge scores by at least 20% (pre/post \nassessment). \n• 90% of participants will report increased interest in STEM careers. \n• 80% of high school seniors will complete at least one college or scholarship \napplication. \n• 75% of students will demonstrate improved problem-solving and teamwork skills \n(rubric-based evaluation). \nEvaluation Plan \nBPYI will use both quantitative and qualitative methods: \n• Pre- and post-STEM assessments \n• Attendance and retention tracking \n• Student surveys \n• Parent feedback surveys\n• Mentor feedback reports \n• External evaluator (annual review) \nQuarterly reports will measure progress toward goals and allow for program adjustments. \nBudget Summary (12-Month Project) \nCategory Amount \nProgram Staff Salaries $120,000 \nSTEM Equipment & Supplies $45,000 \nLaptops & Software $25,000 \nTransportation & Field Trips $20,000 \nEvaluation & Data Management $15,000 \nFamily Workshops & Outreach $10,000 \nAdministrative Costs (10%) $15,000 \nTotal Request $250,000 \nSustainability Plan \nBPYI maintains diversified funding streams, including: \n• Individual donors (20%) \n• Corporate sponsorships (25%) \n• Foundation grants (40%) \n• Government contracts (15%) \nWe are actively pursuing multi-year funding commitments and expanding corporate \npartnerships with Los Angeles-based technology firms. Equipment purchased under this \ngrant will support programming for multiple years. \nConclusion \nBright Path Youth Initiative is committed to addressing educational inequities and \nempowering the next generation of STEM leaders in Los Angeles. With support from this\ngrant, we will provide transformative opportunities for 150 underserved youth, equipping \nthem with critical skills, mentorship, and pathways to college and career success. \nWe appreciate your consideration and welcome the opportunity to provide additional \ninformation."
+    },
+    "sections": {},
+    "diffs": {},
+    "gate": "none",
+    "retry_counts": {},
+    "flagged_sections": []
   }
 }

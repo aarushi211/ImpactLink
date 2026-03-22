@@ -1,9 +1,9 @@
 import json
-from config import USE_GROQ  
-from services.parser import parse_proposal
-from agents.scoring_agent import score_proposal
-from services.vector_store import find_similar_grants
-from services.budget import generate_budget
+from impactlink-backend.config import USE_GROQ  
+from impactlink-backend.services.parser import parse_proposal
+from impactlink-backend.agents.scoring_agent import score_proposal
+from impactlink-backend.services.vector_store import find_similar_grants
+from impactlink-backend.services.budget import generate_budget
 
 PDF_PATH = "Data/Urban Green Tech.pdf"
 
