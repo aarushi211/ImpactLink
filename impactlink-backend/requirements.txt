@@ -15,3 +15,5 @@ pydantic>=2.0
 python-dotenv
 requests
 firebase-admin
+python-docx
+fpdf2
