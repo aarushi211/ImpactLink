@@ -70,9 +70,7 @@ export default function Draft() {
   const [saveStatus,   setSaveStatus]   = useState(null); // "saved" | "error" | null
 
   const [selectedGrantId,   setSelectedGrantId]   = useState(grantId || "");
-  const [selectedProposalId, setSelectedProposalId] = useState(
-    sessionStorage.getItem("upload_draft_id") || ""
-  );
+  const [selectedProposalId, setSelectedProposalId] = useState("");
   const [activeTab,       setActiveTab]       = useState(null);
   const [editedContent,   setEditedContent]   = useState({});
   const [wordCounts,      setWordCounts]      = useState({});
@@ -88,6 +86,18 @@ export default function Draft() {
   const resolvedProposal = activeProposal?.proposal_context
     || proposal
     || null;
+
+  // Auto-select most recent proposal if none selected
+  useEffect(() => {
+    if (!selectedProposalId && proposals.length > 0) {
+      const storedId = sessionStorage.getItem("upload_draft_id");
+      if (storedId && proposals.find(p => p.id === storedId)) {
+        setSelectedProposalId(storedId);
+      } else {
+        setSelectedProposalId(proposals[0].id);
+      }
+    }
+  }, [proposals, selectedProposalId]);
 
   useEffect(() => { if (grantId) setSelectedGrantId(grantId); }, [grantId]);
 

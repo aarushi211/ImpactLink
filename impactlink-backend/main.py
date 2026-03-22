@@ -67,8 +67,8 @@ class RegisterRequest(BaseModel):
     org_name: str
 
 class ProfileUpdateRequest(BaseModel):
-    ngo_id:  str
     updates: dict
+    ngo_id:  Optional[str] = None
 
 class TopicSearchRequest(BaseModel):
     query:   str
@@ -88,7 +88,6 @@ class BuildRequest(BaseModel):
     grant:   Optional[dict] = None
 
 class SaveDraftRequest(BaseModel):
-    ngo_id:            str
     title:             str = ""
     grant_title:       str = ""
     grant_id:          str = ""
@@ -96,43 +95,44 @@ class SaveDraftRequest(BaseModel):
     proposal_context:  dict = {}
     matches_id:        list = []
     budget_id:         Optional[str] = None
-    sections:          dict
-    section_order:     list
+    sections:          dict = {}
+    section_order:     list = []
+    ngo_id:            Optional[str] = None
 
 class UpdateDraftRequest(BaseModel):
-    ngo_id:    str
     draft_id:  str
     sections:  dict
     budget_id: Optional[str] = None
+    ngo_id:    Optional[str] = None
 
 class SaveBuildRequest(BaseModel):
-    ngo_id:            str
     title:             str = ""
     org_name:          str = ""
     grant_title:       str = ""
     proposal_context:  dict = {}
     matches_id:        list = []
     budget_id:         Optional[str] = None
-    sections:          dict
-    section_order:     list
+    sections:          dict = {}
+    section_order:     list = []
     answers:           list = []
+    ngo_id:            Optional[str] = None
 
 class UpdateBuildRequest(BaseModel):
-    ngo_id:    str
     build_id:  str
     sections:  dict
     budget_id: Optional[str] = None
+    ngo_id:    Optional[str] = None
 
 class SaveBudgetRequest(BaseModel):
-    ngo_id:               str
     title:                str = ""
     grant_title:          str = ""
     grant_id:             str = ""
     max_budget:           int = 0
     proposal_id:          Optional[str] = None
-    items:                list
-    total_requested:      int
+    items:                list = []
+    total_requested:      int = 0
     locality_explanation: str = ""
+    ngo_id:               Optional[str] = None
 
 
 # ── Core routes ────────────────────────────────────────────────
