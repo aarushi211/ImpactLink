@@ -178,7 +178,6 @@ export default function Budget() {
   const { grants, proposal } = useGrants();
   const { budget, loading, error, generate, refine, reset } = useBudget();
   const { saveBudget, budgets, proposals } = useWorkStore();
-  const [savedBudgetId,   setSavedBudgetId]   = useState(null);
   const [preloadedBudget, setPreloadedBudget] = useState(null);
 
   // saved proposal selector
@@ -274,7 +273,7 @@ export default function Budget() {
           items:                displayBudget.items,
           total_requested:      displayBudget.total_requested,
           locality_explanation: displayBudget.locality_explanation,
-        }).then(saved => { if (saved) setSavedBudgetId(saved.id); });
+        });
       }
       setChatReady(true);
       setMessages([{
@@ -298,6 +297,7 @@ export default function Budget() {
   };
 
   // when refine returns a new budget, add assistant ack
+  const displayBudget = budget || preloadedBudget;
   const prevBudgetRef = useRef(null);
   useEffect(() => {
     if (displayBudget && prevBudgetRef.current && displayBudget !== prevBudgetRef.current) {
@@ -308,7 +308,7 @@ export default function Budget() {
       }]);
     }
     prevBudgetRef.current = displayBudget;
-  }, [budget]);
+  }, [budget, displayBudget]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -319,7 +319,6 @@ export default function Budget() {
 
   // ── derived ────────────────────────────────────────────
 
-  const displayBudget = budget || preloadedBudget;
   const canGenerate = !!resolvedProposal && !!maxBudget && Number(maxBudget) > 0;
   const isGenerating = loading === "generating";
   const isRefining   = loading === "refining";

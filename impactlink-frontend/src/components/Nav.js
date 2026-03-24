@@ -114,6 +114,21 @@ export default function Nav() {
             Sign In
           </button>
         )}
+        {profile && (
+          <button
+            onClick={logout}
+            style={{
+              background: "transparent", border: "1px solid #2a2a4e",
+              color: "#555", padding: "5px 12px", borderRadius: 6,
+              fontSize: 11, fontWeight: 600, cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={e => { e.target.style.color = "var(--red)"; e.target.style.borderColor = "var(--red)"; }}
+            onMouseLeave={e => { e.target.style.color = "#555"; e.target.style.borderColor = "#2a2a4e"; }}
+          >
+            Sign Out
+          </button>
+        )}
       </div>
     </nav>
   );

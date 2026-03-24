@@ -41,8 +41,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     // 1. Authenticate with Firebase
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    await signInWithEmailAndPassword(auth, email, password);
 
     // 2. Fetch the corresponding profile from your backend
     const { data } = await api.get(`/api/profile/me`);

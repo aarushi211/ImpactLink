@@ -63,11 +63,15 @@ _embedding_model = None
 _collection      = None
 
 def _get_resources():
-    global _embedding_model, _collection
+    global _embedding_model
     if _embedding_model is None:
         _embedding_model = SentenceTransformer(MODEL_NAME)
-        client = chromadb.PersistentClient(path=CHROMA_PATH)
-        _collection = client.get_collection(COLLECTION)
+    
+    # Always fetch the collection fresh to avoid caching stale UUIDs 
+    # if load_vectors.py deletes and recreates the DB in the background.
+    client = chromadb.PersistentClient(path=CHROMA_PATH)
+    _collection = client.get_collection(COLLECTION)
+    
     return _embedding_model, _collection
 
 

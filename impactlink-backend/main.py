@@ -1,10 +1,15 @@
 import firebase_admin
 from firebase_admin import credentials, storage
 import os
+from dotenv import load_dotenv
+load_dotenv()  # Must happen before os.getenv calls below
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 
 # 1. INITIALIZE FIREBASE FIRST
-BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET", "impactlink-710f2.firebasestorage.app")
+BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET")  # Set in .env
+if not BUCKET_NAME:
+    raise RuntimeError("FIREBASE_STORAGE_BUCKET is not set in your .env file.")
 if os.path.exists("firebase-service-account.json"):
     cred = credentials.Certificate("firebase-service-account.json")
     firebase_admin.initialize_app(cred, {"storageBucket": BUCKET_NAME})
@@ -19,9 +24,8 @@ from typing import Optional
 import asyncio
 
 from services.parser import parse_proposal
-from agents.scoring_agent import score_proposal
-
 from services.vector_store import find_similar_grants, topic_search_grants
+from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
@@ -154,21 +158,12 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
         print(f"Storage upload failed: {e}")
 
     proposal = parse_proposal(file_bytes, file.filename)
-    scoring, matches = await asyncio.gather(
-        asyncio.to_thread(score_proposal, proposal),
-        asyncio.to_thread(find_similar_grants, proposal, 5),
-    )
-    return {"proposal": proposal, "scoring": scoring, "matches": matches}
+    matches = await asyncio.to_thread(find_similar_grants, proposal, 5)
+    return {"proposal": proposal, "matches": matches}
 
 @app.post("/api/match")
 def match(req: ProposalRequest):
     return {"matches": find_similar_grants(req.proposal, req.top_k)}
-
-@app.post("/api/score")
-def score(req: ProposalRequest):
-    return {"scoring": score_proposal(req.proposal)}
-
-
 
 
 # ── Budget routes ──────────────────────────────────────────────
@@ -241,6 +236,32 @@ async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_token)
 async def grants_topic_search(req: TopicSearchRequest):
     results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k)
     return {"grants": results, "query": req.query}
+
+# ── Work Store (Drafts, Builds, Budgets) ───────────────────────────────────
+
+@app.get("/api/work/{work_type}/me")
+def get_user_work(work_type: str, uid: str = Depends(verify_token)):
+    if work_type not in ("drafts", "builds", "budgets", "summary"):
+        raise HTTPException(400, "Invalid work type")
+    return {work_type: list_work(uid, work_type)}
+
+@app.post("/api/work/{work_type}")
+def create_user_work(work_type: str, req: dict, uid: str = Depends(verify_token)):
+    if work_type not in ("drafts", "builds", "budgets", "summary"):
+        raise HTTPException(400, "Invalid work type")
+    return save_work(uid, work_type, req)
+
+@app.patch("/api/work/{work_type}/{work_id}")
+def edit_user_work(work_type: str, work_id: str, req: dict, uid: str = Depends(verify_token)):
+    try:
+        return update_work(uid, work_id, req)
+    except ValueError:
+        raise HTTPException(404, "Not found")
+
+@app.delete("/api/work/{work_type}/{work_id}")
+def remove_user_work(work_type: str, work_id: str, uid: str = Depends(verify_token)):
+    delete_work(uid, work_id)
+    return {"status": "deleted"}
 
 # ── Unified Session Routes ─────────────────────────────────────────────────
 

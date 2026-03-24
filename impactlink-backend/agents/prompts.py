@@ -459,55 +459,6 @@ def _extract_user_values(proposal: dict) -> str:
         lines.append(f"People served: {proposal['number_served']}")
     return "\n".join(lines) if lines else "Use reasonable estimates based on proposal context."
 
-
-def _parse_budget_string(val: str) -> int:
-    if not val:
-        return 0
-    clean = re.sub(r'[$,]', '', str(val).lower())
-    match = re.search(r'([\d.]+)\s*(k|m|million|thousand)?', clean)
-    if not match:
-        return 0
-    num = float(match.group(1))
-    suffix = match.group(2)
-    if suffix in ('k', 'thousand'):
-        num *= 1000
-    elif suffix in ('m', 'million'):
-        num *= 1000000
-    return int(num)
-
-
-def _inject_budget_calculator(section_key: str, instructions: str, proposal: dict, grant: dict, user_values: str) -> tuple[str, str]:
-    """Intercepts the budget_narrative section to inject mathematically checked budget table."""
-    if section_key != "budget_narrative":
-        return instructions, user_values
-        
-    try:
-        from services.budget.generator import generate_budget
-        budget_val = proposal.get("total_budget", "")
-        grant_doc = grant.get("description", "") if isinstance(grant, dict) else ""
-        grant_ceiling = grant.get("award_ceiling", 0) if isinstance(grant, dict) else 0
-        max_budget = _parse_budget_string(budget_val) or grant_ceiling or 100000
-        
-        budget_data = generate_budget(proposal, max_budget, grant_doc)
-        
-        if "error" in budget_data:
-            log.warning("Budget script failed. LLM will estimate natively.")
-            return instructions, user_values
-            
-        budget_table = "Here is a strictly calculated, mathematically correct, grant-compliant budget table for this project. YOU MUST BASE YOUR NARRATIVE ON IT EXACTLY:\n\n"
-        budget_table += "| Category | Amount (USD) | NOTES/FTE |\n|---|---|---|\n"
-        for item in budget_data.get("items", []):
-            budget_table += f"| {item.get('category')} | ${item.get('amount'):,} | {item.get('notes', item.get('description', ''))} |\n"
-        budget_table += f"| **TOTAL** | **${budget_data.get('total_requested'):,}** | |\n\n"
-        
-        user_values += "\n\n" + budget_table
-        instructions = "CRITICAL INSTRUCTION: Analyze the calculated budget table provided in the User's Data Inputs below. Base your narrative strictly on its mathematically validated line items.\n\n" + instructions
-    except Exception as e:
-        log.error(f"Failed to generate budget script: {e}")
-        
-    return instructions, user_values
-
-
 def _build_grant_context(grant: dict) -> dict:
     """Build a lean but complete grant context for the prompt."""
     return {

@@ -33,11 +33,7 @@ export const getMatches = async (proposal, topK = 5) => {
   return res.data;
 };
 
-// Score a proposal
-export const scoreProposal = async (proposal) => {
-  const res = await api.post("/api/score", { proposal });
-  return res.data;
-};
+
 
 // Generate a localized line-item budget
 export const generateBudget = async (proposal, maxBudget) => {
@@ -70,7 +66,9 @@ export const createSession = async (flowType, grant, profile, originalSections =
  * advanceSession moves the session forward with user input (e.g. gap confirmation, slot answer).
  */
 export const advanceSession = async (sessionId, userInput = {}) => {
-  const res = await api.post(`/api/session/${sessionId}/advance`, userInput);
+  const res = await api.post(`/api/session/${sessionId}/advance`, userInput, {
+    timeout: 300_000, // 5 minutes — rewrite_sections can take 60–120s
+  });
   return res.data; // GateResponse
 };
 

@@ -55,7 +55,6 @@ SECTION CONTENT:
 {content}"""),
 ])
 
-
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def score_section(
@@ -67,17 +66,6 @@ def score_section(
 ) -> dict:
     """
     Score one section. Returns {"score": int, "feedback": str}.
-
-    Args:
-        section_key:   e.g. "executive_summary" (used for logging)
-        section_title: human-readable title
-        content:       the section text to score
-        grant:         grant dict
-        funder_vocab:  extracted vocab list (used to judge vocabulary alignment)
-
-    Returns:
-        {"score": int, "feedback": str}
-        On parse failure returns {"score": 50, "feedback": "..."} — never crashes.
     """
     vocab_str = ", ".join(funder_vocab[:10]) if funder_vocab else "None."
 
@@ -92,7 +80,6 @@ def score_section(
     })
 
     raw = response.content.strip()
-    # Strip markdown fences defensively
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -102,17 +89,13 @@ def score_section(
     try:
         result = json.loads(raw.strip())
         score = int(result.get("score", 50))
-        # Clamp to valid range
         score = max(0, min(100, score))
         return {
             "score":    score,
             "feedback": result.get("feedback", "No feedback provided."),
         }
     except (json.JSONDecodeError, ValueError, TypeError) as e:
-        log.warning(
-            "scoring_agent: parse failed for section '%s' — %s\nRaw: %s",
-            section_key, e, raw,
-        )
+        log.warning("scoring_agent: parse failed - %s\nRaw: %s", e, raw)
         return {
             "score":    50,
             "feedback": f"Score parsing failed. Raw output: {raw[:200]}",
@@ -120,20 +103,11 @@ def score_section(
 
 
 def needs_retry(score: int, retry_count: int) -> bool:
-    """
-    Returns True if this section should be rewritten.
-    False if score is good enough OR retry cap is reached.
-    """
     if score >= SCORE_THRESHOLD:
         return False
     if retry_count >= MAX_RETRIES:
-        return False   # cap reached — flag for human review instead
+        return False
     return True
 
-
 def is_flagged(score: int, retry_count: int) -> bool:
-    """
-    Returns True if the section should be flagged for human attention.
-    A section is flagged when it failed all retries and still scores low.
-    """
     return score < SCORE_THRESHOLD and retry_count >= MAX_RETRIES

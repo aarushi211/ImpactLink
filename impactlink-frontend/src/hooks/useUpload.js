@@ -8,7 +8,6 @@ import { auth } from "../firebase";
  */
 export default function useUpload() {
   const [proposal,   setProposal]   = useState(null);
-  const [scoring,    setScoring]    = useState(null);
   const [matches,    setMatches]    = useState([]);
   const [savedId,    setSavedId]    = useState(null); // work-store draft id
   const [loading,    setLoading]    = useState(false);
@@ -18,7 +17,6 @@ export default function useUpload() {
     setLoading(true);
     setError(null);
     setProposal(null);
-    setScoring(null);
     setMatches([]);
     setSavedId(null);
 
@@ -31,13 +29,11 @@ export default function useUpload() {
       }
 
       setProposal(data.proposal);
-      setScoring(data.scoring);
       const matchList = data.matches || [];
       setMatches(matchList);
 
       // Persist in sessionStorage for immediate cross-page access
       sessionStorage.setItem("proposal", JSON.stringify(data.proposal));
-      sessionStorage.setItem("scoring",  JSON.stringify(data.scoring));
       sessionStorage.setItem("matches",  JSON.stringify(matchList));
 
       // Persist to backend if user is logged in
@@ -91,15 +87,13 @@ export default function useUpload() {
 
   const reset = () => {
     setProposal(null);
-    setScoring(null);
     setMatches([]);
     setSavedId(null);
     setError(null);
     sessionStorage.removeItem("proposal");
-    sessionStorage.removeItem("scoring");
     sessionStorage.removeItem("matches");
     sessionStorage.removeItem("upload_draft_id");
   };
 
-  return { upload, proposal, scoring, matches, savedId, loading, error, reset };
+  return { upload, proposal, matches, savedId, loading, error, reset };
 }

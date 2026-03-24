@@ -34,7 +34,7 @@ function ViewToggle({ view, onChange }) {
 export default function GrantsList() {
   const { grants, proposal, hasRealData } = useGrants();
   const { profile } = useAuth();
-  const { proposals: savedProposals, loading: workLoading } = useWorkStore();
+  const { proposals: savedProposals } = useWorkStore();
 
   const [view,          setView]          = useState("grants");
   const [search,        setSearch]        = useState("");

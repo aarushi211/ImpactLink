@@ -36,9 +36,6 @@ export default function useProposalSession(initialSessionId = null) {
     try {
       const res = await createSession(flowType, grant, profile, originalSections);
       _sync(res);
-      // Immediately advance to get the first gate (e.g. gap_analysis or slot_filling)
-      const firstGate = await advanceSession(res.session_id);
-      _sync(firstGate);
       return res.session_id;
     } catch (err) {
       setError(err.response?.data?.detail || err.message || "Failed to start session");

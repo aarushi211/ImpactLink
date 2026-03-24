@@ -17,3 +17,5 @@ requests
 firebase-admin
 python-docx
 fpdf2
+psycopg[binary,pool]
+langgraph-checkpoint-postgres
