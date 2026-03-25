@@ -7,9 +7,8 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 from sentence_transformers import SentenceTransformer
-from langchain_ollama import ChatOllama
 from langchain_groq import ChatGroq
-from config import USE_GROQ, GROQ_API_KEY, LOCAL_LLM_MODEL
+from config import GROQ_API_KEY
 
 
 # ── Embedder (reuses your existing model) ────────────────────────────────────
@@ -43,19 +42,11 @@ class ProposalFeatures(BaseModel):
 # ── LLM + chain (unchanged from your working code) ───────────────────────────
 
 def get_extraction_llm():
-    if USE_GROQ:
-        return ChatGroq(
-            model="llama-3.3-70b-versatile",
-            temperature=0,
-            groq_api_key=GROQ_API_KEY,
-        )
-    else:
-        return ChatOllama(
-            model=LOCAL_LLM_MODEL,
-            temperature=0,
-            format="json",
-            num_ctx=8192,
-        )
+    return ChatGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0,
+        groq_api_key=GROQ_API_KEY,
+    )
 
 def build_extraction_chain():
     llm = get_extraction_llm()
@@ -135,8 +126,7 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
             # Short doc — pass everything directly, exactly like your original
             context = full_text
 
-        mode_name = "Groq" if USE_GROQ else "Local Ollama"
-        print(f"🧠 Extracting features using {mode_name} ({len(context)} chars)...")
+        print(f"🧠 Extracting features using Groq ({len(context)} chars)...")
 
         # 3. Run chain (identical to your working original)
         chain = build_extraction_chain()

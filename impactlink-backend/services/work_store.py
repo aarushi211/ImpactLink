@@ -12,7 +12,7 @@ if not DB_URL:
 pool = ConnectionPool(
     conninfo=DB_URL,
     max_size=10,
-    kwargs={"autocommit": True, "prepare_threshold": 0}
+    kwargs={"autocommit": True, "prepare_threshold": None}  # None = disable prepared statements (required for PgBouncer/Supabase)
 )
 
 def _init_db():

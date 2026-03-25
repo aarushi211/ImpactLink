@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./impactlink-backend
+    image: impactlink-api
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+    environment:
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+      - DATABASE_URL=${DATABASE_URL}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
+      - ALLOW_ORIGINS=${ALLOW_ORIGINS:-http://localhost:3000}
+
+  frontend:
+    build: ./impactlink-frontend
+    image: impactlink-ui
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8081
+    depends_on:
+      - backend

@@ -1,15 +1,22 @@
 import firebase_admin
 from firebase_admin import credentials, storage
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()  # Must happen before os.getenv calls below
+
+log = logging.getLogger(__name__)
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 
 # 1. INITIALIZE FIREBASE FIRST
 BUCKET_NAME = os.getenv("FIREBASE_STORAGE_BUCKET")  # Set in .env
 if not BUCKET_NAME:
-    raise RuntimeError("FIREBASE_STORAGE_BUCKET is not set in your .env file.")
+    # Check if we are running in a container
+    if os.path.exists("/.dockerenv"):
+        raise RuntimeError("FIREBASE_STORAGE_BUCKET was not passed to Docker via -e or --env-file")
+    else:
+        raise RuntimeError("FIREBASE_STORAGE_BUCKET is not set in your local .env file.")
 if os.path.exists("firebase-service-account.json"):
     cred = credentials.Certificate("firebase-service-account.json")
     firebase_admin.initialize_app(cred, {"storageBucket": BUCKET_NAME})
@@ -37,9 +44,16 @@ from api.session import create_session, advance_session, get_session_status
 
 app = FastAPI(title="ImpactLink AI Backend")
 
+# CORS: read from env so production URL can be injected without code changes
+_allow_origins = [
+    o.strip() for o in os.getenv("ALLOW_ORIGINS", "http://localhost:3000").split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_allow_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -155,7 +169,7 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
         await asyncio.to_thread(blob.upload_from_string, file_bytes, content_type=file.content_type)
         # We don't necessarily need a public URL yet, but the file is now in Storage
     except Exception as e:
-        print(f"Storage upload failed: {e}")
+        log.warning("Storage upload failed: %s", e)
 
     proposal = parse_proposal(file_bytes, file.filename)
     matches = await asyncio.to_thread(find_similar_grants, proposal, 5)
@@ -281,7 +295,7 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
             raise HTTPException(403, str(e))
         raise HTTPException(404, str(e))
     except Exception as e:
-        print(f"Session advance failed: {e}")
+        log.exception("Session advance failed")
         raise HTTPException(500, "Internal session error")
 
 @app.get("/api/session/{session_id}")

@@ -65,11 +65,13 @@ log = logging.getLogger(__name__)
 # PostgresSaver stores all graph state in a PostgreSQL database.
 # Both graphs use the same checkpointer so session IDs are globally unique.
 
-db_url = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/impactlink")
+db_url = os.getenv("DATABASE_URL")
+if not db_url:
+    raise RuntimeError("DATABASE_URL environment variable is required.")
 pool = ConnectionPool(
     conninfo=db_url,
     max_size=20,
-    kwargs={"autocommit": True, "prepare_threshold": 0}
+    kwargs={"autocommit": True, "prepare_threshold": None}  # None = disable prepared statements (required for PgBouncer/Supabase)
 )
 checkpointer = PostgresSaver(pool)
 checkpointer.setup()

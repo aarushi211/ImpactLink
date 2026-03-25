@@ -21,8 +21,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
-from langchain_ollama import ChatOllama
-from config import USE_GROQ, GROQ_API_KEY, LOCAL_LLM_MODEL
+from config import GROQ_API_KEY
 
 CHROMA_PATH  = "./chroma_db"
 MODEL_NAME   = "all-MiniLM-L6-v2"
@@ -75,9 +74,7 @@ Return one CollabInsight per NGO.""")
 
 
 def _get_llm():
-    if USE_GROQ:
-        return ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY, temperature=0)
-    return ChatOllama(model=LOCAL_LLM_MODEL, temperature=0)
+    return ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY, temperature=0)
 
 
 # ── Core functions ────────────────────────────────────────────────────────────
