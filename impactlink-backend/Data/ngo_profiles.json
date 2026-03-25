@@ -1,0 +1,152 @@
+{
+  "navratan_b006": {
+    "id": "navratan_b006",
+    "email": "nav@gmail.com",
+    "password_hash": "32de526587fc3aa933aa3cb8268dc4ebb9e672505bc3ff655d1e0f2a3ce714f9",
+    "org_name": "Navratan",
+    "mission": "",
+    "location": "LA",
+    "cause_area": "Health & Wellbeing",
+    "sdgs": [],
+    "website": "",
+    "founding_year": null,
+    "team_size": "1\u20135",
+    "key_activities": [],
+    "geographic_focus": [
+      "LA"
+    ],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-01T00:29:38.268311",
+    "updated_at": "2026-03-01T00:29:38.301708"
+  },
+  "test_ngo_2872": {
+    "id": "test_ngo_2872",
+    "email": "testaccount@example.com",
+    "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "org_name": "Test NGO",
+    "mission": "",
+    "location": "",
+    "cause_area": "",
+    "sdgs": [],
+    "website": "",
+    "founding_year": null,
+    "team_size": "",
+    "key_activities": [],
+    "geographic_focus": [],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-13T22:38:03.192822",
+    "updated_at": "2026-03-13T22:38:03.192822"
+  },
+  "test_ngo_6737": {
+    "id": "test_ngo_6737",
+    "email": "patch2@example.com",
+    "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "org_name": "Test NGO",
+    "mission": "Test",
+    "location": "",
+    "cause_area": "",
+    "sdgs": [],
+    "website": "",
+    "founding_year": null,
+    "team_size": "",
+    "key_activities": [],
+    "geographic_focus": [],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-13T22:39:56.835733",
+    "updated_at": "2026-03-13T22:39:58.876535"
+  },
+  "eco_tech_7e58": {
+    "id": "eco_tech_7e58",
+    "email": "eco@gmail.com",
+    "password_hash": "fc24f16565964ad713e01381f2ff7ee39d70d1da6b22130cd163343911596694",
+    "org_name": "Eco Tech",
+    "mission": "Empowering youth through technical training",
+    "location": "Los Angeles, USA",
+    "cause_area": "Education & Youth",
+    "sdgs": [
+      "SDG 3: Good Health",
+      "SDG 8: Decent Work",
+      "SDG 10: Reduced Inequalities"
+    ],
+    "website": "",
+    "founding_year": null,
+    "team_size": "1\u20135",
+    "key_activities": [],
+    "geographic_focus": [
+      "South LA"
+    ],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-13T22:40:44.446253",
+    "updated_at": "2026-03-13T22:40:44.492927"
+  },
+  "amara_foundation_f6e8": {
+    "id": "amara_foundation_f6e8",
+    "email": "amara@gmail.com",
+    "password_hash": "de8059a61404ec8e5a5277ab2647f541805529ef45c56588caf5331e09f9054d",
+    "org_name": "Amara Foundation",
+    "mission": "Empowering youth through digital literacy",
+    "location": "LA, USA",
+    "cause_area": "Education & Youth",
+    "sdgs": [
+      "SDG 3: Good Health",
+      "SDG 10: Reduced Inequalities",
+      "SDG 8: Decent Work"
+    ],
+    "website": "",
+    "founding_year": null,
+    "team_size": "6\u201315",
+    "key_activities": [],
+    "geographic_focus": [
+      "South LA"
+    ],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-13T22:42:28.743457",
+    "updated_at": "2026-03-13T22:42:28.766332"
+  },
+  "ecotech_85f2": {
+    "id": "ecotech_85f2",
+    "email": "test3@example.com",
+    "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "org_name": "EcoTech",
+    "mission": "Empowering youth by providing technical training",
+    "location": "Los Angeles, USA",
+    "cause_area": "Education & Youth",
+    "sdgs": [
+      "SDG 4: Quality Education"
+    ],
+    "website": "",
+    "founding_year": null,
+    "team_size": "1\u20135",
+    "key_activities": [],
+    "geographic_focus": [
+      "South LA"
+    ],
+    "collab_open": true,
+    "collab_interests": [],
+    "total_applied": 0,
+    "total_won": 0,
+    "funding_secured": 0,
+    "created_at": "2026-03-13T22:43:01.094858",
+    "updated_at": "2026-03-13T22:43:01.120703"
+  }
+}

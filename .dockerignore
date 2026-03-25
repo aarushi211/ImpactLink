@@ -7,6 +7,8 @@ __pycache__/
 .env
 *.db
 *.sqlite3
+*.gguf
+testpipeline.py
 
 # Sensitive credentials — mount at runtime via secrets manager
 firebase-service-account.json
@@ -26,3 +28,13 @@ Data_2/
 data_2/
 impactlink/Data/
 impactlink-backend/firebase-service-account.json
+
+venv/
+.zencoder/
+.zenflow/
+*.pyc
+*.pyd
+test_*
+codebase_overview.md
+apitest.py
+firebase-service-account.json

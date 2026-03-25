@@ -1,5 +1,6 @@
 import os
 import re
+import random
 import tempfile
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -7,11 +8,15 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 from sentence_transformers import SentenceTransformer
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from config import GROQ_API_KEY
 
+# Parse keys once at module level (mirrors vector_store.py)
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
-# ── Embedder (reuses your existing model) ────────────────────────────────────
+
+# ── Embedder ──────────────────────────────────────────────────────────────────
 
 class LocalEmbedder:
     def __init__(self):
@@ -24,7 +29,7 @@ class LocalEmbedder:
         return self.model.encode([text]).tolist()[0]
 
 
-# ── Pydantic schema (unchanged from your working code) ───────────────────────
+# ── Pydantic schema ───────────────────────────────────────────────────────────
 
 class ProposalFeatures(BaseModel):
     organization_name: str = Field(description="Official name of the NGO or organization")
@@ -39,30 +44,34 @@ class ProposalFeatures(BaseModel):
     key_activities: List[str] = Field(description="Main project activities listed in the proposal")
 
 
-# ── LLM + chain (unchanged from your working code) ───────────────────────────
+# ── LLM prompt ────────────────────────────────────────────────────────────────
 
-def get_extraction_llm():
-    return ChatGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0,
-        groq_api_key=GROQ_API_KEY,
-    )
-
-def build_extraction_chain():
-    llm = get_extraction_llm()
-    structured_llm = llm.with_structured_output(ProposalFeatures)
-
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are an expert grant reviewer. Extract metadata from the NGO proposal.
+EXTRACTION_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are an expert grant reviewer. Extract metadata from the NGO proposal.
 If information is missing, infer from context or leave blank.
 CRITICAL: Return ONLY a valid JSON object matching the requested schema."""),
-        ("user", "Here is the proposal text:\n\n{text}")
-    ])
-
-    return prompt | structured_llm
+    ("user", "Here is the proposal text:\n\n{text}")
+])
 
 
-# ── Semantic chunk selector (the only new piece) ──────────────────────────────
+def _get_llm() -> RotatingGroq:
+    """
+    Always returns a fresh RotatingGroq with a pre-selected valid key.
+
+    with_structured_output() initialises the Groq HTTP client at chain-build
+    time — before _generate() ever runs — so key rotation inside _generate
+    is too late.  Passing the key explicitly at construction time ensures
+    every chain invocation starts with a valid credential.
+    """
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0,
+        groq_api_key=key,
+    )
+
+
+# ── Semantic chunk selector ───────────────────────────────────────────────────
 
 def select_chunks(full_text: str, character_budget: int = 12000) -> str:
     """
@@ -113,26 +122,26 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
         tmp_path = tmp.name
 
     try:
-        # 1. Load document (same as your original)
+        # 1. Load document
         loader = PyPDFLoader(tmp_path) if is_pdf else TextLoader(tmp_path, encoding="utf-8")
         pages = loader.load()
         full_text = "\n".join(page.page_content for page in pages)
 
         # 2. Choose context: semantic chunks for long docs, raw text for short ones
-        LONG_DOC_THRESHOLD = 15000  # ~10 dense pages; tune as needed
+        LONG_DOC_THRESHOLD = 15000  # ~10 dense pages
         if len(full_text) > LONG_DOC_THRESHOLD:
             context = select_chunks(full_text)
         else:
-            # Short doc — pass everything directly, exactly like your original
             context = full_text
 
         print(f"🧠 Extracting features using Groq ({len(context)} chars)...")
 
-        # 3. Run chain (identical to your working original)
-        chain = build_extraction_chain()
+        # 3. Build chain with a fresh LLM instance each call so the Groq client
+        #    is always initialised with a valid, freshly-rotated key.
+        llm = _get_llm()
+        chain = EXTRACTION_PROMPT | llm.with_structured_output(ProposalFeatures)
         result = chain.invoke({"text": context})
-        
-        # Include the full text so the Improve flow has access to the actual writing
+
         output = result.model_dump()
         output["raw_text"] = full_text
         return output

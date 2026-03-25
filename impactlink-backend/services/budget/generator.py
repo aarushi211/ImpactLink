@@ -1,24 +1,12 @@
 """
 services/budget/generator.py  —  Personnel-first budget pipeline
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Pipeline
---------
-1. Extract grant rules   (LLM, no math)
-2. Resolve enum sets     (Python)
-3. Resolve CoL, min wage, labor cap  (Python)
-3b. Extract personnel from proposal  (LLM → PersonnelRole list)
-3c. Compute personnel budget         (Python engine — wage-validated)
-4. LLM allocates SECONDARY categories from the remaining budget
-5. Percentages → $ amounts           (Python)
-6. Merge personnel + secondary items (Python)
-7. Compliance enforcement            (indirect cap, direct service only)
-8. Final rebalance                   (fill any gaps into safe categories)
 """
 
+import os
+import random
 from typing import Optional, List, Set
 
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -35,14 +23,17 @@ from .rules import extract_grant_rules, resolve_indirect_categories, resolve_una
 from .compliance import enforce_grant_rules
 from .personnel import extract_personnel_from_proposal, compute_personnel_budget
 
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
-# ── Proposal-context categories (keyed from proposal.budget_breakdown) ────────
+
+def _get_llm() -> RotatingGroq:
+    from config import GROQ_API_KEY
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+
 
 def _proposal_preferred_categories(proposal: dict) -> List[str]:
-    """
-    Return a list of category VALUE strings the proposal explicitly mentions
-    in its budget_breakdown field. Used to guide the LLM's secondary allocation.
-    """
     raw = proposal.get("budget_breakdown", [])
     if not isinstance(raw, list):
         return []
@@ -56,8 +47,6 @@ def _proposal_preferred_categories(proposal: dict) -> List[str]:
                     matched.append(value)
     return matched
 
-
-# ── LLM prompt for secondary category allocation ──────────────────────────────
 
 SECONDARY_BUDGET_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are an expert NGO Financial Director.
@@ -92,14 +81,11 @@ def generate_budget(
 ) -> dict:
     print("💰 Starting personnel-first budget generation pipeline…\n")
 
-    # ── Step 1: Extract grant rules ───────────────────────────────────────────
     rules = extract_grant_rules(grant_document) if grant_document else GrantRules()
 
-    # ── Step 2: Resolve enum sets ─────────────────────────────────────────────
-    indirect_categories   = resolve_indirect_categories(rules)
+    indirect_categories    = resolve_indirect_categories(rules)
     unallowable_categories = resolve_unallowable_categories(rules)
 
-    # ── Step 3: Deterministic math ────────────────────────────────────────────
     locality_index  = load_locality_index()
     locations       = proposal.get("geographic_focus", [])
     target_location = locations[0] if locations else "Default"
@@ -116,14 +102,12 @@ def generate_budget(
     print(f"🚫 Unallowable:    {[c.value for c in unallowable_categories]}\n")
 
     try:
-        # ── Step 3b: Extract personnel from proposal ──────────────────────────
         extracted_roles = extract_personnel_from_proposal(proposal)
 
-        # ── Step 3c: Compute compliant personnel budget ───────────────────────
         personnel_items, personnel_report = compute_personnel_budget(
             extracted_roles, min_wage_hourly, labor_cap
         )
-        personnel_total = sum(i.amount for i in personnel_items)
+        personnel_total  = sum(i.amount for i in personnel_items)
         remaining_budget = max_budget - personnel_total
 
         print(f"\n📊 Personnel total: ${personnel_total:,}")
@@ -135,19 +119,17 @@ def generate_budget(
                 "Consider reducing headcount or the maximum budget."
             )
 
-        # ── Step 4: LLM allocates secondary categories ────────────────────────
-        # Determine categories that can still be used (exclude personnel + unallowable)
-        fixed_cats_values  = [c.value for c in PERSONNEL_CATEGORIES]
-        unallow_values     = [c.value for c in unallowable_categories]
-        valid_secondary    = [
+        fixed_cats_values = [c.value for c in PERSONNEL_CATEGORIES]
+        unallow_values    = [c.value for c in unallowable_categories]
+        valid_secondary   = [
             c.value for c in CategoryType
             if c not in PERSONNEL_CATEGORIES and c not in unallowable_categories
         ]
-        preferred_cats     = _proposal_preferred_categories(proposal)
-        # Keep only preferred that are valid
-        preferred_cats     = [p for p in preferred_cats if p in valid_secondary]
+        preferred_cats = _proposal_preferred_categories(proposal)
+        preferred_cats = [p for p in preferred_cats if p in valid_secondary]
 
-        llm       = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+        # Fresh LLM instance — key selected before with_structured_output builds the client
+        llm       = _get_llm()
         sec_chain = SECONDARY_BUDGET_PROMPT | llm.with_structured_output(BudgetAllocationPlan)
 
         sec_plan: BudgetAllocationPlan = sec_chain.invoke({
@@ -163,24 +145,18 @@ def generate_budget(
             "remaining_budget":           remaining_budget,
         })
 
-        # ── Step 5: Percentages → dollar amounts for secondary items ──────────
         secondary_items = allocations_to_line_items(sec_plan, remaining_budget)
+        line_items      = personnel_items + secondary_items
 
-        # ── Step 6: Merge personnel + secondary ───────────────────────────────
-        line_items = personnel_items + secondary_items
-
-        # ── Step 7: Compliance enforcement (indirect + direct service) ────────
         line_items, compliance_report = enforce_grant_rules(
             line_items, max_budget, rules,
             indirect_categories, unallowable_categories, labor_cap, min_wage_hourly,
         )
-        # Attach personnel report to compliance summary
         compliance_report["personnel_report"] = personnel_report
 
-        # ── Step 8: Final rebalance ───────────────────────────────────────────
         total = sum(i.amount for i in line_items)
         if total != max_budget:
-            gap = max_budget - total
+            gap        = max_budget - total
             safe_items = [
                 i for i in line_items
                 if i.category not in PERSONNEL_CATEGORIES
@@ -189,12 +165,11 @@ def generate_budget(
             if safe_items:
                 max(safe_items, key=lambda i: i.amount).amount += gap
             elif line_items:
-                line_items[0].amount += gap  # last resort
+                line_items[0].amount += gap
             total = max_budget
 
         assert sum(i.amount for i in line_items) == max_budget, "Budget integrity check failed."
 
-        # Choose a locality explanation from the LLM output
         locality_explanation = sec_plan.locality_explanation or (
             f"Budget generated for {target_location} with a CoL multiplier of {multiplier}x."
         )

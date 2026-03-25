@@ -1,30 +1,27 @@
 """
 agents/gap_analysis_agent.py
-
-Flow A only: compares the EXISTING PROPOSAL SECTIONS against grant requirements.
-
-This is NOT the same as the scratch flow's slot extractor.
-The input is actual written section content — not an org profile.
-The output is a structured gap list the user reviews before any rewriting begins.
-
-Phase 4 upgrade path:
-    replace the LLM detection with a Kuzu graph traversal query.
-    LLM role shifts to explaining gaps in prose — not detecting them.
-    The function signature stays the same, callers don't change.
 """
 
+import os
 import json
+import random
 import logging
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
-# ── Gap analysis prompt ───────────────────────────────────────────────────────
+
+def _get_llm() -> RotatingGroq:
+    from config import GROQ_API_KEY
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+
 
 GAP_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a senior grant reviewer with 20 years of experience.
@@ -74,29 +71,11 @@ EXISTING PROPOSAL SECTIONS:
 ])
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
-
 def analyze_gaps(
     existing_sections: dict[str, str],
     grant: dict,
     funder_vocab: list[str],
 ) -> dict:
-    """
-    Compare existing written proposal sections against grant requirements.
-
-    Args:
-        existing_sections: {section_key: section_text_content}
-                           Pass the raw text of each section, not SectionResult dicts.
-        grant:             the full grant dict
-        funder_vocab:      extracted vocab list from vocab_extractor
-
-    Returns:
-        Structured gap dict with keys:
-            missing_content, weak_evidence, wrong_vocabulary,
-            misalignment, sections_to_rewrite
-        Falls back to a minimal safe dict on parse failure.
-    """
-    # Format existing sections for the prompt
     sections_str = "\n\n".join(
         f"=== {key.upper()} ===\n{text}"
         for key, text in existing_sections.items()
@@ -108,18 +87,17 @@ def analyze_gaps(
 
     vocab_str = "\n".join(f"- {v}" for v in funder_vocab) or "None extracted."
 
-    chain = GAP_PROMPT | llm
+    llm      = _get_llm()
+    chain    = GAP_PROMPT | llm
     response = chain.invoke({
         "grant_title":       grant.get("title", ""),
         "grant_agency":      grant.get("agency", ""),
-        "grant_description": grant.get("description", "")[:2000],  # cap to avoid token overflow
+        "grant_description": grant.get("description", "")[:2000],
         "funder_vocab":      vocab_str,
         "existing_sections": sections_str,
     })
 
     raw = response.content.strip()
-
-    # Strip markdown fences if present
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -141,41 +119,25 @@ def apply_user_adjustments(
     user_additions: str,
     sections_to_rewrite: list[str],
 ) -> dict:
-    """
-    Merge user's gate input back into the analysis dict.
-
-    Args:
-        analysis:            the original gap analysis dict
-        confirmed_gaps:      list of gap descriptions the user kept (unchecked = removed)
-        user_additions:      free-text adjustments the user typed
-        sections_to_rewrite: user-confirmed list of sections to rewrite
-
-    Returns:
-        Updated analysis dict ready to pass to the rewriter.
-    """
     updated = dict(analysis)
-    updated["user_confirmed_gaps"] = confirmed_gaps
-    updated["user_additions"] = user_additions
-    updated["sections_to_rewrite"] = sections_to_rewrite
+    updated["user_confirmed_gaps"]   = confirmed_gaps
+    updated["user_additions"]        = user_additions
+    updated["sections_to_rewrite"]   = sections_to_rewrite
     return updated
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def _empty_analysis() -> dict:
     return {
-        "missing_content":    [],
-        "weak_evidence":      [],
-        "wrong_vocabulary":   [],
-        "misalignment":       [],
+        "missing_content":     [],
+        "weak_evidence":       [],
+        "wrong_vocabulary":    [],
+        "misalignment":        [],
         "sections_to_rewrite": [],
     }
 
 
 def _validate_analysis(result: dict) -> None:
-    """Raise ValueError if required keys are missing."""
-    required = {"missing_content", "weak_evidence",
-                "wrong_vocabulary", "misalignment", "sections_to_rewrite"}
-    missing = required - set(result.keys())
+    required = {"missing_content", "weak_evidence", "wrong_vocabulary", "misalignment", "sections_to_rewrite"}
+    missing  = required - set(result.keys())
     if missing:
         raise ValueError(f"Gap analysis missing keys: {missing}")

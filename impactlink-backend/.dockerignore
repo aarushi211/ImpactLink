@@ -42,3 +42,44 @@ env/
 
 .DS_Store
 dist/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local dev files
+.env
+*.db
+*.sqlite3
+*.gguf
+testpipeline.py
+
+# Sensitive credentials — mount at runtime via secrets manager
+firebase-service-account.json
+
+# ChromaDB local vector store — no longer needed (using pgvector)
+chroma_db/
+
+# Debug / scratch files
+error.txt
+error2.txt
+error4.txt
+test.db
+langgraph_sessions.db
+
+# Data files that shouldn't be in the image (load via load_vectors.py separately)
+Data_2/
+data_2/
+impactlink/Data/
+impactlink-backend/firebase-service-account.json
+
+venv/
+.zencoder/
+.zenflow/
+*.pyc
+*.pyd
+test_*
+codebase_overview.md
+apitest.py
+firebase-service-account.json

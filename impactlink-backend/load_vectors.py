@@ -24,7 +24,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger(__name__)
 
-GRANTS_FILE = "data/grants_enriched.json"
+GRANTS_FILE = "Data/grants_enriched.json"
 MODEL_NAME  = "all-MiniLM-L6-v2"
 DB_URL      = os.getenv("DATABASE_URL")
 if not DB_URL:

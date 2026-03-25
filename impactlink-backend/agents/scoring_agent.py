@@ -1,30 +1,36 @@
 """
 agents/scoring_agent.py
-
-Scores a single proposal section and manages the retry cap.
-
-Scale: 0–100 (not 1–10, to match the existing scoring_agent.py convention).
-Threshold: 75 (not 85 — self-scoring bias inflates by 8–12 points;
-           75 auto-proceed ≈ 83–87 in unbiased evaluation).
-Max retries: 2 per section. After 2 failures, section is flagged for
-             human review rather than retrying indefinitely.
 """
 
+import os
+import re
 import json
+import random
 import logging
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
-import re
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
-# Separate LLM instance with low temperature for consistent scoring
-scorer_llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, model_kwargs={"response_format": {"type": "json_object"}})
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
-SCORE_THRESHOLD = 75   # auto-proceed above this
-MAX_RETRIES     = 2    # hard cap — never retry more than twice
+SCORE_THRESHOLD = 75
+MAX_RETRIES     = 2
+
+
+def _get_scorer_llm() -> RotatingGroq:
+    from config import GROQ_API_KEY
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0,
+        groq_api_key=key,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
 
 SCORING_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a strict grant reviewer scoring a proposal section.
@@ -56,7 +62,6 @@ SECTION CONTENT:
 {content}"""),
 ])
 
-# ── Public API ────────────────────────────────────────────────────────────────
 
 def score_section(
     section_key:   str,
@@ -67,55 +72,45 @@ def score_section(
 ) -> dict:
     vocab_str = ", ".join(funder_vocab[:10]) if funder_vocab else "None."
 
-    chain = SCORING_PROMPT | scorer_llm
+    # Fresh instance per score call — low temperature, json_object mode
+    llm      = _get_scorer_llm()
+    chain    = SCORING_PROMPT | llm
     response = chain.invoke({
-        "grant_title":  grant.get("title", ""),
-        "grant_agency": grant.get("agency", ""),
-        "grant_focus":  grant.get("focus_areas", grant.get("description", "")[:300]),
-        "funder_vocab": vocab_str,
+        "grant_title":   grant.get("title", ""),
+        "grant_agency":  grant.get("agency", ""),
+        "grant_focus":   grant.get("focus_areas", grant.get("description", "")[:300]),
+        "funder_vocab":  vocab_str,
         "section_title": section_title,
-        "content":      content,
+        "content":       content,
     })
 
     raw = response.content.strip()
 
-    # 1. Advanced Cleaning: Extract only the JSON part using Regex
-    # This finds the first '{' and the last '}' regardless of what's around it
     json_match = re.search(r'(\{.*\})', raw, re.DOTALL)
     if json_match:
         raw = json_match.group(1)
-    
-    # 2. Fix common LLM trailing comma/newline issues
-    raw = re.sub(r',\s*}', '}', raw) 
+    raw = re.sub(r',\s*}', '}', raw)
 
     try:
-        # 3. Standard Parse
         result = json.loads(raw)
-        score = int(result.get("score", 50))
+        score  = int(result.get("score", 50))
         return {
-            "score": max(0, min(100, score)),
+            "score":    max(0, min(100, score)),
             "feedback": result.get("feedback", "No feedback provided."),
         }
     except (json.JSONDecodeError, ValueError, TypeError) as e:
-        # 4. Emergency Backup: If JSON still fails, try to find the score manually
         log.warning("scoring_agent: parse failed - %s\nRaw: %s", e, raw)
-        
-        # Regex to find "score": 92 even in broken JSON
-        score_match = re.search(r'"score":\s*(\d+)', raw)
+        score_match    = re.search(r'"score":\s*(\d+)', raw)
         fallback_score = int(score_match.group(1)) if score_match else 50
-        
         return {
-            "score": fallback_score,
+            "score":    fallback_score,
             "feedback": "Analysis complete. (Structure was repaired by system).",
         }
 
 
 def needs_retry(score: int, retry_count: int) -> bool:
-    if score >= SCORE_THRESHOLD:
-        return False
-    if retry_count >= MAX_RETRIES:
-        return False
-    return True
+    return score < SCORE_THRESHOLD and retry_count < MAX_RETRIES
+
 
 def is_flagged(score: int, retry_count: int) -> bool:
     return score < SCORE_THRESHOLD and retry_count >= MAX_RETRIES

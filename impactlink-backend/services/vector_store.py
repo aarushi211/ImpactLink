@@ -32,13 +32,15 @@ Schema (created by load_vectors.py):
 import os
 import json
 import re
+import time
+import random
 import logging
 from psycopg_pool import ConnectionPool
 from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 from typing import List, Literal
 from sentence_transformers import SentenceTransformer
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from config import USE_GROQ, GROQ_API_KEY
 
@@ -48,6 +50,10 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 DB_URL     = os.getenv("DATABASE_URL")
 if not DB_URL:
     raise ValueError("DATABASE_URL environment variable is required.")
+
+# Parse keys once at module level (same as RotatingGroq does)
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
 _pool: ConnectionPool | None = None
 _embedding_model = None
@@ -67,14 +73,38 @@ def _get_pool() -> ConnectionPool:
 def _get_model() -> SentenceTransformer:
     global _embedding_model
     if _embedding_model is None:
-        _embedding_model = SentenceTransformer(MODEL_NAME, cache_folder=os.getenv('SENTENCE_TRANSFORMERS_HOME', '/app/.cache'))
+        _embedding_model = SentenceTransformer(
+            MODEL_NAME,
+            cache_folder=os.getenv("SENTENCE_TRANSFORMERS_HOME", "/app/.cache"),
+        )
     return _embedding_model
+
+
+def _get_llm() -> RotatingGroq:
+    """
+    Always constructs a fresh RotatingGroq with a pre-selected valid key.
+
+    Why: with_structured_output() initialises the underlying Groq client
+    at chain-build time, BEFORE _generate() is ever called.  If we rely
+    solely on the key rotation inside _generate/_agenerate, the client is
+    created with whatever stale/empty key was set on the instance, causing
+    a 401 before a single token is produced.
+
+    Passing the key explicitly at construction time guarantees the Groq
+    client is initialised with a real key on every call.
+    """
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    log.info("🔄 Using Groq Key: %s...", str(key)[:7])
+    return RotatingGroq(
+        model="llama-3.3-70b-versatile",
+        groq_api_key=key,
+    )
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def clean_html(text: str) -> str:
-    return re.sub(r'<[^>]+>', ' ', text or '').strip()
+    return re.sub(r"<[^>]+>", " ", text or "").strip()
 
 
 def proposal_to_text(proposal: dict) -> str:
@@ -136,7 +166,7 @@ def _vector_search(embedding: list, n_results: int) -> list[dict]:
             return cur.fetchall()
 
 
-# ── Pydantic models (unchanged from ChromaDB version) ─────────────────────────
+# ── Pydantic models ───────────────────────────────────────────────────────────
 
 class ReRankedGrant(BaseModel):
     grant_id: str = Field(description="The exact ID of the grant")
@@ -161,7 +191,7 @@ class GrantMatchInsightsList(BaseModel):
     insights: List[GrantMatchInsight] = Field(description="One insight per retrieved grant.")
 
 
-# ── LLM prompts (unchanged) ───────────────────────────────────────────────────
+# ── LLM prompts ───────────────────────────────────────────────────────────────
 
 RERANK_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a Senior Grant Consultant.
@@ -196,10 +226,6 @@ Return JSON array now:""")
 ])
 
 
-def _get_llm():
-    return ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=GROQ_API_KEY)
-
-
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
@@ -226,20 +252,30 @@ def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
             "vector_score":  round(float(row["similarity"]) * 100, 1),
         })
 
+    # ── LLM re-rank with retry + key rotation per attempt ────────────────────
     log.info("Re-ranking %d candidates with LLM", len(initial_candidates))
-    llm = _get_llm()
-    structured_llm = llm.with_structured_output(ReRankerList)
-    chain = RERANK_PROMPT | structured_llm
+    refined_data: dict = {}
 
-    try:
-        result = chain.invoke({
-            "proposal": json.dumps(proposal, indent=2),
-            "grants":   json.dumps(initial_candidates, indent=2),
-        })
-        refined_data = {str(r.grant_id): r for r in result.rankings}
-    except Exception as e:
-        log.warning("Re-ranking error: %s — using vector scores only", e)
-        refined_data = {}
+    for attempt in range(3):
+        try:
+            # Fresh instance each attempt — guarantees with_structured_output()
+            # initialises the Groq client with a valid, freshly-rotated key.
+            llm = _get_llm()
+            structured_llm = llm.with_structured_output(ReRankerList)
+            chain = RERANK_PROMPT | structured_llm
+            result = chain.invoke({
+                "proposal": json.dumps(proposal, indent=2),
+                "grants":   json.dumps(initial_candidates, indent=2),
+            })
+            refined_data = {str(r.grant_id): r for r in result.rankings}
+            break  # success — exit retry loop
+        except Exception as e:
+            log.warning("Re-rank attempt %d/3 failed: %s", attempt + 1, e)
+            if attempt < 2:
+                time.sleep(1.5 ** attempt)  # 1 s, then 1.5 s back-off
+            else:
+                log.warning("All re-rank attempts failed — using vector scores only")
+    # ─────────────────────────────────────────────────────────────────────────
 
     proposal_geo = proposal.get("geographic_focus") or []
     final = []
@@ -259,22 +295,22 @@ def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
                 eligibility = []
 
         final.append({
-            "grant_id":          grant["grant_id"],
-            "title":             grant["title"],
-            "agency":            grant["agency"],
-            "award_ceiling":     row.get("award_ceiling") or 0,
-            "award_floor":       row.get("award_floor") or 0,
-            "application_url":   row.get("application_url") or "",
-            "close_date":        row.get("close_date") or "",
-            "focus_areas":       row.get("focus_areas") or "",
-            "contact_email":     row.get("contact_email") or "",
-            "description":       clean_html(row.get("description") or ""),
-            "eligibility":       eligibility,
-            "similarity_score":  score,
-            "match_explanation": llm_insight.match_explanation if llm_insight else "Semantic similarity match.",
-            "fit_level":         llm_insight.fit_level if llm_insight else "unknown",
-            "application_tip":   llm_insight.application_tip if llm_insight else "Standard review recommended.",
-            "location_boosted":  boost > 0,
+            "grant_id":           grant["grant_id"],
+            "title":              grant["title"],
+            "agency":             grant["agency"],
+            "award_ceiling":      row.get("award_ceiling") or 0,
+            "award_floor":        row.get("award_floor") or 0,
+            "application_url":    row.get("application_url") or "",
+            "close_date":         row.get("close_date") or "",
+            "focus_areas":        row.get("focus_areas") or "",
+            "contact_email":      row.get("contact_email") or "",
+            "description":        clean_html(row.get("description") or ""),
+            "eligibility":        eligibility,
+            "similarity_score":   score,
+            "match_explanation":  llm_insight.match_explanation if llm_insight else "Semantic similarity match.",
+            "fit_level":          llm_insight.fit_level if llm_insight else "unknown",
+            "application_tip":    llm_insight.application_tip if llm_insight else "Standard review recommended.",
+            "location_boosted":   boost > 0,
             "location_boost_pts": boost,
         })
 
@@ -303,21 +339,30 @@ def topic_search_grants(query: str, top_k: int = 10) -> list:
         "vector_score":  round(float(row["similarity"]) * 100, 1),
     } for row in rows]
 
-    llm = _get_llm()
-    try:
-        resp = llm.invoke(
-            TOPIC_SEARCH_PROMPT.format_messages(
-                query=query,
-                grants=json.dumps(candidates, indent=2)
+    # ── LLM topic scoring with retry + key rotation per attempt ──────────────
+    scored: dict = {}
+
+    for attempt in range(3):
+        try:
+            llm = _get_llm()  # fresh instance + key per attempt
+            resp = llm.invoke(
+                TOPIC_SEARCH_PROMPT.format_messages(
+                    query=query,
+                    grants=json.dumps(candidates, indent=2),
+                )
             )
-        )
-        content = resp.content.strip()
-        if "```" in content:
-            content = re.sub(r"```json|```", "", content).strip()
-        scored = {str(r["grant_id"]): r for r in json.loads(content)}
-    except Exception as e:
-        log.warning("Topic search LLM error: %s", e)
-        scored = {}
+            content = resp.content.strip()
+            if "```" in content:
+                content = re.sub(r"```json|```", "", content).strip()
+            scored = {str(r["grant_id"]): r for r in json.loads(content)}
+            break  # success
+        except Exception as e:
+            log.warning("Topic search LLM attempt %d/3 failed: %s", attempt + 1, e)
+            if attempt < 2:
+                time.sleep(1.5 ** attempt)
+            else:
+                log.warning("All topic search LLM attempts failed — using vector scores only")
+    # ─────────────────────────────────────────────────────────────────────────
 
     final = []
     for g in candidates:

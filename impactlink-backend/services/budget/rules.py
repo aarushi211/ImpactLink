@@ -1,21 +1,27 @@
+"""
+services/budget/rules.py
+"""
+import os
+import random
 from typing import Set
 
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 
 from .models import CategoryType, GrantRules
 from .constants import INDIRECT_CATEGORIES_DEFAULT
 
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
+
+
+def _get_llm() -> RotatingGroq:
+    from config import GROQ_API_KEY
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+
 
 def resolve_indirect_categories(rules: GrantRules) -> Set[CategoryType]:
-    """
-    Converts the LLM-extracted indirect_cost_includes strings into a
-    set of CategoryType enum values.
-
-    Falls back to INDIRECT_CATEGORIES_DEFAULT for any string that
-    doesn't match a valid CategoryType, and logs a warning so the
-    mismatch is visible rather than silently dropped.
-    """
     if not rules.indirect_cost_includes:
         return INDIRECT_CATEGORIES_DEFAULT.copy()
 
@@ -26,11 +32,7 @@ def resolve_indirect_categories(rules: GrantRules) -> Set[CategoryType]:
         if label in valid_values:
             resolved.add(valid_values[label])
         else:
-            # Try a case-insensitive partial match before giving up
-            match = next(
-                (e for e in CategoryType if label.lower() in e.value.lower()),
-                None
-            )
+            match = next((e for e in CategoryType if label.lower() in e.value.lower()), None)
             if match:
                 resolved.add(match)
                 print(f"   ⚠️  Fuzzy-matched indirect category '{label}' → '{match.value}'")
@@ -41,7 +43,6 @@ def resolve_indirect_categories(rules: GrantRules) -> Set[CategoryType]:
 
 
 def resolve_unallowable_categories(rules: GrantRules) -> Set[CategoryType]:
-    """Same resolution logic for unallowable cost categories."""
     valid_values = {e.value: e for e in CategoryType}
     resolved: Set[CategoryType] = set()
 
@@ -49,10 +50,7 @@ def resolve_unallowable_categories(rules: GrantRules) -> Set[CategoryType]:
         if label in valid_values:
             resolved.add(valid_values[label])
         else:
-            match = next(
-                (e for e in CategoryType if label.lower() in e.value.lower()),
-                None
-            )
+            match = next((e for e in CategoryType if label.lower() in e.value.lower()), None)
             if match:
                 resolved.add(match)
                 print(f"   ⚠️  Fuzzy-matched unallowable category '{label}' → '{match.value}'")
@@ -75,11 +73,12 @@ Do not invent restrictions not present in the document. Use defaults for anythin
 
 def extract_grant_rules(grant_document: str) -> GrantRules:
     print("📋 Extracting grant compliance rules...")
-    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+    # Fresh instance — with_structured_output builds the client at call time
+    llm   = _get_llm()
     chain = GRANT_RULES_PROMPT | llm.with_structured_output(GrantRules)
     try:
         rules = chain.invoke({
-            "grant_document": grant_document,
+            "grant_document":   grant_document,
             "valid_categories": [e.value for e in CategoryType],
         })
         print(f"   Personnel cap:     {rules.personnel_cap_pct}%")

@@ -1,24 +1,27 @@
 """
 agents/vocab_extractor.py
-
-Extracts the funder's distinctive vocabulary from a grant description.
-Runs once per session before any drafting.
-Output is injected into every section prompt.
-
-Why this matters: mirrors exact funder language, which is the single
-highest-leverage improvement to draft quality and reviewer scores.
 """
 
+import os
 import json
+import random
 import logging
-from langchain_groq import ChatGroq
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
+
+
+def _get_llm() -> RotatingGroq:
+    from config import GROQ_API_KEY
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+
 
 VOCAB_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are an expert grant writer analyzing a funder's program description.
@@ -43,30 +46,20 @@ Example: ["phrase one", "phrase two", "phrase three"]"""),
 
 
 def extract_funder_vocab(grant: dict) -> list[str]:
-    """
-    Extract distinctive funder vocabulary from a grant dict.
-
-    Args:
-        grant: the full grant dict (must contain a "description" key)
-
-    Returns:
-        list of 10–15 distinctive phrases as strings.
-        Falls back to empty list on parse failure — never crashes the flow.
-    """
     description = grant.get("description", "").strip()
     if not description:
         log.warning("vocab_extractor: grant has no description, returning empty vocab")
         return []
 
-    chain = VOCAB_PROMPT | llm
+    llm      = _get_llm()
+    chain    = VOCAB_PROMPT | llm
     response = chain.invoke({"description": description})
-    raw = response.content.strip()
+    raw      = response.content.strip()
 
     try:
         vocab = json.loads(raw)
         if not isinstance(vocab, list):
             raise ValueError(f"Expected list, got {type(vocab)}")
-        # Sanitize: keep only non-empty strings
         return [v for v in vocab if isinstance(v, str) and v.strip()]
     except (json.JSONDecodeError, ValueError) as e:
         log.warning("vocab_extractor: JSON parse failed — %s\nRaw output: %s", e, raw)
@@ -74,7 +67,6 @@ def extract_funder_vocab(grant: dict) -> list[str]:
 
 
 def vocab_to_prompt_str(vocab: list[str]) -> str:
-    """Format vocab list for injection into section prompts."""
     if not vocab:
         return "No specific vocabulary extracted — use language from the grant description."
     return "\n".join(f"- {v}" for v in vocab)

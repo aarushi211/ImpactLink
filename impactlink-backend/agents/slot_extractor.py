@@ -17,15 +17,28 @@ Slot loop logic (in scratch_flow.py):
 
 import json
 import logging
-from langchain_groq import ChatGroq
+from typing import Optional
+from utils.llm import RotatingGroq
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from state.proposal_state import Slot
+from config import GROQ_API_KEY
+import os
+import random
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
+GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
+
+def _get_llm() -> RotatingGroq:
+    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
+    return RotatingGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=0,
+        groq_api_key=key,
+    )
 
 # ── Slot definitions ──────────────────────────────────────────────────────────
 # The canonical list of slots the scratch flow must fill before drafting.
@@ -133,9 +146,25 @@ Extract now:"""),
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def initial_slots() -> dict[str, Slot]:
-    """Return a fresh slots dict keyed by slot key."""
-    return {s["key"]: dict(s) for s in SLOT_DEFINITIONS}
+def initial_slots(profile: Optional[dict] = None) -> dict[str, Slot]:
+    """
+    Return a fresh slots dict keyed by slot key.
+    Pre-fills slots if data exists in the provided profile.
+    """
+    profile = profile or {}
+    slots = {s["key"]: dict(s) for s in SLOT_DEFINITIONS}
+
+    # Pre-fill from profile if available
+    # Profile keys are usually 'org_name' and 'mission' (from auth.py)
+    if profile.get("org_name"):
+        slots["org_name"]["value"]  = profile["org_name"]
+        slots["org_name"]["filled"] = True
+
+    if profile.get("mission"):
+        slots["mission"]["value"]  = profile["mission"]
+        slots["mission"]["filled"] = True
+
+    return slots
 
 
 def next_question(slots: dict[str, Slot]) -> tuple[str, str] | None:
@@ -178,7 +207,7 @@ def extract_slots(
     unfilled_str = "\n".join(f"- {k}: {q}" for k, q in unfilled.items())
     filled_str   = "\n".join(f"- {k}: {v}" for k, v in filled.items()) or "None yet."
 
-    chain = EXTRACT_PROMPT | llm
+    chain = EXTRACT_PROMPT | _get_llm()
     response = chain.invoke({
         "unfilled_slots": unfilled_str,
         "filled_slots":   filled_str,
