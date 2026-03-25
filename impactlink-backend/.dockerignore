@@ -23,8 +23,8 @@ debug_listing_p1.html
 error*.txt
 
 # Data folders
-Data/
-data/
+Data_2/
+data_2/
 impactlink/Data/
 build/
 

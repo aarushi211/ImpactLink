@@ -54,9 +54,9 @@ export const refineBudget = async (currentBudget, userRequest) => {
  */
 export const createSession = async (flowType, grant, profile, originalSections = {}) => {
   const res = await api.post("/api/session", {
-    flow:              flowType,
-    grant:             grant,
-    profile:           profile,
+    flow: flowType,
+    grant: grant,
+    profile: profile,
     original_sections: originalSections,
   });
   return res.data; // { session_id, gate }

@@ -156,6 +156,16 @@ export default function GrantDetail() {
             }}>
               ＋ Add to Tracker
             </button>
+            <button
+               onClick={() => navigate(`/budget?grant=${grant.grant_id}`)}
+               style={{
+                 width: "100%", background: "transparent", border: "1px solid #7c6fef",
+                 color: "#7c6fef", padding: "12px", borderRadius: 12,
+                 fontSize: 14, fontWeight: 700, cursor: "pointer",
+               }}
+             >
+               💰 Build Budget with AI
+             </button>
 
             {/* Grant Details */}
             <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>

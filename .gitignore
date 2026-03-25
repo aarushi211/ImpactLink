@@ -3,7 +3,7 @@ venv/
 .zenflow/
 chroma_db
 .env
-Data/
+Data_2/
 __pycache__/
 *.pyc
 *.pyo

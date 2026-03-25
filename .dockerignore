@@ -3,42 +3,26 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Local dev repositories and node_modules (Vast majority of heavy files)
-.git/
-node_modules/
-impactlink-frontend/node_modules/
-
-# Local env & credentials
+# Local dev files
 .env
-firebase-service-account.json
-impactlink-backend/firebase-service-account.json
-
-# Databases & local state
 *.db
 *.sqlite3
+
+# Sensitive credentials — mount at runtime via secrets manager
+firebase-service-account.json
+
+# ChromaDB local vector store — no longer needed (using pgvector)
 chroma_db/
 
-# Heavy temporary or debug files
-debug_listing_p1.html
-error*.txt
+# Debug / scratch files
+error.txt
+error2.txt
+error4.txt
+test.db
+langgraph_sessions.db
 
-# Data folders
-Data/
-data/
+# Data files that shouldn't be in the image (load via load_vectors.py separately)
+Data_2/
+data_2/
 impactlink/Data/
-build/
-
-.venv
-venv/
-.cache/
-*.pdf
-*.docx
-
-# Local virtual environments (The biggest culprits)
-.venv/
-venv/
-ENV/
-env/
-
-.DS_Store
-dist/
+impactlink-backend/firebase-service-account.json

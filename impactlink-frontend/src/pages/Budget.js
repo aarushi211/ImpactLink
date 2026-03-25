@@ -174,6 +174,7 @@ function ChatMessage({ msg }) {
 export default function Budget() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const grantParam = searchParams.get("grant");
   const { profile } = useAuth();
   const { grants, proposal } = useGrants();
   const { budget, loading, error, generate, refine, reset } = useBudget();
@@ -190,7 +191,7 @@ export default function Budget() {
     || null;
 
   // grant + budget amount selection
-  const [selectedGrantId, setSelectedGrantId] = useState("");
+  const [selectedGrantId, setSelectedGrantId] = useState(grantParam || "");
   const [maxBudget,       setMaxBudget]       = useState("");
 
   // chat state
@@ -210,6 +211,13 @@ export default function Budget() {
     if (linked) setPreloadedBudget(linked);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProposalId]);
+
+  // Sync selectedGrantId with grantParam if it changes
+  useEffect(() => {
+    if (grantParam) {
+      setSelectedGrantId(grantParam);
+    }
+  }, [grantParam, grants]); // Also depend on grants to ensure we can find it
 
   // Load saved budget if ?load=<id>
   const loadBudgetId = searchParams.get("load");
@@ -231,18 +239,31 @@ export default function Budget() {
 
   // pre-fill max_budget from selected grant ceiling (or floor as fallback)
   useEffect(() => {
-    if (!selectedGrant) {
-      setMaxBudget("");
-      return;
+    // Only pre-fill if we have a grant selected AND it's in our grants list
+    const grant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
+    
+    if (grant) {
+      // Priority: 1. award_ceiling (BigInt/Number), 2. award_floor, 3. estimated_total (String)
+      const ceiling = grant.award_ceiling;
+      const floor   = grant.award_floor;
+      const total   = grant.estimated_total;
+      
+      let amount = 0;
+      if (ceiling && Number(ceiling) > 0) {
+        amount = Number(ceiling);
+      } else if (floor && Number(floor) > 0) {
+        amount = Number(floor);
+      } else if (total) {
+        // Parse "estimated_total" which might have $ or , (e.g. "$53,000,000")
+        const parsed = parseInt(String(total).replace(/[^0-9]/g, ""), 10);
+        if (!isNaN(parsed) && parsed > 0) amount = parsed;
+      }
+
+      if (amount > 0) {
+        setMaxBudget(String(amount));
+      }
     }
-    const ceiling = selectedGrant.award_ceiling;
-    const floor   = selectedGrant.award_floor;
-    if (ceiling && ceiling > 0) {
-      setMaxBudget(String(ceiling));
-    } else if (floor && floor > 0) {
-      setMaxBudget(String(floor));
-    }
-  }, [selectedGrant]);
+  }, [selectedGrantId, grants]);
 
   // scroll chat to bottom on new messages
   useEffect(() => {

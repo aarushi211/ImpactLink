@@ -23,13 +23,18 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // User is logged into Firebase, fetch their profile from the backend
         try {
-          // We use the Firebase UID to fetch the specific NGO profile
-          const { data } = await api.get(`/api/profile/me`);
+          // Get a fresh token from Firebase
+          const token = await user.getIdToken();
+
+          // Pass the token explicitly in the header for this call
+          const { data } = await api.get(`/api/profile/me`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
           setProfile(data);
         } catch (err) {
           console.error("Failed to fetch NGO profile", err);
+          // If it's a 401, it means the user exists in Firebase but not in your DB
         }
       } else {
         setProfile(null);
@@ -38,7 +43,6 @@ export function AuthProvider({ children }) {
     });
     return unsubscribe;
   }, []);
-
   const login = useCallback(async (email, password) => {
     // 1. Authenticate with Firebase
     await signInWithEmailAndPassword(auth, email, password);
