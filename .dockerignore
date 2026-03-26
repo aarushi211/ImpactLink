@@ -1,40 +1,48 @@
-# Python cache
-__pycache__/
-*.py[cod]
-*.pyo
+# --- Project Structure ---
+# We don't want the frontend in the backend's Docker image
+impactlink-frontend/
+node_modules/
+**/node_modules/
 
-# Local dev files
+# --- Python & System ---
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+**/.DS_Store
+venv/
+.venv/
+env/
+.cache/
+
+# --- Local Credentials & Secrets (CRITICAL) ---
 .env
+**/*.json
+!firebase-service-account.json # Exclude JSONs generally, but keep an eye on this
+# Actually, it's safer to just explicitly ignore the specific secret:
+firebase-service-account.json
+**/firebase-service-account.json
+
+# --- Databases & Vector Stores ---
 *.db
 *.sqlite3
-*.gguf
-testpipeline.py
-
-# Sensitive credentials — mount at runtime via secrets manager
-firebase-service-account.json
-
-# ChromaDB local vector store — no longer needed (using pgvector)
 chroma_db/
-
-# Debug / scratch files
-error.txt
-error2.txt
-error4.txt
-test.db
 langgraph_sessions.db
 
-# Data files that shouldn't be in the image (load via load_vectors.py separately)
+# --- Data & Large Files ---
+# You've moved these to Supabase/Firebase, so they don't need to be in the image
 Data_2/
 data_2/
 impactlink/Data/
-impactlink-backend/firebase-service-account.json
+*.pdf
+*.docx
+grants_enriched.json
+ngo_profiles.json
 
-venv/
-.zencoder/
-.zenflow/
-*.pyc
-*.pyd
-test_*
-codebase_overview.md
+# --- Build Artifacts & Debugging ---
+build/
+dist/
+debug_listing_p1.html
+error*.txt
+testpipeline.py
 apitest.py
-firebase-service-account.json
+codebase_overview.md

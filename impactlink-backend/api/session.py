@@ -70,7 +70,9 @@ if not db_url:
     raise RuntimeError("DATABASE_URL environment variable is required.")
 pool = ConnectionPool(
     conninfo=db_url,
+    min_size=1,
     max_size=20,
+    check=ConnectionPool.check_connection,
     kwargs={"autocommit": True, "prepare_threshold": None}  # None = disable prepared statements (required for PgBouncer/Supabase)
 )
 checkpointer = PostgresSaver(pool)

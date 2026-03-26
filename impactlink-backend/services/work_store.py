@@ -11,7 +11,9 @@ if not DB_URL:
 # Reusing connection pool pattern from session.py for consistent connection management
 pool = ConnectionPool(
     conninfo=DB_URL,
+    min_size=1,
     max_size=10,
+    check=ConnectionPool.check_connection,
     kwargs={"autocommit": True, "prepare_threshold": None}  # None = disable prepared statements (required for PgBouncer/Supabase)
 )
 

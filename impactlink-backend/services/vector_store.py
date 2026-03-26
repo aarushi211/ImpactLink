@@ -64,7 +64,9 @@ def _get_pool() -> ConnectionPool:
     if _pool is None:
         _pool = ConnectionPool(
             conninfo=DB_URL,
+            min_size=1,
             max_size=5,
+            check=ConnectionPool.check_connection,
             kwargs={"autocommit": True, "prepare_threshold": None},  # None = disable prepared statements (required for PgBouncer/Supabase)
         )
     return _pool
