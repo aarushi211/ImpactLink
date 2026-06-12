@@ -122,6 +122,7 @@ class CollabMatchRequest(BaseModel):
 class ReviseRequest(BaseModel):
     current_draft: str
     feedback:      str
+    section_title: str = "Proposal Section"
 
 class BuildRequest(BaseModel):
     answers: list
@@ -348,6 +349,28 @@ def edit_user_work(work_type: str, work_id: str, req: dict, uid: str = Depends(v
 def remove_user_work(work_type: str, work_id: str, uid: str = Depends(verify_token)):
     delete_work(uid, work_id)
     return {"status": "deleted"}
+
+# ── Section revise (human-in-the-loop edit assist) ─────────────────────────
+
+@app.post("/api/build/revise")
+async def build_revise(req: ReviseRequest, uid: str = Depends(verify_token)):
+    """Apply user feedback to a single section via SectionRewriteAgent."""
+    from agents.rewriter_agent import retry_rewrite
+
+    del uid  # auth required; section content is user-supplied
+    try:
+        content = await asyncio.to_thread(
+            retry_rewrite,
+            req.section_title,
+            req.current_draft,
+            req.feedback,
+            [],
+        )
+        return {"content": content}
+    except Exception as e:
+        log.exception("Section revise failed")
+        raise HTTPException(500, str(e))
+
 
 # ── Unified Session Routes ─────────────────────────────────────────────────
 

@@ -70,6 +70,12 @@ Each subgraph logs routing decisions for observability:
 
 `budget_narrative` additionally receives a pre-calculated table from **BudgetInjector** (deterministic Python engine) before drafting.
 
+### 2.3.1 Deterministic Section Tools
+| Tool | File | When invoked |
+|---|---|---|
+| `get_grant_requirement` | `agents/tools/grant_requirements.py` | Injected into every `SectionDraftAgent` prompt |
+| `check_budget_consistency` | `agents/tools/budget_consistency.py` | Scoring routes `budget_narrative` to `needs_tool_call` before rewrite |
+
 ### 2.4 Phased Parallel Drafting
 `node_draft_sections` drafts in three dependency waves (`DRAFTING_WAVES` in `planning_agent.py`):
 

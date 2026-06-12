@@ -27,6 +27,8 @@ export default function useProposalSession(initialSessionId = null) {
       sections: res.sections || prev.sections || {},
       slots:    res.slots    || prev.slots    || {},
       analysis: res.analysis || prev.analysis || null,
+      drafting_plan: res.drafting_plan || prev.drafting_plan || null,
+      agent_trace:   res.agent_trace   || prev.agent_trace   || [],
     }));
   }, []);
 

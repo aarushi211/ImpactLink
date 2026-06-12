@@ -3,12 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import { useAuth } from "../context/AuthContext";
-import api from "../services/api";
-import { auth } from "../firebase";
+import api, { reviseSection } from "../services/api";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -63,18 +60,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
     if (!feedback.trim()) return;
     setRevising(true);
     try {
-      const user = auth.currentUser;
-      const token = user ? await user.getIdToken() : null;
-
-      const res = await fetch(`${API_BASE}/api/build/revise`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ current_draft: content, feedback }),
-      });
-      const data = await res.json();
+      const data = await reviseSection(content, feedback, title);
       onRevise(data.content);
       setEditContent(data.content);
       setFeedback("");
@@ -341,11 +327,29 @@ export default function BuildProposal() {
 
     if (session.gate === "draft_review" && !done) {
         setMessages(prev => {
-            if (prev[prev.length-1]?.type === "complete") return prev;
-            return [...prev, { role: "ai", type: "complete", text: "✨ All sections drafted! Review and approve each one, then download your complete proposal." }];
+            if (prev[prev.length-1]?.type === "draft_ready") return prev;
+            return [...prev, { role: "ai", type: "draft_ready", text: "✨ All sections drafted! Review each section, then click Confirm Draft & Continue to advance the session." }];
+        });
+    }
+
+    if (session.gate === "final_save" && !done) {
+        setMessages(prev => {
+            if (prev[prev.length-1]?.type === "final_save") return prev;
+            return [...prev, { role: "ai", type: "final_save", text: "Draft confirmed. Click Complete Session to finish, then download your PDF." }];
         });
     }
   }, [session.gate, session.data, done]);
+
+  // Log agent routing decisions to browser console (portfolio demo)
+  useEffect(() => {
+    const trace = session.data.agent_trace;
+    if (!trace?.length) return;
+    console.group("[ImpactLink Agent Trace]");
+    trace.forEach((entry) => {
+      console.log(`[${entry.agent}] ${entry.decision}`);
+    });
+    console.groupEnd();
+  }, [session.data.agent_trace]);
 
   // ── Start / advance the build flow ──────────────────────────
 
@@ -450,6 +454,27 @@ export default function BuildProposal() {
       ...prev,
       [sectionKey]: { ...prev[sectionKey], content: newContent },
     }));
+  };
+
+  const handleConfirmDraftReview = async () => {
+    const payload = {};
+    secOrder.forEach((k) => {
+      payload[k] = sections[k]?.content ?? "";
+    });
+    try {
+      await session.advance({ sections: payload });
+    } catch (e) {
+      console.error("Confirm draft error:", e);
+    }
+  };
+
+  const handleCompleteSession = async () => {
+    try {
+      await session.advance({});
+      setDone(true);
+    } catch (e) {
+      console.error("Complete session error:", e);
+    }
   };
 
   // ── PDF download ──────────────────────────────────────────
@@ -1013,6 +1038,56 @@ export default function BuildProposal() {
                 transition:"width 0.4s",
               }} />
             </div>
+
+            {session.gate === "draft_review" && !done && (
+              <div style={{
+                marginBottom: 16, padding: "14px 16px",
+                background: "#1a1a2e", border: "1px solid var(--accent)",
+                borderRadius: 10, display: "flex",
+                alignItems: "center", justifyContent: "space-between", gap: 12,
+              }}>
+                <p style={{ margin: 0, color: "#aaa", fontSize: 12, lineHeight: 1.5 }}>
+                  Review sections below, then confirm to advance the LangGraph session.
+                </p>
+                <button
+                  onClick={handleConfirmDraftReview}
+                  disabled={session.loading}
+                  style={{
+                    background: "var(--accent)", border: "none", color: "#fff",
+                    padding: "8px 16px", borderRadius: 8, fontSize: 12,
+                    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                    opacity: session.loading ? 0.6 : 1,
+                  }}
+                >
+                  {session.loading ? "⟳ Saving…" : "Confirm Draft & Continue"}
+                </button>
+              </div>
+            )}
+
+            {session.gate === "final_save" && !done && (
+              <div style={{
+                marginBottom: 16, padding: "14px 16px",
+                background: "#0d2e1a", border: "1px solid #166534",
+                borderRadius: 10, display: "flex",
+                alignItems: "center", justifyContent: "space-between", gap: 12,
+              }}>
+                <p style={{ margin: 0, color: "#2d5a3d", fontSize: 12, lineHeight: 1.5 }}>
+                  Draft saved to session. Complete to reach the final graph node.
+                </p>
+                <button
+                  onClick={handleCompleteSession}
+                  disabled={session.loading}
+                  style={{
+                    background: "#166534", border: "none", color: "#fff",
+                    padding: "8px 16px", borderRadius: 8, fontSize: 12,
+                    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                    opacity: session.loading ? 0.6 : 1,
+                  }}
+                >
+                  {session.loading ? "⟳ Finishing…" : "Complete Session"}
+                </button>
+              </div>
+            )}
 
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
               {secOrder.map((key, idx) => {
