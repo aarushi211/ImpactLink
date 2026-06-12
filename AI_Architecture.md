@@ -45,7 +45,7 @@ class ProposalState(TypedDict):
 The scratch flow (`flows/scratch_flow.py`) is a LangGraph `StateGraph` with human-in-the-loop gates:
 
 ```
-init_slots → slot_filling ⟲ → slot_confirm → plan_draft → draft_sections → draft_review → final_save → complete
+init_slots → slot_filling ⟲ → slot_confirm → plan_draft → draft_sections → coherence_check → draft_review → final_save → complete
 ```
 
 - **VocabExtractor** runs at `init_slots` to pull funder-specific phrases from the grant description.
@@ -87,8 +87,26 @@ Each subgraph logs routing decisions for observability:
 
 Within each wave, `ThreadPoolExecutor` runs SectionSubgraph instances concurrently (2 workers). Later waves receive a rolling summary of prior sections (~1200 chars) for cross-section consistency.
 
-### 2.5 The "LLM-as-a-Judge" Reflection Loop
-Inside each SectionSubgraph, `SectionScoringAgent` evaluates against a 100-point rubric (Alignment, Vocabulary, Specificity, Persuasion). If score &lt; 75 and retries remain, `SectionRewriteAgent` revises using scorer feedback, then re-scores. Sections still below threshold after 2 retries are flagged for human review at `draft_review`.
+### 2.5 Structured Scoring Router
+`SectionScoringAgent` returns a `ScoringDecision` — not just a score:
+
+```python
+class ScoringDecision(BaseModel):
+    score: int
+    routing: Literal["approve", "targeted_rewrite", "needs_tool_call", "escalate"]
+    targeted_feedback: list[TargetedFeedback]
+    tool_to_call: Optional[str]
+    cross_section_impact: list[str]
+```
+
+`route_after_scoring()` drives the SectionSubgraph loop:
+- **approve** — score ≥ 75, section done
+- **targeted_rewrite** — `SectionRewriteAgent` fixes only listed issues
+- **needs_tool_call** — invokes `check_budget_consistency` or `get_grant_requirement`, then rewrites
+- **escalate** — max retries exhausted; flagged for human review
+
+### 2.6 CoherenceAgent
+After all sections draft, `node_coherence_check` runs `CoherenceAgent.check()` across the full proposal. It detects cross-section contradictions (beneficiary counts, budget alignment, KPI mismatches) and applies up to 2 targeted fixes before `draft_review`.
 
 ## 3. The Hybrid RAG Pipeline (Supabase + pgvector)
 Standard Semantic RAG is insufficient for grant matching, as funding relies heavily on hard constraints (e.g., geographic boundaries, maximum award ceilings).

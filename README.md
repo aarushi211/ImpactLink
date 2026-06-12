@@ -99,7 +99,8 @@ graph TD
         I --> G
     end
 
-    H --> J[draft_review: Human Gate]
+    H --> C[CoherenceAgent: coherence_check]
+    C --> J[draft_review: Human Gate]
     J --> K[final_save]
     K --> L[complete: PDF Export]
 ```

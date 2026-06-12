@@ -26,6 +26,8 @@ from agents.planning_agent import (
     summarize_prior_sections,
 )
 from agents.prompts import SECTIONS
+from agents.coherence_agent import CoherenceAgent
+from agents.rewriter_agent import targeted_retry_rewrite
 from flows.section_subgraph import run_section_subgraph
 from utils.metrics import metrics_collector
 
@@ -224,7 +226,62 @@ def node_draft_sections(state: ProposalState) -> dict:
         "retry_counts":     new_retry_counts,
         "flagged_sections": new_flagged,
         "agent_trace":      trace,
-        "gate":             "draft_review",
+    }
+
+
+def node_coherence_check(state: ProposalState) -> dict:
+    """CoherenceAgent: cross-section validation and targeted fixes (max 2)."""
+    sid = state["session_id"]
+    log.info("[%s] node: coherence_check (CoherenceAgent)", sid)
+
+    sections = dict(state.get("sections") or {})
+    trace = list(state.get("agent_trace") or [])
+
+    with metrics_collector.timer("node", "coherence_check", session_id=sid):
+        report = CoherenceAgent.check(sections, state["grant"])
+
+        if report.coherent or not report.issues:
+            trace = append_agent_trace(trace, "CoherenceAgent", "coherent — no fixes needed")
+            log.info("[%s] [CoherenceAgent] proposal coherent", sid)
+            return {"agent_trace": trace, "gate": "draft_review"}
+
+        trace = append_agent_trace(
+            trace,
+            "CoherenceAgent",
+            f"found {len(report.issues)} issue(s) — fixing up to 2",
+        )
+
+        fixes = CoherenceAgent.top_fixes(report)
+        updated = dict(sections)
+        vocab = state["funder_vocab"]
+
+        for issue in fixes:
+            key = issue.section
+            if key not in updated:
+                continue
+            sec = updated[key]
+            log.info(
+                "[%s] [CoherenceAgent] fixing '%s': %s",
+                sid, key, issue.issue[:80],
+            )
+            new_content = targeted_retry_rewrite(
+                sec.get("title", key),
+                sec.get("content", ""),
+                [issue.model_dump()],
+                f"Coherence issue: {issue.issue}",
+                vocab,
+            )
+            updated[key] = {**sec, "content": new_content}
+            trace = append_agent_trace(
+                trace,
+                "CoherenceAgent",
+                f"fixed {key}: {issue.issue[:60]}",
+            )
+
+    return {
+        "sections": updated,
+        "agent_trace": trace,
+        "gate": "draft_review",
     }
 
 
@@ -274,8 +331,9 @@ def build_scratch_graph(checkpointer):
     builder.add_node("slot_filling",   node_slot_filling)
     builder.add_node("slot_confirm",   node_slot_confirm)
     builder.add_node("plan_draft",     node_plan_draft)
-    builder.add_node("draft_sections", node_draft_sections)
-    builder.add_node("draft_review",   node_draft_review)
+    builder.add_node("draft_sections",   node_draft_sections)
+    builder.add_node("coherence_check", node_coherence_check)
+    builder.add_node("draft_review",    node_draft_review)
     builder.add_node("final_save",     node_final_save)
     builder.add_node("complete",       node_complete)
 
@@ -283,7 +341,8 @@ def build_scratch_graph(checkpointer):
     builder.add_edge("init_slots",     "slot_filling")
     builder.add_edge("slot_confirm",   "plan_draft")
     builder.add_edge("plan_draft",     "draft_sections")
-    builder.add_edge("draft_sections", "draft_review")
+    builder.add_edge("draft_sections",   "coherence_check")
+    builder.add_edge("coherence_check", "draft_review")
     builder.add_edge("draft_review",   "final_save")
     builder.add_edge("final_save",     "complete")
     builder.add_edge("complete",       END)

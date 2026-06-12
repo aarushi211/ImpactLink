@@ -59,6 +59,27 @@ Agency: {grant_agency}
 Rewrite the section now, fixing the gaps while preserving what works:"""),
 ])
 
+TARGETED_RETRY_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """You are a senior grant writer doing a surgical revision.
+Fix ONLY the specific issues listed below. Preserve strong paragraphs unchanged.
+Do not restructure the entire section. Return ONLY the revised section content."""),
+    ("user", """SECTION: {section_title}
+
+CURRENT CONTENT:
+{current_content}
+
+TARGETED ISSUES TO FIX:
+{targeted_issues}
+
+OVERALL SCORER NOTES:
+{general_feedback}
+
+FUNDER VOCABULARY TO USE:
+{funder_vocab}
+
+Revise the section now:"""),
+])
+
 RETRY_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a senior grant writer doing a targeted revision.
 The section below scored too low. Fix ONLY what the feedback identifies.
@@ -104,6 +125,39 @@ def rewrite_section(
         "org_profile":      _fmt_profile(profile),
         "grant_title":      grant.get("title", ""),
         "grant_agency":     grant.get("agency", ""),
+    })
+    return response.content.strip()
+
+
+def _format_targeted_issues(targeted_feedback: list[dict]) -> str:
+    if not targeted_feedback:
+        return "No targeted issues — apply general feedback only."
+    lines = []
+    for item in targeted_feedback:
+        para = f" (paragraph {item['paragraph']})" if item.get("paragraph") else ""
+        lines.append(
+            f"- [{item.get('severity', 'medium').upper()}]{para} "
+            f"{item.get('issue', '')} → Fix: {item.get('fix', '')}"
+        )
+    return "\n".join(lines)
+
+
+@timed("agent", "targeted_retry_rewrite")
+def targeted_retry_rewrite(
+    section_title: str,
+    current_content: str,
+    targeted_feedback: list[dict],
+    general_feedback: str,
+    funder_vocab: list[str],
+) -> str:
+    llm = _get_llm(temperature=0.3)
+    chain = TARGETED_RETRY_PROMPT | llm
+    response = chain.invoke({
+        "section_title": section_title,
+        "current_content": current_content,
+        "targeted_issues": _format_targeted_issues(targeted_feedback),
+        "general_feedback": general_feedback,
+        "funder_vocab": vocab_to_prompt_str(funder_vocab),
     })
     return response.content.strip()
 
