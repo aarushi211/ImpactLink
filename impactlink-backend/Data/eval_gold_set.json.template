@@ -1,0 +1,18 @@
+[
+  {
+    "ngo_id": "green_future_la",
+    "query": "Urban tree planting and heat island mitigation in Los Angeles",
+    "ground_truth_grant_ids": [
+        "CALFIRE-UF-2024", 
+        "LA-CITY-GREEN-2024"
+    ]
+  },
+  {
+    "ngo_id": "rural_edu_al",
+    "query": "K-12 tutoring and educational equity in rural Alabama",
+    "ground_truth_grant_ids": [
+        "AL-STATE-EDU-7",
+        "FED-DOED-RURAL-22"
+    ]
+  }
+]
