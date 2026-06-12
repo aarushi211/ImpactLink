@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Must happen before os.getenv calls below
 
 log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 
@@ -40,9 +41,34 @@ from services.ngo_collab import find_similar_ngos
 from services.auth import verify_token
 
 from api.session import create_session, advance_session, get_session_status
+from utils.metrics import metrics_collector
+
+import time as _time
+from starlette.requests import Request
+from starlette.responses import Response
 
 
 app = FastAPI(title="ImpactLink AI Backend")
+
+
+# ── Latency middleware ─────────────────────────────────────────
+
+@app.middleware("http")
+async def latency_middleware(request: Request, call_next):
+    """Time every HTTP request and record it in the metrics collector."""
+    start = _time.perf_counter()
+    response: Response = await call_next(request)
+    duration = _time.perf_counter() - start
+    metrics_collector.record(
+        category="api",
+        name=request.url.path,
+        duration_s=duration,
+        metadata={
+            "method": request.method,
+            "status_code": response.status_code,
+        },
+    )
+    return response
 
 # CORS: read from env so production URL can be injected without code changes
 _allow_origins = [
@@ -155,6 +181,52 @@ class SaveBudgetRequest(BaseModel):
 @app.get("/")
 def root():
     return {"status": "ImpactLink AI backend running"}
+
+
+# ── Metrics routes ─────────────────────────────────────────────
+
+@app.get("/api/metrics")
+def get_metrics():
+    """Return aggregated latency metrics across all events."""
+    return metrics_collector.get_summary()
+
+@app.get("/api/metrics/events")
+def get_all_events():
+    """Return all raw timing events."""
+    return {"events": metrics_collector.get_all_events()}
+
+@app.get("/api/metrics/{session_id}")
+def get_session_metrics(session_id: str):
+    """Return all timing events for a specific session."""
+    return metrics_collector.get_session_report(session_id)
+
+@app.post("/api/metrics/reset")
+def reset_metrics():
+    """Clear all collected metrics."""
+    metrics_collector.reset()
+    return {"status": "reset"}
+
+@app.get("/api/metrics/export/events")
+def export_events_csv():
+    """Download all raw timing events as a CSV file."""
+    from starlette.responses import Response
+    csv_data = metrics_collector.export_events_csv()
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=impactlink_events.csv"},
+    )
+
+@app.get("/api/metrics/export/summary")
+def export_summary_csv():
+    """Download aggregated latency stats as a CSV file."""
+    from starlette.responses import Response
+    csv_data = metrics_collector.export_summary_csv()
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=impactlink_summary.csv"},
+    )
 
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token)):

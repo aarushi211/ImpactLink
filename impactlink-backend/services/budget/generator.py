@@ -7,6 +7,7 @@ import random
 from typing import Optional, List, Set
 
 from utils.llm import RotatingGroq
+from utils.metrics import timed, metrics_collector
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -74,6 +75,7 @@ Remaining budget for secondary categories: ${remaining_budget:,}
 ])
 
 
+@timed("service", "generate_budget")
 def generate_budget(
     proposal: dict,
     max_budget: int,

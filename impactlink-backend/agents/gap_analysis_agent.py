@@ -7,6 +7,7 @@ import json
 import random
 import logging
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
@@ -71,6 +72,7 @@ EXISTING PROPOSAL SECTIONS:
 ])
 
 
+@timed("agent", "analyze_gaps")
 def analyze_gaps(
     existing_sections: dict[str, str],
     grant: dict,

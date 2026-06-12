@@ -19,6 +19,7 @@ import json
 import logging
 from typing import Optional
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from state.proposal_state import Slot
@@ -182,6 +183,7 @@ def next_question(slots: dict[str, Slot]) -> tuple[str, str] | None:
     return None
 
 
+@timed("agent", "extract_slots")
 def extract_slots(
     answer:       str,
     current_slots: dict[str, Slot],

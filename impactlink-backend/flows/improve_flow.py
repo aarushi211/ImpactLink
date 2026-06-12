@@ -10,6 +10,7 @@ from agents.scoring_agent import score_section, needs_retry, is_flagged, MAX_RET
 from utils.diff import diff_sections
 import concurrent.futures
 import logging
+from utils.metrics import metrics_collector
 
 log = logging.getLogger(__name__)
 MAX_WORKERS = 2
@@ -22,18 +23,20 @@ MAX_WORKERS = 2
 def node_extract_vocab(state: ProposalState) -> dict:
     """Node 1: extract funder vocabulary."""
     log.info("[%s] node: extract_vocab", state["session_id"])
-    vocab = extract_funder_vocab(state["grant"])
+    with metrics_collector.timer("node", "extract_vocab", session_id=state["session_id"]):
+        vocab = extract_funder_vocab(state["grant"])
     return {"funder_vocab": vocab}
 
 
 def node_analyze_gaps(state: ProposalState) -> dict:
     """Node 2: run gap analysis against existing sections."""
     log.info("[%s] node: analyze_gaps", state["session_id"])
-    analysis = analyze_gaps(
-        existing_sections=state["original_sections"],
-        grant=state["grant"],
-        funder_vocab=state["funder_vocab"],
-    )
+    with metrics_collector.timer("node", "analyze_gaps", session_id=state["session_id"]):
+        analysis = analyze_gaps(
+            existing_sections=state["original_sections"],
+            grant=state["grant"],
+            funder_vocab=state["funder_vocab"],
+        )
     return {"analysis": analysis}
 
 
@@ -75,64 +78,80 @@ def node_gap_review(state: ProposalState) -> dict:
 def node_rewrite_sections(state: ProposalState) -> dict:
     """Node 4: rewrite flagged sections in parallel with score/retry."""
     log.info("[%s] node: rewrite_sections", state["session_id"])
+    sid = state["session_id"]
 
-    sections_to_rewrite = state["analysis"].get("sections_to_rewrite", [])
-    original_text       = state["original_sections"]
-    grant               = state["grant"]
-    profile             = state["profile"]
-    funder_vocab        = state["funder_vocab"]
-    analysis            = state["analysis"]
+    with metrics_collector.timer("node", "rewrite_sections", session_id=sid) as node_meta:
+        sections_to_rewrite = state["analysis"].get("sections_to_rewrite", [])
+        original_text       = state["original_sections"]
+        grant               = state["grant"]
+        profile             = state["profile"]
+        funder_vocab        = state["funder_vocab"]
+        analysis            = state["analysis"]
 
-    # Preserve unrewritten sections
-    new_sections = {}
-    for key, text in original_text.items():
-        new_sections[key] = {
-            "title": key.replace("_", " ").title(),
-            "content": text, "score": 0, "retries": 0, "flagged": False,
-        }
+        # Preserve unrewritten sections
+        new_sections = {}
+        for key, text in original_text.items():
+            new_sections[key] = {
+                "title": key.replace("_", " ").title(),
+                "content": text, "score": 0, "retries": 0, "flagged": False,
+            }
 
-    new_retry_counts  = dict(state["retry_counts"])
-    new_flagged       = list(state["flagged_sections"])
+        new_retry_counts  = dict(state["retry_counts"])
+        new_flagged       = list(state["flagged_sections"])
 
-    def rewrite_one(section_key):
-        from agents.rewriter_agent import gaps_for_section as gfs
-        title         = section_key.replace("_", " ").title()
-        original      = original_text.get(section_key, "")
-        relevant_gaps = gfs(analysis, section_key)
+        def rewrite_one(section_key):
+            import time as _time
+            section_start = _time.perf_counter()
 
-        content     = rewrite_section(section_key, title, original,
-                                      relevant_gaps, funder_vocab, grant, profile)
-        retry_count = new_retry_counts.get(section_key, 0)
-        last_score  = 0
-        feedback    = ""
+            from agents.rewriter_agent import gaps_for_section as gfs
+            title         = section_key.replace("_", " ").title()
+            original      = original_text.get(section_key, "")
+            relevant_gaps = gfs(analysis, section_key)
 
-        while True:
-            result     = score_section(section_key, title, content, grant, funder_vocab)
-            last_score = result["score"]
-            feedback   = result["feedback"]
-            if not needs_retry(last_score, retry_count):
-                break
-            content     = retry_rewrite(title, content, feedback, funder_vocab)
-            retry_count += 1
+            content     = rewrite_section(section_key, title, original,
+                                          relevant_gaps, funder_vocab, grant, profile)
+            retry_count = new_retry_counts.get(section_key, 0)
+            last_score  = 0
+            feedback    = ""
 
-        flagged = is_flagged(last_score, retry_count)
-        return section_key, {
-            "title": title, "content": content,
-            "score": last_score, "retries": retry_count, "flagged": flagged,
-        }
+            while True:
+                result     = score_section(section_key, title, content, grant, funder_vocab)
+                last_score = result["score"]
+                feedback   = result["feedback"]
+                if not needs_retry(last_score, retry_count):
+                    break
+                content     = retry_rewrite(title, content, feedback, funder_vocab)
+                retry_count += 1
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        futures = {ex.submit(rewrite_one, k): k for k in sections_to_rewrite}
-        for future in concurrent.futures.as_completed(futures):
-            key, result = future.result()
-            new_sections[key]       = result
-            new_retry_counts[key]   = result["retries"]
-            if result["flagged"] and key not in new_flagged:
-                new_flagged.append(key)
+            section_duration = _time.perf_counter() - section_start
+            metrics_collector.record(
+                category="node",
+                name=f"rewrite_one/{section_key}",
+                duration_s=section_duration,
+                session_id=sid,
+                metadata={"score": last_score, "retries": retry_count},
+            )
 
-    revised_text = {k: v["content"] for k, v in new_sections.items()
-                    if k in sections_to_rewrite}
-    diffs = diff_sections(original_text, revised_text)
+            flagged = is_flagged(last_score, retry_count)
+            return section_key, {
+                "title": title, "content": content,
+                "score": last_score, "retries": retry_count, "flagged": flagged,
+            }
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+            futures = {ex.submit(rewrite_one, k): k for k in sections_to_rewrite}
+            for future in concurrent.futures.as_completed(futures):
+                key, result = future.result()
+                new_sections[key]       = result
+                new_retry_counts[key]   = result["retries"]
+                if result["flagged"] and key not in new_flagged:
+                    new_flagged.append(key)
+
+        revised_text = {k: v["content"] for k, v in new_sections.items()
+                        if k in sections_to_rewrite}
+        diffs = diff_sections(original_text, revised_text)
+
+        node_meta["sections_rewritten"] = len(sections_to_rewrite)
 
     return {
         "sections":         new_sections,

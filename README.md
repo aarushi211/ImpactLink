@@ -25,11 +25,57 @@ This repository demonstrates enterprise-level engineering, featuring **Reflectio
 
 ## ⚡ Performance Metrics
 
-Evidence of a high-performance, production-ready system:
-- **Inference Velocity**: ~300 tokens/sec via Llama 3.3 70B on Groq LPUs, enabling real-time iterative drafting.
-- **Semantic Discovery**: <45ms average latency for `pgvector` similarity search across thousands of grant vectors.
-- **Draft Efficiency**: Average end-to-end proposal generation time reduced from **40 hours** to **105 seconds**.
-- **Container Density**: Optimized Docker image size from **2.1GB** to **148MB** using aggressive `.dockerignore` strategies.
+All latency numbers below are **real measurements** captured via the built-in instrumentation layer (`utils/metrics.py`). Timings were recorded on a local development environment using **Llama 3.3 70B** on Groq LPU inference.
+
+### System-Level Summary
+| Metric | Measured Value |
+|---|---|
+| **Full 10-Section Proposal (Scratch)** | **19.7s** end-to-end (parallel drafting + scoring + retries) |
+| **3-Section Rewrite (Improve)** | **2.8s** end-to-end (parallel rewrite + scoring) |
+| **Average LLM Call Latency** | **0.99s** (Groq LPU, Llama 3.3 70B) |
+| **Slot Extraction (per question)** | **0.31 – 0.78s** including JSON parsing |
+| **Budget Generation Pipeline** | **1.33s** (rule extraction + personnel + allocation) |
+| **API Request Overhead** | **< 50ms** for data endpoints |
+
+### Pipeline Step Latencies (Measured)
+
+#### Flow A: Improve Existing Proposal
+| Step | Category | Duration | Details |
+|---|---|---|---|
+| Extract Funder Vocab | Agent → Node | 0.71s | 1 LLM call (0.67s) + JSON parse |
+| Gap Analysis | Agent → Node | 1.34s | 1 LLM call (1.30s) + JSON parse |
+| Rewrite Section (×3 parallel) | Node | 2.84s wall-clock | 3 sections rewritten concurrently |
+| ↳ `executive_summary` | Agent + Score | 1.43s | Score: 85/100, 0 retries |
+| ↳ `evaluation_plan` | Agent + Score | 1.71s | Score: 88/100, 0 retries |
+| ↳ `program_description` | Agent + Score | 1.40s | Score: 85/100, 0 retries |
+| **Total Session (create → review)** | **API** | **5.48s** | |
+
+#### Flow B: Scratch Proposal (10 Sections)
+| Step | Category | Duration | Details |
+|---|---|---|---|
+| Init Slots + Vocab | Node | 0.001s | No grant description → instant |
+| Slot Filling (7 rounds) | Agent | 0.28 – 0.78s each | LLM extraction + JSON parse per answer |
+| Draft Sections (×10 parallel) | Node | **19.68s** wall-clock | 2 workers, 10 sections |
+| ↳ `executive_summary` | Draft + Score | 2.55s | Score: 85, 0 retries |
+| ↳ `problem_statement` | Draft + Score | 3.46s | Score: 87, 0 retries |
+| ↳ `proposed_solution` | Draft + Score | 3.42s | Score: 92, 0 retries |
+| ↳ `target_beneficiaries` | Draft + Score | 2.90s | Score: 88, 0 retries |
+| ↳ `budget_narrative` | Draft + Score + **2 Retries** | **9.80s** | Score: 70→70→92 |
+| ↳ `evaluation_plan` | Draft + Score | 3.51s | Score: 85, 0 retries |
+| ↳ `sustainability` | Draft + Score | 2.75s | Score: 85, 0 retries |
+| ↳ `equity_statement` | Draft + Score | 2.69s | Score: 85, 0 retries |
+| **Total Session (draft advance)** | **API** | **19.99s** | |
+
+#### Budget Generation Pipeline
+| Step | Duration | Details |
+|---|---|---|
+| Extract Grant Rules | Service | ~0.3s | LLM structured output |
+| Extract Personnel | Service | 0.29 – 0.38s | 4 roles identified |
+| Secondary Allocation | LLM | 0.94s | Structured output with constraints |
+| Compliance Enforcement | CPU | <10ms | Deterministic Python logic |
+| **Total Pipeline** | **Service** | **1.33s** | |
+
+> **Key Insight — Self-Correction Cost:** The `budget_narrative` section triggered **2 automatic retries** (scored 70 → 70 → 92), adding ~6.3s. Sections passing on the first attempt average **2.5 – 3.5s** each. The reflection loop is the primary latency variable.
 
 ---
 
@@ -39,24 +85,22 @@ Instead of a linear prompt chain, ImpactLink utilizes a **LangGraph StateGraph**
 
 ```mermaid
 graph TD
-    A[User Upload/Prompt] --> B[init_slots: Metadata Extraction]
-    B --> C[slot_filling: Conversational UI Loop]
-    C -->|All slots meta-verified| D{Is Draft Ready?}
-    D -->|Wait for Confirm| E[slot_confirm: User Review]
-    E --> F[draft_sections: Map-Reduce Node]
-    
-    subgraph "Parallel Reflection Loop"
-        F --> G[Section A Drafting]
-        F --> H[Section B Drafting]
-        G --> I[LLM-as-a-Judge: Rubric Scoring]
-        H --> J[LLM-as-a-Judge: Rubric Scoring]
-        I -->|Score < 75| K[Reflection/Rewrite Node]
-        K --> G
-        I -->|Score >= 75| L[Final Assembly]
-        J -->|Score >= 75| L
+    A[User Prompt] --> B[VocabExtractor: init_slots]
+    B --> C[slot_filling: Conversational Q&A]
+    C -->|All slots filled| D[slot_confirm: Human Gate]
+    D --> E[node_draft_sections: Parallel Orchestrator]
+
+    subgraph "SectionSubgraph (×10 parallel)"
+        E --> F[SectionDraftAgent]
+        F --> G[SectionScoringAgent]
+        G -->|score ≥ 75| H[Section Approved]
+        G -->|score < 75| I[SectionRewriteAgent]
+        I --> G
     end
-    
-    L --> M[final_save: Firebase Storage + PDF Export]
+
+    H --> J[draft_review: Human Gate]
+    J --> K[final_save]
+    K --> L[complete: PDF Export]
 ```
 
 ## 🛠️ Core Engineering Challenges & Solutions

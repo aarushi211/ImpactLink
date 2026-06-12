@@ -24,22 +24,55 @@ State is maintained via LangGraph Checkpointers backed by PostgreSQL, ensuring t
 
 ```python
 class ProposalState(TypedDict):
-    ngo_context: dict             # Ground truth extracted from uploaded docs
-    grant_requirements: dict      # Rules extracted from the Funder's RFP
-    draft_sections: List[Section] # Actively mutating array of proposal sections
-    evaluation_scores: dict       # Real-time scoring from the Judge Agent
-    current_node: str             # Pointer for session resumption
-
+    session_id:         str
+    flow:               Literal["improve", "scratch"]
+    profile:            dict
+    grant:              dict
+    funder_vocab:       list[str]
+    slots:              dict[str, Slot]          # scratch flow only
+    analysis:           Optional[dict]         # improve flow only
+    original_sections:  dict[str, str]
+    sections:           dict[str, SectionResult]
+    diffs:              dict[str, list[DiffToken]]
+    gate:               str                      # human interrupt identifier
+    retry_counts:       dict[str, int]
+    flagged_sections:   list[str]
 ```
 
-### 2.2 Map-Reduce Parallel Drafting
-Instead of drafting linearly, the graph employs a distributed Map-Reduce pattern governed by a strict orchestration configuration:
-1. **Map (Deterministic Planning)**: Rather than relying on a probabilistic LLM to guess the document structure, the Graph Orchestrator utilizes a static, compliance-driven configuration (`SECTIONS`) to segment the proposal into mandatory independent nodes (e.g., Executive Summary, Methodology, Sustainability). This guarantees structural integrity and saves inference latency.
-2. **Execute (Parallel Generation)**: Thread-safe executor nodes draft these mapped sections concurrently against the Groq API, maintaining their own localized state.
-3. **Reduce (State Assembly)**: The final graph node acts as the synthesizer, compiling the parallel outputs and merging the localized state dictionaries into a cohesive, structurally sound document ready for PDF export.
+### 2.2 Scratch Flow Graph Topology
+The scratch flow (`flows/scratch_flow.py`) is a LangGraph `StateGraph` with human-in-the-loop gates:
 
-### 2.3 The "LLM-as-a-Judge" Reflection Loop
-Every parallel branch includes an autonomous verification step. A dedicated `Scoring Agent` evaluates the generated text against a 100-point rubric. If a section scores $< 75$, the node transitions to a `Rewrite Agent` with the critique appended to the context window, explicitly preventing subpar drafts from reaching the user.
+```
+init_slots → slot_filling ⟲ → slot_confirm → draft_sections → draft_review → final_save → complete
+```
+
+- **VocabExtractor** runs at `init_slots` to pull funder-specific phrases from the grant description.
+- **Slot extraction** loops via `slot_filling` until all profile slots are filled, then pauses at `slot_confirm`.
+
+### 2.3 SectionSubgraph: Named Per-Section Agents
+`node_draft_sections` does not draft inline. It orchestrates parallel runs of `run_section_subgraph()` (`flows/section_subgraph.py`), one per canonical section in `agents/prompts.SECTIONS`:
+
+| Agent | Role |
+|---|---|
+| **SectionDraftAgent** | Generates initial section content via `SECTION_PROMPT` |
+| **SectionScoringAgent** | LLM-as-a-Judge rubric scoring (0–100) |
+| **SectionRewriteAgent** | Targeted revision when score &lt; 75 |
+
+Each subgraph logs routing decisions for observability:
+```
+[SectionScoringAgent] budget_narrative score=68 → route=targeted_rewrite (retry 1/2)
+[SectionScoringAgent] budget_narrative score=92 → approve
+```
+
+`budget_narrative` additionally receives a pre-calculated table from **BudgetInjector** (deterministic Python engine) before drafting.
+
+### 2.4 Map-Reduce Parallel Drafting
+1. **Map**: Static `SECTIONS` config defines 10 mandatory section keys (structural integrity, no LLM guessing).
+2. **Execute**: `ThreadPoolExecutor` runs SectionSubgraph instances concurrently (2 workers).
+3. **Reduce**: `node_draft_sections` merges `SectionResult` dicts into `ProposalState.sections`.
+
+### 2.5 The "LLM-as-a-Judge" Reflection Loop
+Inside each SectionSubgraph, `SectionScoringAgent` evaluates against a 100-point rubric (Alignment, Vocabulary, Specificity, Persuasion). If score &lt; 75 and retries remain, `SectionRewriteAgent` revises using scorer feedback, then re-scores. Sections still below threshold after 2 retries are flagged for human review at `draft_review`.
 
 ## 3. The Hybrid RAG Pipeline (Supabase + pgvector)
 Standard Semantic RAG is insufficient for grant matching, as funding relies heavily on hard constraints (e.g., geographic boundaries, maximum award ceilings).

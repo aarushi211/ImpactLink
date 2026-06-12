@@ -20,7 +20,7 @@ except ImportError:
 # ══════════════════════════════════════════════════════════════════════════════
 
 SIMPLER_API_KEY = os.getenv("SIMPLER_GRANTS_API_KEY", "")
-OUTPUT_DIR      = Path("data")
+OUTPUT_DIR      = Path("Data")
 OUTPUT_FILE     = OUTPUT_DIR / "grants_enriched.json"
 UA              = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 HEADERS         = {"User-Agent": UA}
@@ -63,7 +63,7 @@ def portal_from_agency(code):
 # SOURCE 1 — Simpler Grants API (Fixed 422 Error & Response Parsing)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def fetch_simpler(keywords="", limit=100):
+def fetch_simpler(keywords="", limit=200):
     if not SIMPLER_API_KEY:
         print("  ⚠  No SIMPLER_GRANTS_API_KEY — falling back to legacy grants.gov\n")
         return fetch_legacy(keywords=keywords, limit=limit)
@@ -133,7 +133,7 @@ def _norm_simpler(raw):
 # SOURCE 2 — Legacy Grants.gov (Fallback)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def fetch_legacy(keywords="", limit=50):
+def fetch_legacy(keywords="", limit=100):
     print("  [grants.gov legacy API] Fetching federal grants (no key needed)...")
     results = []
     payload = {
@@ -168,7 +168,7 @@ def _norm_legacy(raw):
 # SOURCE 3 & 4 — State Open Data APIs & Scrapers 
 # ══════════════════════════════════════════════════════════════════════════════
 
-def fetch_california(keywords="", limit=100):
+def fetch_california(keywords="", limit=200):
     print("  [California Grants Portal / data.ca.gov] Fetching CA state grants...")
     # Socrata ID
     CA_API = "https://data.ca.gov/api/3/action/datastore_search"
@@ -245,7 +245,7 @@ def main():
     ap = argparse.ArgumentParser(description="ImpactLink grant pipeline")
     ap.add_argument("--source", choices=["all","federal","california","newyork"], default="all")
     ap.add_argument("--keywords", default="nonprofit education community")
-    ap.add_argument("--limit", type=int, default=100)
+    ap.add_argument("--limit", type=int, default=500)
     args = ap.parse_args()
 
     OUTPUT_DIR.mkdir(exist_ok=True)

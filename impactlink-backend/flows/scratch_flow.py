@@ -1,48 +1,41 @@
 """
-flows/scratch_flow_lg.py — fixed: no module-level LLM singleton
+flows/scratch_flow.py — LangGraph state machine for building proposals from scratch.
+
+Section drafting is delegated to flows/section_subgraph.py (SectionDraftAgent,
+SectionScoringAgent, SectionRewriteAgent) and orchestrated in parallel by
+node_draft_sections.
 """
 
-import os
-import random
 import logging
 import concurrent.futures
 
 from langgraph.graph import StateGraph, END
 from langgraph.types import interrupt
+from dotenv import load_dotenv
 
-from state.proposal_state import ProposalState, SectionResult
-from agents.vocab_extractor import extract_funder_vocab, vocab_to_prompt_str
+from state.proposal_state import ProposalState
+from agents.vocab_extractor import extract_funder_vocab
 from agents.slot_extractor import (
     initial_slots, next_question, extract_slots,
     apply_extractions, is_slot_exhausted, slots_to_profile,
 )
-from agents.scoring_agent import score_section, needs_retry, is_flagged, MAX_RETRIES
-from agents.prompts import SECTIONS, _build_grant_context, _extract_user_values, SECTION_PROMPT
-from agents.rewriter_agent import retry_rewrite
-from utils.llm import RotatingGroq
-from dotenv import load_dotenv
+from agents.prompts import SECTIONS
+from flows.section_subgraph import run_section_subgraph
+from utils.metrics import metrics_collector
 
 load_dotenv()
 log = logging.getLogger(__name__)
 
 MAX_WORKERS = 2
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm(temperature: float = 0.3) -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=temperature, groq_api_key=key)
-
 
 # ── Node functions ─────────────────────────────────────────────────────────────
 
 def node_init_slots(state: ProposalState) -> dict:
     log.info("[%s] node: init_slots", state["session_id"])
-    vocab = extract_funder_vocab(state["grant"])
-    slots = initial_slots(state.get("profile"))
+    with metrics_collector.timer("node", "init_slots", session_id=state["session_id"]):
+        vocab = extract_funder_vocab(state["grant"])
+        slots = initial_slots(state.get("profile"))
     return {"funder_vocab": vocab, "slots": slots, "gate": "slot_filling"}
 
 
@@ -69,8 +62,10 @@ def node_slot_filling(state: ProposalState) -> dict:
     updated_flagged = list(state["flagged_sections"])
 
     if answer:
-        extracted     = extract_slots(answer, updated_slots)
-        updated_slots = apply_extractions(updated_slots, extracted, asked_key)
+        with metrics_collector.timer("node", "slot_filling_extraction", session_id=state["session_id"],
+                                     metadata={"slot_key": asked_key}):
+            extracted     = extract_slots(answer, updated_slots)
+            updated_slots = apply_extractions(updated_slots, extracted, asked_key)
 
         if extracted:
             log.info("[%s] filled slots: %s", state["session_id"], list(extracted.keys()))
@@ -117,73 +112,47 @@ def node_slot_confirm(state: ProposalState) -> dict:
 
 
 def node_draft_sections(state: ProposalState) -> dict:
-    log.info("[%s] node: draft_sections", state["session_id"])
+    """Orchestrate parallel SectionSubgraph runs (one per canonical section)."""
+    log.info("[%s] node: draft_sections (parallel SectionSubgraph)", state["session_id"])
+    sid = state["session_id"]
 
-    profile   = slots_to_profile(state["slots"])
-    grant     = state["grant"]
-    grant_ctx = _build_grant_context(grant)
-    vocab     = state["funder_vocab"]
-    vocab_str = vocab_to_prompt_str(vocab)
+    with metrics_collector.timer("node", "draft_sections", session_id=sid) as node_meta:
+        profile = slots_to_profile(state["slots"])
+        grant = state["grant"]
+        vocab = state["funder_vocab"]
+        drafting_plan = state.get("drafting_plan")
 
-    def draft_one(section: dict) -> tuple[str, SectionResult]:
-        # Fresh LLM per section draft — thread-safe, valid key guaranteed
-        llm   = _get_llm(temperature=0.3)
-        chain = SECTION_PROMPT | llm
+        def run_one(section: dict):
+            return run_section_subgraph(
+                section,
+                session_id=sid,
+                profile=profile,
+                grant=grant,
+                funder_vocab=vocab,
+                drafting_plan=drafting_plan,
+            )
 
-        user_values = _extract_user_values(profile)
-        if section["key"] == "budget_narrative":
-            from agents.budget_injector import get_budget_context
-            budget_ctx = get_budget_context(profile, grant)
-            if budget_ctx:
-                user_values += f"\n\nPre-calculated budget table:\n{budget_ctx}"
+        new_sections = {}
+        new_retry_counts = dict(state["retry_counts"])
+        new_flagged = list(state["flagged_sections"])
 
-        response = chain.invoke({
-            "section_title": section["title"],
-            "word_target":   section["word_target"],
-            "instructions":  section["instructions"],
-            "proposal":      str(profile),
-            "grant":         str(grant_ctx),
-            "user_values":   user_values + f"\n\nFunder vocabulary:\n{vocab_str}",
-        })
-        content     = response.content.strip()
-        retry_count = 0
-        last_score  = 0
-        feedback    = ""
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {executor.submit(run_one, s): s["key"] for s in SECTIONS}
+            for future in concurrent.futures.as_completed(futures):
+                section_key = futures[future]
+                try:
+                    key, result = future.result()
+                    new_sections[key] = result
+                    new_retry_counts[key] = result["retries"]
+                    if result["flagged"] and key not in new_flagged:
+                        new_flagged.append(key)
+                except Exception as e:
+                    log.error(
+                        "[%s] SectionSubgraph failed for '%s': %s",
+                        sid, section_key, e, exc_info=True,
+                    )
 
-        while True:
-            result     = score_section(section["key"], section["title"], content, grant, vocab)
-            last_score = result["score"]
-            feedback   = result["feedback"]
-            if not needs_retry(last_score, retry_count):
-                break
-            log.info("[%s] section '%s' scored %d — retry %d/%d",
-                     state["session_id"], section["key"], last_score, retry_count + 1, MAX_RETRIES)
-            content     = retry_rewrite(section["title"], content, feedback, vocab)
-            retry_count += 1
-
-        flagged = is_flagged(last_score, retry_count)
-        return section["key"], SectionResult(
-            title=section["title"], content=content,
-            score=last_score, retries=retry_count, flagged=flagged,
-        )
-
-    new_sections     = {}
-    new_retry_counts = dict(state["retry_counts"])
-    new_flagged      = list(state["flagged_sections"])
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {executor.submit(draft_one, s): s["key"] for s in SECTIONS}
-        for future in concurrent.futures.as_completed(futures):
-            section_key = futures[future]
-            try:
-                key, result = future.result()
-                new_sections[key]     = result
-                new_retry_counts[key] = result["retries"]
-                if result["flagged"] and key not in new_flagged:
-                    new_flagged.append(key)
-            except Exception as e:
-                log.error("[%s] draft failed for '%s': %s",
-                          state["session_id"], section_key, e, exc_info=True)
+        node_meta["sections_drafted"] = len(new_sections)
 
     return {
         "profile":          profile,

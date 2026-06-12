@@ -6,6 +6,7 @@ import os
 import random
 import logging
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from agents.vocab_extractor import vocab_to_prompt_str
@@ -78,6 +79,7 @@ Revise the section now:"""),
 ])
 
 
+@timed("agent", "rewrite_section")
 def rewrite_section(
     section_key:      str,
     section_title:    str,
@@ -106,6 +108,7 @@ def rewrite_section(
     return response.content.strip()
 
 
+@timed("agent", "retry_rewrite")
 def retry_rewrite(
     section_title:   str,
     current_content: str,

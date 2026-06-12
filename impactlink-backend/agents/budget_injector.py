@@ -12,10 +12,12 @@ The caller (draft node in flows) decides what to do with it.
 
 import re
 import logging
+from utils.metrics import timed
 
 log = logging.getLogger(__name__)
 
 
+@timed("agent", "get_budget_context")
 def get_budget_context(proposal: dict, grant: dict) -> str | None:
     """
     Generate a pre-calculated budget table for the budget_narrative section.

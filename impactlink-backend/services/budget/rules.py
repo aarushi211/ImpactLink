@@ -6,6 +6,7 @@ import random
 from typing import Set
 
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 
 from .models import CategoryType, GrantRules
@@ -71,6 +72,7 @@ Do not invent restrictions not present in the document. Use defaults for anythin
 ])
 
 
+@timed("service", "extract_grant_rules")
 def extract_grant_rules(grant_document: str) -> GrantRules:
     print("📋 Extracting grant compliance rules...")
     # Fresh instance — with_structured_output builds the client at call time

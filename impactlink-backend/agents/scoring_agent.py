@@ -8,6 +8,7 @@ import json
 import random
 import logging
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
@@ -63,6 +64,7 @@ SECTION CONTENT:
 ])
 
 
+@timed("agent", "score_section")
 def score_section(
     section_key:   str,
     section_title: str,

@@ -10,6 +10,7 @@ import math
 from typing import List, Optional
 
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -87,6 +88,7 @@ Beneficiaries: {beneficiaries}
 ])
 
 
+@timed("service", "extract_personnel_from_proposal")
 def extract_personnel_from_proposal(proposal: dict) -> List[PersonnelRole]:
     """
     Call the LLM to extract personnel roles + FTE counts from the proposal.

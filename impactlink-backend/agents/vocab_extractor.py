@@ -7,6 +7,7 @@ import json
 import random
 import logging
 from utils.llm import RotatingGroq
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
@@ -45,6 +46,7 @@ Example: ["phrase one", "phrase two", "phrase three"]"""),
 ])
 
 
+@timed("agent", "extract_funder_vocab")
 def extract_funder_vocab(grant: dict) -> list[str]:
     description = grant.get("description", "").strip()
     if not description:
