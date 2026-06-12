@@ -50,6 +50,10 @@ class ProposalState(TypedDict):
     # Analysis (populated in step 1)
     funder_vocab:       list[str]     # extracted funder phrases
 
+    # Flow B only: planning + observability
+    drafting_plan:      Optional[dict]  # serialized DraftingPlan from PlanningAgent
+    agent_trace:        list[dict]      # visible routing decisions for demo/debug
+
     # Flow B only: slot-filling
     slots:              dict[str, Slot]
 
@@ -97,6 +101,8 @@ def new_state(
         profile=profile,
         grant=grant,
         funder_vocab=[],
+        drafting_plan=None,
+        agent_trace=[],
         slots={},
         analysis=None,
         original_sections=original_sections or {},

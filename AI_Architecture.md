@@ -34,6 +34,8 @@ class ProposalState(TypedDict):
     original_sections:  dict[str, str]
     sections:           dict[str, SectionResult]
     diffs:              dict[str, list[DiffToken]]
+    drafting_plan:      Optional[dict]           # PlanningAgent output (scratch flow)
+    agent_trace:        list[dict]               # visible agent decisions for demo
     gate:               str                      # human interrupt identifier
     retry_counts:       dict[str, int]
     flagged_sections:   list[str]
@@ -43,11 +45,13 @@ class ProposalState(TypedDict):
 The scratch flow (`flows/scratch_flow.py`) is a LangGraph `StateGraph` with human-in-the-loop gates:
 
 ```
-init_slots → slot_filling ⟲ → slot_confirm → draft_sections → draft_review → final_save → complete
+init_slots → slot_filling ⟲ → slot_confirm → plan_draft → draft_sections → draft_review → final_save → complete
 ```
 
 - **VocabExtractor** runs at `init_slots` to pull funder-specific phrases from the grant description.
 - **Slot extraction** loops via `slot_filling` until all profile slots are filled, then pauses at `slot_confirm`.
+- **PlanningAgent** (`agents/planning_agent.py`) runs at `plan_draft` before any section is written. It produces a `DraftingPlan` with per-section priorities, evidence needs, cross-section dependencies, and red flags. The plan is stored in `ProposalState.drafting_plan` and injected into each `SectionDraftAgent` prompt.
+- **Agent trace** (`ProposalState.agent_trace`) records visible routing decisions for demo and debugging (e.g. `[PlanningAgent] problem_statement priority=1, evidence=[...]`).
 
 ### 2.3 SectionSubgraph: Named Per-Section Agents
 `node_draft_sections` does not draft inline. It orchestrates parallel runs of `run_section_subgraph()` (`flows/section_subgraph.py`), one per canonical section in `agents/prompts.SECTIONS`:
@@ -66,10 +70,16 @@ Each subgraph logs routing decisions for observability:
 
 `budget_narrative` additionally receives a pre-calculated table from **BudgetInjector** (deterministic Python engine) before drafting.
 
-### 2.4 Map-Reduce Parallel Drafting
-1. **Map**: Static `SECTIONS` config defines 10 mandatory section keys (structural integrity, no LLM guessing).
-2. **Execute**: `ThreadPoolExecutor` runs SectionSubgraph instances concurrently (2 workers).
-3. **Reduce**: `node_draft_sections` merges `SectionResult` dicts into `ProposalState.sections`.
+### 2.4 Phased Parallel Drafting
+`node_draft_sections` drafts in three dependency waves (`DRAFTING_WAVES` in `planning_agent.py`):
+
+| Wave | Sections | Rationale |
+|---|---|---|
+| 1 | problem_statement, proposed_solution, target_beneficiaries | Core narrative foundation |
+| 2 | goals_and_objectives, evaluation_plan, organizational_capacity, budget_narrative | Structure + budget |
+| 3 | executive_summary, sustainability, equity_statement | Summarize prior waves |
+
+Within each wave, `ThreadPoolExecutor` runs SectionSubgraph instances concurrently (2 workers). Later waves receive a rolling summary of prior sections (~1200 chars) for cross-section consistency.
 
 ### 2.5 The "LLM-as-a-Judge" Reflection Loop
 Inside each SectionSubgraph, `SectionScoringAgent` evaluates against a 100-point rubric (Alignment, Vocabulary, Specificity, Persuasion). If score &lt; 75 and retries remain, `SectionRewriteAgent` revises using scorer feedback, then re-scores. Sections still below threshold after 2 retries are flagged for human review at `draft_review`.

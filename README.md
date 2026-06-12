@@ -88,9 +88,10 @@ graph TD
     A[User Prompt] --> B[VocabExtractor: init_slots]
     B --> C[slot_filling: Conversational Q&A]
     C -->|All slots filled| D[slot_confirm: Human Gate]
-    D --> E[node_draft_sections: Parallel Orchestrator]
+    D --> P[PlanningAgent: plan_draft]
+    P --> E[node_draft_sections: 3 Phased Waves]
 
-    subgraph "SectionSubgraph (×10 parallel)"
+    subgraph "SectionSubgraph per section"
         E --> F[SectionDraftAgent]
         F --> G[SectionScoringAgent]
         G -->|score ≥ 75| H[Section Approved]

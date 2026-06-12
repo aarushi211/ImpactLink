@@ -196,6 +196,8 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
         "grant":             grant,
         "original_sections": original_sections,
         "funder_vocab":      [],
+        "drafting_plan":     None,
+        "agent_trace":       [],
         "slots":             {},
         "analysis":          None,
         "sections":          {},
