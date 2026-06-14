@@ -1,0 +1,37 @@
+{
+  "eval_type": "budget_logic",
+  "timestamp": "2026-06-14T01:31:57.181770+00:00",
+  "aggregate": {
+    "total": 5,
+    "passed": 1,
+    "failed": 4,
+    "pass_rate": 0.2
+  },
+  "results": [
+    {
+      "name": "Scenario: la_urban_forestry",
+      "status": "CRASH",
+      "detail": "'charmap' codec can't encode character '\\U0001f4b0' in position 0: character maps to <undefined>"
+    },
+    {
+      "name": "Scenario: rural_youth_tutoring_al",
+      "status": "CRASH",
+      "detail": "'charmap' codec can't encode character '\\U0001f4b0' in position 0: character maps to <undefined>"
+    },
+    {
+      "name": "Scenario: sf_food_security",
+      "status": "CRASH",
+      "detail": "'charmap' codec can't encode character '\\U0001f4b0' in position 0: character maps to <undefined>"
+    },
+    {
+      "name": "Extreme Over-Budget Request (Stress Test)",
+      "status": "PASS",
+      "detail": "caught exception: 'charmap' codec can't encode character '\\U0001f4b0' in position 0: character maps to <undefined>"
+    },
+    {
+      "name": "Low Wage Region Compliance",
+      "status": "CRASH",
+      "detail": "'charmap' codec can't encode character '\\U0001f4b0' in position 0: character maps to <undefined>"
+    }
+  ]
+}

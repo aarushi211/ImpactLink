@@ -1,0 +1,2678 @@
+{
+  "metadata": {
+    "last_updated": "2026-06-13T18:28:28.775373",
+    "total_grants": 267
+  },
+  "grants": [
+    {
+      "id": "ca_1604",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1105",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1040",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_669",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_356",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_408",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_437",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_544",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1257",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_124",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1034",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_440",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1156",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1778",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_507",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1267",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_643",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_549",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_802",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_461",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_582",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1378",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_112",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_333",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1706",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_692",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1053",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_658",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_581",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_914",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_617",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_58",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1241",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_703",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_862",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_242",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_537",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1071",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_360",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_262",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1882",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_255",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_117",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1361",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_3",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1180",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_502",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_696",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1763",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_192",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_352",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1041",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1042",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_354",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_667",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_668",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1545",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1152",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_570",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_98",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_781",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_22",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_849",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1081",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_752",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1838",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_856",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_857",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_854",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1422",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1309",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1009",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_905",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1264",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_756",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1780",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_792",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_687",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_113",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1560",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1761",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1758",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_936",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1749",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_457",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_761",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1116",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_783",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1346",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_76",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_371",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_759",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1377",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1667",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1887",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_96",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_847",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_848",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1918",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1123",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1751",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_424",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1496",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_619",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1373",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_348",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_125",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1649",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1307",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_206",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1318",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_942",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_324",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1165",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_739",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1362",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1262",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_846",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_178",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_266",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_25",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1430",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1400",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_340",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_410",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_428",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_772",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_465",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_713",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1791",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_766",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1564",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1848",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1393",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_911",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1915",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1699",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_87",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_439",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_189",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_620",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1726",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1426",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_323",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_994",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1427",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1039",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_738",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1424",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1425",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_800",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_583",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1792",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1771",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1710",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_513",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1550",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1552",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_831",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1226",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1225",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1615",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_156",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_767",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1054",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_204",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_888",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_811",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_559",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1319",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1230",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_511",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1082",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_473",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_172",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_464",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_477",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_952",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1022",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_512",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_870",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_188",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_830",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1423",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1349",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_17",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_18",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_832",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1179",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1269",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_799",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1098",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_600",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1106",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_341",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1659",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1488",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1231",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1316",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_993",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1348",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_796",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1718",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1793",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_841",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1212",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_458",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_514",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1329",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1217",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1328",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_803",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_972",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_608",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1315",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_809",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_946",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1148",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1601",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1480",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_798",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1807",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_151",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_313",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1712",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1063",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_694",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_695",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_773",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1019",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1411",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_115",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_349",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_350",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_214",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_48",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1357",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_840",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1224",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1690",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_493",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_584",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1389",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_770",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1314",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_373",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_15",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1895",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_945",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_281",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_64",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_28",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_332",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_314",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1420",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1364",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_197",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_860",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1055",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1621",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_381",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_740",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_1089",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_326",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_671",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_636",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    },
+    {
+      "id": "ca_947",
+      "source": "california_grants",
+      "title": "CA Grant",
+      "agency": "CA Agency",
+      "closeDate": "",
+      "application_url": "https://www.grants.ca.gov",
+      "requires_sam": false,
+      "application_portal": "California Grants Portal"
+    }
+  ]
+}

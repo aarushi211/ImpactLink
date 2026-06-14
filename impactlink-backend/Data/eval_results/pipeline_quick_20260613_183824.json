@@ -1,0 +1,616 @@
+{
+  "eval_type": "pipeline",
+  "timestamp": "2026-06-14T01:38:24.773230+00:00",
+  "mode": "quick",
+  "aggregate": {
+    "runs": 3,
+    "mean_section_score_avg": 92.0,
+    "pass_at_75_avg": 1.0,
+    "elapsed_s_avg": 18.2,
+    "elapsed_s_max": 22.01,
+    "total_flagged": 0,
+    "total_retries": 0
+  },
+  "results": [
+    {
+      "scenario_id": "la_urban_forestry",
+      "scenario_name": "East LA Urban Tree Canopy",
+      "status": "ok",
+      "mode": "quick",
+      "elapsed_s": 15.81,
+      "gate": "draft_review",
+      "sections_expected": 3,
+      "sections_summary": {
+        "count": 3,
+        "mean_score": 92,
+        "min_score": 92,
+        "max_score": 92,
+        "pass_at_75": 1.0,
+        "flagged_count": 0,
+        "total_retries": 0,
+        "per_section": {
+          "executive_summary": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2360
+          },
+          "goals_and_objectives": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 1824
+          },
+          "budget_narrative": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 3258
+          }
+        }
+      },
+      "agent_trace_summary": {
+        "event_count": 9,
+        "by_agent": {
+          "PlanningAgent": 5,
+          "evaluate_pipeline": 1,
+          "CoherenceAgent": 3
+        },
+        "tool_mentions": 0,
+        "coherence_mentions": 3,
+        "planning_mentions": 5
+      },
+      "drafting_plan_priorities": 10,
+      "metrics_summary": {
+        "total_events": 34,
+        "summary_by_step": {
+          "agent/check_coherence": {
+            "count": 1,
+            "mean_s": 1.3935,
+            "median_s": 1.3935,
+            "p95_s": 1.3935,
+            "max_s": 1.3935,
+            "min_s": 1.3935,
+            "total_s": 1.3935
+          },
+          "agent/create_drafting_plan": {
+            "count": 1,
+            "mean_s": 3.3296,
+            "median_s": 3.3296,
+            "p95_s": 3.3296,
+            "max_s": 3.3296,
+            "min_s": 3.3296,
+            "total_s": 3.3296
+          },
+          "agent/extract_funder_vocab": {
+            "count": 1,
+            "mean_s": 0.3865,
+            "median_s": 0.3865,
+            "p95_s": 0.3865,
+            "max_s": 0.3865,
+            "min_s": 0.3865,
+            "total_s": 0.3865
+          },
+          "agent/get_budget_context": {
+            "count": 1,
+            "mean_s": 1.4879,
+            "median_s": 1.4879,
+            "p95_s": 1.4879,
+            "max_s": 1.4879,
+            "min_s": 1.4879,
+            "total_s": 1.4879
+          },
+          "agent/score_section_decision": {
+            "count": 3,
+            "mean_s": 0.7361,
+            "median_s": 0.6862,
+            "p95_s": 0.8993,
+            "max_s": 0.8993,
+            "min_s": 0.6227,
+            "total_s": 2.2082
+          },
+          "agent/targeted_retry_rewrite": {
+            "count": 2,
+            "mean_s": 1.1391,
+            "median_s": 1.1391,
+            "p95_s": 1.4031,
+            "max_s": 1.4031,
+            "min_s": 0.875,
+            "total_s": 2.2781
+          },
+          "llm_call/groq_generate": {
+            "count": 14,
+            "mean_s": 1.1063,
+            "median_s": 0.9151,
+            "p95_s": 3.3132,
+            "max_s": 3.3132,
+            "min_s": 0.2299,
+            "total_s": 15.4887
+          },
+          "node/coherence_check": {
+            "count": 1,
+            "mean_s": 3.6717,
+            "median_s": 3.6717,
+            "p95_s": 3.6717,
+            "max_s": 3.6717,
+            "min_s": 3.6717,
+            "total_s": 3.6717
+          },
+          "node/plan_draft": {
+            "count": 1,
+            "mean_s": 3.3297,
+            "median_s": 3.3297,
+            "p95_s": 3.3297,
+            "max_s": 3.3297,
+            "min_s": 3.3297,
+            "total_s": 3.3297
+          },
+          "node/section_subgraph/budget_narrative": {
+            "count": 1,
+            "mean_s": 4.1672,
+            "median_s": 4.1672,
+            "p95_s": 4.1672,
+            "max_s": 4.1672,
+            "min_s": 4.1672,
+            "total_s": 4.1672
+          },
+          "node/section_subgraph/executive_summary": {
+            "count": 1,
+            "mean_s": 1.9827,
+            "median_s": 1.9827,
+            "p95_s": 1.9827,
+            "max_s": 1.9827,
+            "min_s": 1.9827,
+            "total_s": 1.9827
+          },
+          "node/section_subgraph/goals_and_objectives": {
+            "count": 1,
+            "mean_s": 2.2753,
+            "median_s": 2.2753,
+            "p95_s": 2.2753,
+            "max_s": 2.2753,
+            "min_s": 2.2753,
+            "total_s": 2.2753
+          },
+          "service/extract_grant_rules": {
+            "count": 1,
+            "mean_s": 0.2531,
+            "median_s": 0.2531,
+            "p95_s": 0.2531,
+            "max_s": 0.2531,
+            "min_s": 0.2531,
+            "total_s": 0.2531
+          },
+          "service/extract_personnel_from_proposal": {
+            "count": 1,
+            "mean_s": 0.2477,
+            "median_s": 0.2477,
+            "p95_s": 0.2477,
+            "max_s": 0.2477,
+            "min_s": 0.2477,
+            "total_s": 0.2477
+          },
+          "service/generate_budget": {
+            "count": 1,
+            "mean_s": 1.4691,
+            "median_s": 1.4691,
+            "p95_s": 1.4691,
+            "max_s": 1.4691,
+            "min_s": 1.4691,
+            "total_s": 1.4691
+          },
+          "tool/get_grant_requirement": {
+            "count": 3,
+            "mean_s": 0.0,
+            "median_s": 0.0,
+            "p95_s": 0.0,
+            "max_s": 0.0,
+            "min_s": 0.0,
+            "total_s": 0.0
+          }
+        }
+      },
+      "session_id": "eval-la_urban_forestry-4809f101"
+    },
+    {
+      "scenario_id": "rural_youth_tutoring_al",
+      "scenario_name": "Rural Alabama After-School Tutoring",
+      "status": "ok",
+      "mode": "quick",
+      "elapsed_s": 16.78,
+      "gate": "draft_review",
+      "sections_expected": 3,
+      "sections_summary": {
+        "count": 3,
+        "mean_score": 92,
+        "min_score": 92,
+        "max_score": 92,
+        "pass_at_75": 1.0,
+        "flagged_count": 0,
+        "total_retries": 0,
+        "per_section": {
+          "executive_summary": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2018
+          },
+          "goals_and_objectives": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2005
+          },
+          "budget_narrative": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2943
+          }
+        }
+      },
+      "agent_trace_summary": {
+        "event_count": 10,
+        "by_agent": {
+          "PlanningAgent": 6,
+          "evaluate_pipeline": 1,
+          "CoherenceAgent": 3
+        },
+        "tool_mentions": 0,
+        "coherence_mentions": 3,
+        "planning_mentions": 6
+      },
+      "drafting_plan_priorities": 10,
+      "metrics_summary": {
+        "total_events": 34,
+        "summary_by_step": {
+          "agent/check_coherence": {
+            "count": 1,
+            "mean_s": 0.9786,
+            "median_s": 0.9786,
+            "p95_s": 0.9786,
+            "max_s": 0.9786,
+            "min_s": 0.9786,
+            "total_s": 0.9786
+          },
+          "agent/create_drafting_plan": {
+            "count": 1,
+            "mean_s": 3.1702,
+            "median_s": 3.1702,
+            "p95_s": 3.1702,
+            "max_s": 3.1702,
+            "min_s": 3.1702,
+            "total_s": 3.1702
+          },
+          "agent/extract_funder_vocab": {
+            "count": 1,
+            "mean_s": 0.2593,
+            "median_s": 0.2593,
+            "p95_s": 0.2593,
+            "max_s": 0.2593,
+            "min_s": 0.2593,
+            "total_s": 0.2593
+          },
+          "agent/get_budget_context": {
+            "count": 1,
+            "mean_s": 1.4772,
+            "median_s": 1.4772,
+            "p95_s": 1.4772,
+            "max_s": 1.4772,
+            "min_s": 1.4772,
+            "total_s": 1.4772
+          },
+          "agent/score_section_decision": {
+            "count": 3,
+            "mean_s": 0.7519,
+            "median_s": 0.7503,
+            "p95_s": 0.7577,
+            "max_s": 0.7577,
+            "min_s": 0.7477,
+            "total_s": 2.2557
+          },
+          "agent/targeted_retry_rewrite": {
+            "count": 2,
+            "mean_s": 1.6996,
+            "median_s": 1.6996,
+            "p95_s": 2.2275,
+            "max_s": 2.2275,
+            "min_s": 1.1717,
+            "total_s": 3.3992
+          },
+          "llm_call/groq_generate": {
+            "count": 14,
+            "mean_s": 1.1785,
+            "median_s": 0.9584,
+            "p95_s": 3.1547,
+            "max_s": 3.1547,
+            "min_s": 0.1613,
+            "total_s": 16.4985
+          },
+          "node/coherence_check": {
+            "count": 1,
+            "mean_s": 4.3779,
+            "median_s": 4.3779,
+            "p95_s": 4.3779,
+            "max_s": 4.3779,
+            "min_s": 4.3779,
+            "total_s": 4.3779
+          },
+          "node/plan_draft": {
+            "count": 1,
+            "mean_s": 3.1703,
+            "median_s": 3.1703,
+            "p95_s": 3.1703,
+            "max_s": 3.1703,
+            "min_s": 3.1703,
+            "total_s": 3.1703
+          },
+          "node/section_subgraph/budget_narrative": {
+            "count": 1,
+            "mean_s": 4.375,
+            "median_s": 4.375,
+            "p95_s": 4.375,
+            "max_s": 4.375,
+            "min_s": 4.375,
+            "total_s": 4.375
+          },
+          "node/section_subgraph/executive_summary": {
+            "count": 1,
+            "mean_s": 2.3373,
+            "median_s": 2.3373,
+            "p95_s": 2.3373,
+            "max_s": 2.3373,
+            "min_s": 2.3373,
+            "total_s": 2.3373
+          },
+          "node/section_subgraph/goals_and_objectives": {
+            "count": 1,
+            "mean_s": 2.2559,
+            "median_s": 2.2559,
+            "p95_s": 2.2559,
+            "max_s": 2.2559,
+            "min_s": 2.2559,
+            "total_s": 2.2559
+          },
+          "service/extract_grant_rules": {
+            "count": 1,
+            "mean_s": 0.3052,
+            "median_s": 0.3052,
+            "p95_s": 0.3052,
+            "max_s": 0.3052,
+            "min_s": 0.3052,
+            "total_s": 0.3052
+          },
+          "service/extract_personnel_from_proposal": {
+            "count": 1,
+            "mean_s": 0.1805,
+            "median_s": 0.1805,
+            "p95_s": 0.1805,
+            "max_s": 0.1805,
+            "min_s": 0.1805,
+            "total_s": 0.1805
+          },
+          "service/generate_budget": {
+            "count": 1,
+            "mean_s": 1.4772,
+            "median_s": 1.4772,
+            "p95_s": 1.4772,
+            "max_s": 1.4772,
+            "min_s": 1.4772,
+            "total_s": 1.4772
+          },
+          "tool/get_grant_requirement": {
+            "count": 3,
+            "mean_s": 0.0,
+            "median_s": 0.0,
+            "p95_s": 0.0,
+            "max_s": 0.0,
+            "min_s": 0.0,
+            "total_s": 0.0
+          }
+        }
+      },
+      "session_id": "eval-rural_youth_tutoring_al-f3a133f6"
+    },
+    {
+      "scenario_id": "sf_food_security",
+      "scenario_name": "SF Food Pantry Expansion",
+      "status": "ok",
+      "mode": "quick",
+      "elapsed_s": 22.01,
+      "gate": "draft_review",
+      "sections_expected": 3,
+      "sections_summary": {
+        "count": 3,
+        "mean_score": 92,
+        "min_score": 92,
+        "max_score": 92,
+        "pass_at_75": 1.0,
+        "flagged_count": 0,
+        "total_retries": 0,
+        "per_section": {
+          "executive_summary": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2141
+          },
+          "goals_and_objectives": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 2237
+          },
+          "budget_narrative": {
+            "score": 92,
+            "retries": 0,
+            "flagged": false,
+            "content_chars": 3254
+          }
+        }
+      },
+      "agent_trace_summary": {
+        "event_count": 10,
+        "by_agent": {
+          "PlanningAgent": 6,
+          "evaluate_pipeline": 1,
+          "CoherenceAgent": 3
+        },
+        "tool_mentions": 0,
+        "coherence_mentions": 3,
+        "planning_mentions": 6
+      },
+      "drafting_plan_priorities": 10,
+      "metrics_summary": {
+        "total_events": 34,
+        "summary_by_step": {
+          "agent/check_coherence": {
+            "count": 1,
+            "mean_s": 1.1699,
+            "median_s": 1.1699,
+            "p95_s": 1.1699,
+            "max_s": 1.1699,
+            "min_s": 1.1699,
+            "total_s": 1.1699
+          },
+          "agent/create_drafting_plan": {
+            "count": 1,
+            "mean_s": 2.9306,
+            "median_s": 2.9306,
+            "p95_s": 2.9306,
+            "max_s": 2.9306,
+            "min_s": 2.9306,
+            "total_s": 2.9306
+          },
+          "agent/extract_funder_vocab": {
+            "count": 1,
+            "mean_s": 0.2075,
+            "median_s": 0.2075,
+            "p95_s": 0.2075,
+            "max_s": 0.2075,
+            "min_s": 0.2075,
+            "total_s": 0.2075
+          },
+          "agent/get_budget_context": {
+            "count": 1,
+            "mean_s": 6.5124,
+            "median_s": 6.5124,
+            "p95_s": 6.5124,
+            "max_s": 6.5124,
+            "min_s": 6.5124,
+            "total_s": 6.5124
+          },
+          "agent/score_section_decision": {
+            "count": 3,
+            "mean_s": 0.7498,
+            "median_s": 0.7395,
+            "p95_s": 0.8093,
+            "max_s": 0.8093,
+            "min_s": 0.7007,
+            "total_s": 2.2495
+          },
+          "agent/targeted_retry_rewrite": {
+            "count": 2,
+            "mean_s": 1.2182,
+            "median_s": 1.2182,
+            "p95_s": 1.6308,
+            "max_s": 1.6308,
+            "min_s": 0.8055,
+            "total_s": 2.4363
+          },
+          "llm_call/groq_generate": {
+            "count": 14,
+            "mean_s": 1.556,
+            "median_s": 0.9752,
+            "p95_s": 5.9626,
+            "max_s": 5.9626,
+            "min_s": 0.157,
+            "total_s": 21.7836
+          },
+          "node/coherence_check": {
+            "count": 1,
+            "mean_s": 3.6063,
+            "median_s": 3.6063,
+            "p95_s": 3.6063,
+            "max_s": 3.6063,
+            "min_s": 3.6063,
+            "total_s": 3.6063
+          },
+          "node/plan_draft": {
+            "count": 1,
+            "mean_s": 2.9307,
+            "median_s": 2.9307,
+            "p95_s": 2.9307,
+            "max_s": 2.9307,
+            "min_s": 2.9307,
+            "total_s": 2.9307
+          },
+          "node/section_subgraph/budget_narrative": {
+            "count": 1,
+            "mean_s": 9.3835,
+            "median_s": 9.3835,
+            "p95_s": 9.3835,
+            "max_s": 9.3835,
+            "min_s": 9.3835,
+            "total_s": 9.3835
+          },
+          "node/section_subgraph/executive_summary": {
+            "count": 1,
+            "mean_s": 3.5583,
+            "median_s": 3.5583,
+            "p95_s": 3.5583,
+            "max_s": 3.5583,
+            "min_s": 3.5583,
+            "total_s": 3.5583
+          },
+          "node/section_subgraph/goals_and_objectives": {
+            "count": 1,
+            "mean_s": 2.3279,
+            "median_s": 2.3279,
+            "p95_s": 2.3279,
+            "max_s": 2.3279,
+            "min_s": 2.3279,
+            "total_s": 2.3279
+          },
+          "service/extract_grant_rules": {
+            "count": 1,
+            "mean_s": 0.3569,
+            "median_s": 0.3569,
+            "p95_s": 0.3569,
+            "max_s": 0.3569,
+            "min_s": 0.3569,
+            "total_s": 0.3569
+          },
+          "service/extract_personnel_from_proposal": {
+            "count": 1,
+            "mean_s": 0.1736,
+            "median_s": 0.1736,
+            "p95_s": 0.1736,
+            "max_s": 0.1736,
+            "min_s": 0.1736,
+            "total_s": 0.1736
+          },
+          "service/generate_budget": {
+            "count": 1,
+            "mean_s": 6.5123,
+            "median_s": 6.5123,
+            "p95_s": 6.5123,
+            "max_s": 6.5123,
+            "min_s": 6.5123,
+            "total_s": 6.5123
+          },
+          "tool/get_grant_requirement": {
+            "count": 3,
+            "mean_s": 0.0,
+            "median_s": 0.0,
+            "p95_s": 0.0,
+            "max_s": 0.0,
+            "min_s": 0.0,
+            "total_s": 0.0
+          }
+        }
+      },
+      "session_id": "eval-sf_food_security-ab93b429"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "description": "Small offline grant catalog for retrieval evaluation without a live database. Mix of relevant grants and distractors.",
+  "grants": [
+    {
+      "id": "eval_urb_forestry_ca",
+      "title": "California Urban and Community Forestry Grant Program",
+      "agency": "CAL FIRE",
+      "description": "Tree planting, urban forest management, and community engagement to increase canopy cover and reduce urban heat island effect in disadvantaged communities.",
+      "focus_areas": "urban forestry, heat island mitigation, canopy expansion, environmental justice"
+    },
+    {
+      "id": "eval_urban_green_la",
+      "title": "Los Angeles Urban Greening and Resilience Fund",
+      "agency": "City of Los Angeles",
+      "description": "Supports neighborhood greening, street tree planting, and heat reduction projects in high-need LA communities with measurable temperature and canopy outcomes.",
+      "focus_areas": "urban greening, Los Angeles, heat resilience, tree planting, disadvantaged communities"
+    },
+    {
+      "id": "eval_rural_literacy_fed",
+      "title": "Education Innovation and Research: Rural Education Research",
+      "agency": "U.S. Department of Education",
+      "description": "Innovative literacy and after-school tutoring interventions for rural K-8 students with evidence-based instruction and measurable reading proficiency gains.",
+      "focus_areas": "rural education, literacy, after-school tutoring, K-8 reading proficiency"
+    },
+    {
+      "id": "eval_rural_afterschool",
+      "title": "21st Century Community Learning Centers — Rural Priority",
+      "agency": "U.S. Department of Education",
+      "description": "After-school and summer academic enrichment for students in rural LEAs, including tutoring, family engagement, and literacy supports.",
+      "focus_areas": "after-school, rural education, academic enrichment, literacy, disadvantaged students"
+    },
+    {
+      "id": "eval_food_security_ca",
+      "title": "California Nutrition Incentive Program — Community Food Access",
+      "agency": "California Department of Food and Agriculture",
+      "description": "Community organizations expanding nutritious food access, SNAP enrollment assistance, and culturally responsive pantry services in low-income communities.",
+      "focus_areas": "food security, nutrition access, SNAP enrollment, food justice"
+    },
+    {
+      "id": "eval_hunger_relief_sf",
+      "title": "San Francisco Emergency Food and Nutrition Services",
+      "agency": "San Francisco Human Services Commission",
+      "description": "Contracts with nonprofits operating food pantries, grocery box distribution, and nutrition education for food-insecure SF residents.",
+      "focus_areas": "food pantry, San Francisco, hunger relief, low-income households, nutrition"
+    },
+    {
+      "id": "eval_distractor_nsf_physics",
+      "title": "NSF Quantum Materials Research Initiative",
+      "agency": "National Science Foundation",
+      "description": "Fundamental research in quantum materials, superconductivity, and advanced physics instrumentation at research universities.",
+      "focus_areas": "quantum physics, materials science, university research, laboratory equipment"
+    },
+    {
+      "id": "eval_distractor_highway",
+      "title": "Federal Highway Administration Bridge Rehabilitation",
+      "agency": "U.S. Department of Transportation",
+      "description": "Rehabilitation and safety upgrades for structurally deficient highway bridges in state transportation networks.",
+      "focus_areas": "highway infrastructure, bridge repair, transportation safety, civil engineering"
+    },
+    {
+      "id": "eval_distractor_marine",
+      "title": "NOAA Coastal Fisheries Habitat Restoration",
+      "agency": "National Oceanic and Atmospheric Administration",
+      "description": "Restoration of estuarine and nearshore habitats to support commercial and recreational fisheries along the Pacific coast.",
+      "focus_areas": "fisheries, coastal habitat, marine restoration, estuary, NOAA"
+    },
+    {
+      "id": "eval_distractor_tech_startup",
+      "title": "SBIR Phase I — AI for Enterprise SaaS",
+      "agency": "U.S. Small Business Administration",
+      "description": "Seed funding for small businesses developing commercial AI software products for enterprise customers.",
+      "focus_areas": "SBIR, artificial intelligence, SaaS, startup, commercialization"
+    }
+  ]
+}

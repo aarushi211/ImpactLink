@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-06-14T01:32:37.836247+00:00",
+  "suites": {
+    "budget": {
+      "eval_type": "budget_logic",
+      "timestamp": "2026-06-14T01:32:46.873093+00:00",
+      "aggregate": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "pass_rate": 1.0
+      },
+      "results": [
+        {
+          "name": "Scenario: la_urban_forestry",
+          "status": "PASS",
+          "detail": "total=$85,000, items_sum=$85,000",
+          "total_requested": 85000
+        },
+        {
+          "name": "Scenario: rural_youth_tutoring_al",
+          "status": "PASS",
+          "detail": "total=$62,000, items_sum=$62,000",
+          "total_requested": 62000
+        },
+        {
+          "name": "Scenario: sf_food_security",
+          "status": "PASS",
+          "detail": "total=$95,000, items_sum=$95,000",
+          "total_requested": 95000
+        },
+        {
+          "name": "Extreme Over-Budget Request (Stress Test)",
+          "status": "PASS",
+          "detail": "Labor cap $37,500 is too low to support any staff at $32.0/hr."
+        },
+        {
+          "name": "Low Wage Region Compliance",
+          "status": "PASS",
+          "detail": "total=$25,000, items_sum=$25,000",
+          "total_requested": 25000
+        }
+      ]
+    },
+    "retrieval": {
+      "mode": "offline_keyword",
+      "k": 5,
+      "catalog_size": 10,
+      "aggregate": {
+        "scenarios": 3,
+        "mean_precision@5": 0.4,
+        "mean_recall@5": 1.0
+      },
+      "results": [
+        {
+          "scenario_id": "la_urban_forestry",
+          "query": "Urban tree planting and heat island mitigation in Los Angeles disadvantaged communities",
+          "relevant_grant_ids": [
+            "eval_urb_forestry_ca",
+            "eval_urban_green_la"
+          ],
+          "retrieved_ids": [
+            "eval_urban_green_la",
+            "eval_urb_forestry_ca",
+            "eval_rural_afterschool",
+            "eval_food_security_ca",
+            "eval_distractor_highway"
+          ],
+          "precision@5": 0.4,
+          "recall@5": 1.0,
+          "missing_from_catalog": [],
+          "status": "ok"
+        },
+        {
+          "scenario_id": "rural_youth_tutoring_al",
+          "query": "K-12 literacy tutoring and educational equity in rural Alabama",
+          "relevant_grant_ids": [
+            "eval_rural_literacy_fed",
+            "eval_rural_afterschool"
+          ],
+          "retrieved_ids": [
+            "eval_rural_literacy_fed",
+            "eval_rural_afterschool",
+            "eval_distractor_highway",
+            "eval_distractor_marine",
+            "eval_distractor_nsf_physics"
+          ],
+          "precision@5": 0.4,
+          "recall@5": 1.0,
+          "missing_from_catalog": [],
+          "status": "ok"
+        },
+        {
+          "scenario_id": "sf_food_security",
+          "query": "Food pantry expansion food insecurity SNAP enrollment San Francisco low-income",
+          "relevant_grant_ids": [
+            "eval_food_security_ca",
+            "eval_hunger_relief_sf"
+          ],
+          "retrieved_ids": [
+            "eval_hunger_relief_sf",
+            "eval_food_security_ca",
+            "eval_urb_forestry_ca",
+            "eval_distractor_highway",
+            "eval_distractor_marine"
+          ],
+          "precision@5": 0.4,
+          "recall@5": 1.0,
+          "missing_from_catalog": [],
+          "status": "ok"
+        }
+      ]
+    }
+  }
+}

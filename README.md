@@ -7,185 +7,612 @@
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-0D0D1A?style=for-the-badge&logo=fastapi&logoColor=6C63FF)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React-0D0D1A?style=for-the-badge&logo=react&logoColor=6C63FF)](https://reactjs.org/)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-0D0D1A?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
 [![Supabase](https://img.shields.io/badge/Database-Supabase-0D0D1A?style=for-the-badge&logo=supabase&logoColor=6C63FF)](https://supabase.com/)
 [![Groq](https://img.shields.io/badge/Inference-Groq-0D0D1A?style=for-the-badge&logoColor=6C63FF)](https://groq.com/)
 
-[**🎥 Live Demo**](https://impactlink-cbfc5.web.app) | [**🏗️ AI Architecture Deep-Dive**](./AI_Architecture.md) 
- </div>
+[**Live Demo**](https://impactlink-cbfc5.web.app) · [**AI Architecture Deep-Dive**](./AI_Architecture.md)
+
+</div>
 
 ---
 
-## 🌟 Overview
+## Table of Contents
 
-**ImpactLink** is a production-grade AI platform designed to bridge the resource gap for under-served NGOs. By combining **Stateful Agentic Workflows** with **Deterministic Financial Logic**, it transforms a complex 40-hour grant application cycle into a streamlined, high-quality output in minutes. 
-
-This repository demonstrates enterprise-level engineering, featuring **Reflection Patterns**, **Graph Orchestration**, and **Localized RAG** architecture.
+1. [What Is ImpactLink?](#what-is-impactlink)
+2. [System Architecture](#system-architecture)
+3. [Agent Orchestration (Drafting Pipeline)](#agent-orchestration-drafting-pipeline)
+4. [Codebase Map](#codebase-map)
+5. [Data Flow: End-to-End](#data-flow-end-to-end)
+6. [API Reference](#api-reference)
+7. [How to Run Locally](#how-to-run-locally)
+8. [Demo Walkthrough](#demo-walkthrough)
+9. [Performance & Observability](#performance--observability)
+10. [Scripts & Evaluation](#scripts--evaluation)
+11. [Roadmap](#roadmap)
 
 ---
 
-## ⚡ Performance Metrics
+## What Is ImpactLink?
 
-All latency numbers below are **real measurements** captured via the built-in instrumentation layer (`utils/metrics.py`). Timings were recorded on a local development environment using **Llama 3.3 70B** on Groq LPU inference.
+ImpactLink is a portfolio-grade AI platform that helps NGOs **find grants**, **draft proposals**, and **build compliant budgets**. It is built around two ideas:
 
-### System-Level Summary
-| Metric | Measured Value |
+1. **Agentic orchestration** — proposal drafting is a **LangGraph state machine** with named agents, human-in-the-loop gates, structured scoring routes, and deterministic tools (not a single mega-prompt).
+2. **Deterministic financial logic** — budget math runs in Python with wage floors and compliance rules; the LLM only writes narrative around pre-calculated numbers.
+
+### Core capabilities
+
+| Feature | Description |
 |---|---|
-| **Full 10-Section Proposal (Scratch)** | **19.7s** end-to-end (parallel drafting + scoring + retries) |
-| **3-Section Rewrite (Improve)** | **2.8s** end-to-end (parallel rewrite + scoring) |
-| **Average LLM Call Latency** | **0.99s** (Groq LPU, Llama 3.3 70B) |
-| **Slot Extraction (per question)** | **0.31 – 0.78s** including JSON parsing |
-| **Budget Generation Pipeline** | **1.33s** (rule extraction + personnel + allocation) |
-| **API Request Overhead** | **< 50ms** for data endpoints |
+| **Grant matching** | Upload a PDF/DOCX proposal → parse features → semantic search over `pgvector` in Supabase |
+| **Build from scratch** | Conversational slot-filling → multi-agent drafting of 10 canonical sections |
+| **Improve existing** | Gap analysis → targeted section rewrites with word-level diffs |
+| **Budget engine** | Rule extraction + personnel modeling + compliance enforcement |
+| **Session persistence** | LangGraph `PostgresSaver` checkpoints survive refreshes and network drops |
 
-### Pipeline Step Latencies (Measured)
+### Tech stack
 
-#### Flow A: Improve Existing Proposal
-| Step | Category | Duration | Details |
-|---|---|---|---|
-| Extract Funder Vocab | Agent → Node | 0.71s | 1 LLM call (0.67s) + JSON parse |
-| Gap Analysis | Agent → Node | 1.34s | 1 LLM call (1.30s) + JSON parse |
-| Rewrite Section (×3 parallel) | Node | 2.84s wall-clock | 3 sections rewritten concurrently |
-| ↳ `executive_summary` | Agent + Score | 1.43s | Score: 85/100, 0 retries |
-| ↳ `evaluation_plan` | Agent + Score | 1.71s | Score: 88/100, 0 retries |
-| ↳ `program_description` | Agent + Score | 1.40s | Score: 85/100, 0 retries |
-| **Total Session (create → review)** | **API** | **5.48s** | |
-
-#### Flow B: Scratch Proposal (10 Sections)
-| Step | Category | Duration | Details |
-|---|---|---|---|
-| Init Slots + Vocab | Node | 0.001s | No grant description → instant |
-| Slot Filling (7 rounds) | Agent | 0.28 – 0.78s each | LLM extraction + JSON parse per answer |
-| Draft Sections (×10 parallel) | Node | **19.68s** wall-clock | 2 workers, 10 sections |
-| ↳ `executive_summary` | Draft + Score | 2.55s | Score: 85, 0 retries |
-| ↳ `problem_statement` | Draft + Score | 3.46s | Score: 87, 0 retries |
-| ↳ `proposed_solution` | Draft + Score | 3.42s | Score: 92, 0 retries |
-| ↳ `target_beneficiaries` | Draft + Score | 2.90s | Score: 88, 0 retries |
-| ↳ `budget_narrative` | Draft + Score + **2 Retries** | **9.80s** | Score: 70→70→92 |
-| ↳ `evaluation_plan` | Draft + Score | 3.51s | Score: 85, 0 retries |
-| ↳ `sustainability` | Draft + Score | 2.75s | Score: 85, 0 retries |
-| ↳ `equity_statement` | Draft + Score | 2.69s | Score: 85, 0 retries |
-| **Total Session (draft advance)** | **API** | **19.99s** | |
-
-#### Budget Generation Pipeline
-| Step | Duration | Details |
-|---|---|---|
-| Extract Grant Rules | Service | ~0.3s | LLM structured output |
-| Extract Personnel | Service | 0.29 – 0.38s | 4 roles identified |
-| Secondary Allocation | LLM | 0.94s | Structured output with constraints |
-| Compliance Enforcement | CPU | <10ms | Deterministic Python logic |
-| **Total Pipeline** | **Service** | **1.33s** | |
-
-> **Key Insight — Self-Correction Cost:** The `budget_narrative` section triggered **2 automatic retries** (scored 70 → 70 → 92), adding ~6.3s. Sections passing on the first attempt average **2.5 – 3.5s** each. The reflection loop is the primary latency variable.
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, React Router, Axios, Firebase Auth |
+| Backend | FastAPI, LangGraph, LangChain, Pydantic |
+| Inference | Groq `llama-3.3-70b-versatile` via custom `RotatingGroq` key pool |
+| Database | Supabase PostgreSQL (`pgvector`, LangGraph checkpoints, `user_work` table) |
+| Storage | Firebase Storage (uploaded proposals) |
+| Embeddings | `sentence-transformers/all-MiniLM-L6-v2` (local) |
 
 ---
 
-## 🏗️ Architectural Topology: Stateful Reflection
+## System Architecture
 
-Instead of a linear prompt chain, ImpactLink utilizes a **LangGraph StateGraph** to manage complex, multi-turn proposal drafting. This architecture enables **Map-Reduce parallelism** for section generation and iterative **Self-Correction (Reflection)**.
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         React SPA (impactlink-frontend)                  │
+│  Landing · Dashboard · Upload · Draft · Build · Budget · Grants        │
+│  Firebase Auth JWT ────────────────────────────────────────────────────── │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │ HTTPS / REST
+┌───────────────────────────────────▼─────────────────────────────────────┐
+│                      FastAPI (impactlink-backend/main.py)                │
+│  ┌─────────────┐  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐ │
+│  │ Session API │  │ Grant RAG    │  │ Budget Eng. │  │ Work Store     │ │
+│  │ LangGraph   │  │ vector_store │  │ generator   │  │ drafts/builds  │ │
+│  └──────┬──────┘  └──────────────┘  └─────────────┘  └────────────────┘ │
+└─────────┼───────────────────────────────────────────────────────────────┘
+          │
+    ┌─────▼─────┐     ┌──────────────┐     ┌─────────────────┐
+    │ Groq API  │     │ Supabase PG  │     │ Firebase Storage │
+    │ (LLM)     │     │ checkpoints  │     │ (uploads)        │
+    └───────────┘     │ pgvector     │     └─────────────────┘
+                      │ user_work    │
+                      └──────────────┘
+```
+
+### Design principles
+
+- **LLMs are probabilistic; money is not.** Budget totals, wage floors, and indirect cost caps are enforced in `services/budget/compliance.py`.
+- **Graphs, not chains.** Drafting uses `StateGraph` with `interrupt()` for human gates and conditional routing after scoring.
+- **Visible agent decisions.** `agent_trace` in state and structured logs (`[PlanningAgent]`, `[SectionScoringAgent] score=68 → route=needs_tool_call`) support debugging and portfolio demos.
+- **Failover by default.** `RotatingGroq` rotates API keys, applies cooldown on 429s, and retries with exponential backoff.
+
+---
+
+## Agent Orchestration (Drafting Pipeline)
+
+ImpactLink has **two LangGraph flows**, both driven through the unified session API (`/api/session`).
+
+### Flow B: Build from scratch (recommended demo path)
 
 ```mermaid
 graph TD
-    A[User Prompt] --> B[VocabExtractor: init_slots]
-    B --> C[slot_filling: Conversational Q&A]
-    C -->|All slots filled| D[slot_confirm: Human Gate]
-    D --> P[PlanningAgent: plan_draft]
-    P --> E[node_draft_sections: 3 Phased Waves]
+    START([User starts /build]) --> INIT[init_slots<br/>VocabExtractor]
+    INIT --> SLOTS[slot_filling ⟲<br/>SlotExtractor]
+    SLOTS --> CONFIRM[slot_confirm<br/>Human Gate]
+    CONFIRM --> PLAN[plan_draft<br/>PlanningAgent]
+    PLAN --> DRAFT[draft_sections<br/>3 phased waves]
 
-    subgraph "SectionSubgraph per section"
-        E --> F[SectionDraftAgent]
-        F --> G[SectionScoringAgent]
-        G -->|score ≥ 75| H[Section Approved]
-        G -->|score < 75| I[SectionRewriteAgent]
-        I --> G
+    subgraph SectionSubgraph["SectionSubgraph (per section)"]
+        DRAFT --> SD[SectionDraftAgent]
+        SD --> SS[SectionScoringAgent]
+        SS -->|approve| OK[done]
+        SS -->|targeted_rewrite| SR[SectionRewriteAgent]
+        SS -->|needs_tool_call| TOOL[ToolNode<br/>budget / grant req]
+        SR --> SS
+        TOOL --> SS
+        SS -->|escalate| FLAG[flagged]
     end
 
-    H --> C[CoherenceAgent: coherence_check]
-    C --> J[draft_review: Human Gate]
-    J --> K[final_save]
-    K --> L[complete: PDF Export]
+    OK --> COH[coherence_check<br/>CoherenceAgent]
+    COH --> REVIEW[draft_review<br/>Human Gate]
+    REVIEW --> SAVE[final_save<br/>Human Gate]
+    SAVE --> DONE([complete])
 ```
 
-## 🛠️ Core Engineering Challenges & Solutions
-### 1. The "Hallucination-Proof" Budget Engine
-- **Challenge:** LLMs are probabilistic, but financial budgets require deterministic exactness.
-- **Solution:** Built a **Deterministic-Agentic Hybrid**. The LLM only parses intent (e.g., "Add a Project Manager"). That intent is fed into a rigid Python engine that enforces real-world constraints like local minimum wage laws and proportional indirect cost caps. **Math is always perfect; AI is only the interface.**
+#### Graph nodes (`flows/scratch_flow.py`)
 
-### 2. Robust RAG & Relational Search
-- **Challenge:** Most RAG implementations fail on long documents, and NGOs need grants that match hard metadata (e.g., Region: "Kenya"), not just semantic similarity.
-- **Solution:**
-    - **Tiered Retrieval:** Uses `SemanticChunker` (percentile-based) to split documents contextually.
-    - **Unified Querying:** Migrated to **Supabase (PostgreSQL + `pgvector`)**. This enables SQL queries that filter by relational metadata first, then rank by semantic similarity in a single database round-trip.
-    - **Idempotent Lifecycle:** Handled via PostgreSQL `ON CONFLICT`, ensuring grant updates or re-indexing operations are atomic and never duplicate data.
+| Node | Agent / Service | Purpose |
+|---|---|---|
+| `init_slots` | `VocabExtractor` | Extract 10–15 funder phrases from grant description |
+| `slot_filling` | `SlotExtractor` | Conversational Q&A; maps free text → 10 profile slots |
+| `slot_confirm` | Human gate | User confirms collected slot values |
+| `plan_draft` | `PlanningAgent` | Produces `DraftingPlan` (priorities, evidence, red flags) |
+| `draft_sections` | `SectionSubgraph` × 10 | Phased parallel drafting in 3 dependency waves |
+| `coherence_check` | `CoherenceAgent` | Cross-section consistency; up to 2 targeted fixes |
+| `draft_review` | Human gate | User edits sections |
+| `final_save` | Human gate | Confirm completion |
+| `complete` | — | Session finished |
 
-### 3. Output Observability: LLM-as-a-Judge
-- **Challenge:** Zero-shot drafts often lack the nuance required for high-stakes grant writing.
-- **Solution:** Every generated proposal section is audited by an autonomous **Scoring Agent** using a strict 100-point rubric assessing Alignment, Vocabulary, Specificity, and Persuasion. Sections scoring below 75 are automatically sent back to the Rewrite Node with targeted feedback.
+#### SectionSubgraph (`flows/section_subgraph.py`)
 
-### 4. Production Security & Resilience
-- **Challenge:** Public LLM APIs have strict rate limits, and serverless architectures face cold-start/clock-skew issues.
-- **Solution:** 
-    - **Provider-Agnostic Failover:** Architected a custom provider factory (`utils/llm.py`) that handles rate-limiting and service disruptions with exponential backoff, ensuring drafting sessions are highly available.
-    - **Auth Resilience:** Custom `verify_token` middleware handles 1.5s clock-skew retries for Firebase JWTs, critical for cross-region serverless deployments.
+Each of the 10 sections in `agents/prompts.SECTIONS` runs:
 
-<!-- ## 🔒 Security & Data Privacy
-To ensure NGO data integrity and compliance with donor privacy standards:
-- **PII Redaction:** Implemented a pre-processing middleware that scrubs Personally Identifiable Information (PII) before sending payloads to LLM providers.
-- **Data Isolation:** Utilized **Supabase Row Level Security (RLS)** to ensure that NGO mission statements and financial data are cryptographically isolated between organizations.
-- **Stateless Inference:** The AI layer is architected to be stateless; user-uploaded grant documents are never used for model training or stored beyond the active RAG session context. -->
+```
+SectionDraftAgent → SectionScoringAgent → route_after_scoring()
+  ├─ approve           → section done
+  ├─ targeted_rewrite  → SectionRewriteAgent (surgical fix) → re-score
+  ├─ needs_tool_call   → check_budget_consistency / get_grant_requirement → rewrite → re-score
+  └─ escalate          → flagged for human review (score < 75 after 2 retries)
+```
 
-## 📁 Project Structure
-```bash
-impactlink/
+**Phased drafting waves** (`agents/planning_agent.DRAFTING_WAVES`):
+
+| Wave | Sections | Why |
+|---|---|---|
+| 1 | problem_statement, proposed_solution, target_beneficiaries | Core narrative |
+| 2 | goals_and_objectives, evaluation_plan, organizational_capacity, budget_narrative | Structure + budget |
+| 3 | executive_summary, sustainability, equity_statement | Summarize prior waves |
+
+Later waves receive a rolling summary (~1200 chars) of earlier sections for consistency.
+
+#### Structured scoring (`agents/scoring_agent.py`)
+
+The scorer returns a `ScoringDecision`, not just a number:
+
+```python
+{
+  "score": 68,
+  "routing": "needs_tool_call",       # approve | targeted_rewrite | needs_tool_call | escalate
+  "feedback": "...",
+  "targeted_feedback": [
+    {"issue": "...", "fix": "...", "severity": "high", "paragraph": 2}
+  ],
+  "tool_to_call": "check_budget_consistency",
+  "cross_section_impact": ["if beneficiary count changes, update executive_summary"]
+}
+```
+
+Threshold: **75/100**. Max automatic retries: **2**.
+
+#### Deterministic tools (`agents/tools/`)
+
+| Tool | When used |
+|---|---|
+| `get_grant_requirement` | Injected into every `SectionDraftAgent` prompt |
+| `check_budget_consistency` | Routed when budget narrative scores low or scorer requests it |
+
+#### PlanningAgent output (`agents/planning_agent.py`)
+
+```python
+DraftingPlan:
+  section_priorities: [{key, priority, critical_because, evidence_needed, funder_phrases_to_use}]
+  cross_section_dependencies: [{if_section, affects, because}]
+  red_flags: [str]
+  scoring_rubric_inference: {alignment, vocabulary, specificity, persuasion}
+```
+
+### Flow A: Improve existing proposal
+
+```mermaid
+graph LR
+    A[extract_vocab] --> B[analyze_gaps]
+    B --> C[gap_review]
+    C --> D[rewrite_sections]
+    D --> E[draft_review]
+    E --> F[final_save]
+```
+
+| Node | Agent | Purpose |
+|---|---|---|
+| `extract_vocab` | `VocabExtractor` | Funder phrase extraction |
+| `analyze_gaps` | `GapAnalysisAgent` | Compare uploaded sections vs grant requirements |
+| `gap_review` | Human gate | User confirms gaps / sections to rewrite |
+| `rewrite_sections` | `RewriterAgent` + `SectionScoringAgent` | Parallel rewrite with reflection loop |
+| `draft_review` | Human gate | Review diffs and edit (`utils/diff.py`) |
+
+> **Note:** The improve flow works best when uploaded proposals are split into canonical section keys. Currently uploads are often stored as a single `uploaded_content` blob — see [Roadmap](#roadmap).
+
+### Shared state (`state/proposal_state.py`)
+
+All agents read/write `ProposalState`, persisted via LangGraph `PostgresSaver`:
+
+```python
+ProposalState:
+  session_id, user_id, flow              # "improve" | "scratch"
+  profile, grant                         # NGO + selected grant
+  funder_vocab                           # extracted phrases
+  drafting_plan, agent_trace             # scratch flow planning + demo logs
+  slots                                  # scratch: conversational slot-filling
+  analysis                               # improve: gap analysis
+  original_sections, sections, diffs     # section content + tracked changes
+  gate                                   # current human interrupt
+  retry_counts, flagged_sections         # reflection loop tracking
+```
+
+### Human gates
+
+The frontend (`useProposalSession`) calls:
+
+- `POST /api/session` — start flow, runs until first `interrupt()`
+- `POST /api/session/{id}/advance` — resume with user input
+- `GET /api/session/{id}` — re-hydrate state
+
+| Gate | Frontend page | `advance` payload |
+|---|---|---|
+| `gap_review` | `Draft.js` | `{confirmed_gaps, user_additions, sections_to_rewrite}` |
+| `slot_filling` | `BuildProposal.js` | `{answer, slot_key}` |
+| `slot_confirm` | `BuildProposal.js` | `{confirmed: true}` or `{slots: {key: value}}` |
+| `draft_review` | Both | `{sections: {key: edited_text}}` |
+| `final_save` | `BuildProposal.js` | `{}` |
+| `complete` | — | Done |
+
+---
+
+## Codebase Map
+
+```
+ImpactLink/
 ├── impactlink-backend/
-│   ├── agents/          # Multi-agent specialized logic (Draft, Build, Scoring)
-│   ├── api/             # FastAPI routers and SSE implementations
-│   ├── services/        # Core logic: Vector store, Budget engine, NGO matching
-│   ├── utils/           # Provider failover, Retry logic, and formatting
-│   ├── Data/            # Seed data and localization indices
-│   └── main.py          # Application entry point
-└── impactlink-frontend/
-    └── src/
-        ├── pages/       # Dashboard and feature-specific views
-        ├── hooks/       # AI state management (SSE, Drafting, Budgets)
-        └── services/    # Centralized API logic (Axios)
+│   ├── main.py                    # FastAPI app, all HTTP routes
+│   ├── config.py                  # GROQ_API_KEY, model config
+│   ├── api/
+│   │   └── session.py             # LangGraph session create/advance/status
+│   ├── flows/
+│   │   ├── scratch_flow.py        # Flow B StateGraph (build from scratch)
+│   │   ├── improve_flow.py        # Flow A StateGraph (improve upload)
+│   │   └── section_subgraph.py    # Per-section agent pipeline
+│   ├── agents/
+│   │   ├── planning_agent.py      # PlanningAgent + DraftingPlan + waves
+│   │   ├── coherence_agent.py     # Cross-section validation
+│   │   ├── scoring_agent.py       # ScoringDecision + routing
+│   │   ├── rewriter_agent.py      # Section rewrites (gap + retry + targeted)
+│   │   ├── vocab_extractor.py     # Funder vocabulary extraction
+│   │   ├── gap_analysis_agent.py  # Improve-flow gap detection
+│   │   ├── slot_extractor.py      # Scratch-flow slot Q&A
+│   │   ├── budget_injector.py     # Pre-calculated budget table → prompt
+│   │   ├── prompts.py             # MASTER_SYSTEM + 10 SECTION definitions
+│   │   └── tools/
+│   │       ├── budget_consistency.py
+│   │       └── grant_requirements.py
+│   ├── state/
+│   │   └── proposal_state.py      # ProposalState TypedDict
+│   ├── services/
+│   │   ├── parser.py              # PDF/DOCX → ProposalFeatures (semantic chunking)
+│   │   ├── vector_store.py        # pgvector grant search + topic search
+│   │   ├── budget/                # Deterministic budget engine
+│   │   │   ├── generator.py
+│   │   │   ├── compliance.py
+│   │   │   ├── personnel.py
+│   │   │   └── rules.py
+│   │   ├── work_store.py          # Persist drafts/builds/budgets
+│   │   ├── auth.py                # Firebase JWT verification
+│   │   └── ngo_store.py           # NGO profiles
+│   ├── utils/
+│   │   ├── llm.py                 # RotatingGroq + KEY_POOL failover
+│   │   ├── metrics.py             # Latency instrumentation
+│   │   └── diff.py                # Word-level diffs for improve flow
+│   ├── scripts/
+│   │   ├── evaluate_generation.py # Scoring agent smoke test
+│   │   ├── evaluate_logic.py      # Budget engine tests
+│   │   └── fetch_grants.py        # Grant ingestion
+│   └── Data/                      # Wage indices, eval templates, seed data
+│
+├── impactlink-frontend/
+│   └── src/
+│       ├── App.js                 # Routes
+│       ├── pages/
+│       │   ├── BuildProposal.js   # Scratch flow UI (primary demo)
+│       │   ├── Draft.js           # Improve flow UI
+│       │   ├── Upload.js          # PDF upload + grant matching
+│       │   ├── Budget.js          # Standalone budget builder
+│       │   ├── GrantsList.js      # Browse / search grants
+│       │   └── Dashboard.js
+│       ├── hooks/
+│       │   ├── useProposalSession.js  # LangGraph session client
+│       │   ├── useUpload.js
+│       │   ├── useBudget.js
+│       │   └── useWorkStore.js
+│       └── services/
+│           └── api.js             # Axios client + Firebase auth interceptor
+│
+├── docker-compose.yml             # Backend container (port 8081)
+├── AI_Architecture.md             # Extended architecture notes
+└── README.md
 ```
 
-### ⚙️ Setup & Verification
-**Prerequisites**
-- Node.js (v18+)
-- Python (3.11+)
-- Docker (Optional)
-- Environment Variables: `GROQ_API_KEY`, `DATABASE_URL`, `FIREBASE_STORAGE_BUCKET`
+---
 
-**Local Development**
+## Data Flow: End-to-End
+
+### 1. Grant discovery (upload path)
+
+```
+User uploads PDF
+  → POST /api/upload
+  → parser.parse_proposal()        # SemanticChunker + Groq structured extraction
+  → vector_store.find_similar_grants()  # pgvector cosine similarity
+  → Frontend shows matched grants on Dashboard / GrantsList
+```
+
+### 2. Build proposal (scratch path — primary demo)
+
+```
+User opens /build, selects grant
+  → POST /api/session {flow: "scratch", grant, profile}
+  → LangGraph runs until slot_filling interrupt
+  → User answers questions (POST .../advance per answer)
+  → slot_confirm → plan_draft → draft_sections (3 waves) → coherence_check
+  → draft_review interrupt (sections returned)
+  → User clicks "Confirm Draft & Continue" (advance with edited sections)
+  → final_save interrupt
+  → User clicks "Complete Session" (advance with {})
+  → gate: complete → download PDF client-side
+```
+
+### 3. Budget generation
+
+```
+User opens /budget
+  → POST /api/budget/generate {proposal, max_budget}
+  → generator.py: extract rules → personnel → allocate → compliance enforce
+  → Returns line items with exact math
+  → budget_narrative section receives pre-calculated table via budget_injector
+```
+
+---
+
+## API Reference
+
+### Session (drafting)
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/session` | Start improve or scratch flow |
+| `POST` | `/api/session/{id}/advance` | Advance one gate (5 min timeout) |
+| `GET` | `/api/session/{id}` | Get current gate + state |
+
+### Grants & upload
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/upload` | Parse PDF/DOCX, return proposal + matches |
+| `POST` | `/api/match` | Re-match proposal to grants |
+| `POST` | `/api/grants/search` | Topic search over grant corpus |
+
+### Budget
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/budget/generate` | Generate compliant line-item budget |
+| `POST` | `/api/budget/refine` | Natural-language budget edits |
+
+### Work persistence
+
+| Method | Path | Description |
+|---|---|---|
+| `GET/POST/PATCH/DELETE` | `/api/work/{drafts\|builds\|budgets}` | Save/load user work |
+
+### Other
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/build/revise` | AI-revise a single section with user feedback |
+| `GET` | `/api/metrics` | Aggregated latency stats |
+| `GET` | `/api/metrics/{session_id}` | Per-session timing breakdown |
+
+All routes except `/` require Firebase JWT (`Authorization: Bearer <token>`).
+
+---
+
+## How to Run Locally
+
+### Prerequisites
+
+- **Node.js** 18+
+- **Python** 3.11+
+- **Supabase** project with PostgreSQL + `pgvector` enabled
+- **Firebase** project (Auth + Storage)
+- **Groq** API key ([console.groq.com](https://console.groq.com))
+
+### 1. Clone and install
+
 ```bash
-# 1. Start the Backend
-cd impactlink-backend
-pip install -r requirements.txt
-python main.py
+git clone <repo-url>
+cd ImpactLink
 
-# 2. Start the Frontend
+# Backend
+cd impactlink-backend
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Frontend
 cd ../impactlink-frontend
 npm install
-npm run start
 ```
 
-**Automated Testing (E2E Pipeline)**
-You can run the full integration test pipeline to verify the AI stack (PDF Parse -> RAG Search -> Scoring -> Budget Logic):
+### 2. Backend environment
+
+Create `impactlink-backend/.env`:
+
+```env
+# Required
+GROQ_API_KEY=gsk_...                    # comma-separate multiple keys for rotation
+DATABASE_URL=postgresql://postgres:...@db....supabase.co:5432/postgres
+FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+
+# Optional
+ALLOW_ORIGINS=http://localhost:3000
+PORT=8000
+```
+
+Place `firebase-service-account.json` in `impactlink-backend/` (download from Firebase Console → Project Settings → Service Accounts).
+
+LangGraph auto-creates checkpoint tables on first run via `PostgresSaver.setup()` in `api/session.py`.
+
+### 3. Frontend environment
+
+Create `impactlink-frontend/.env`:
+
+```env
+REACT_APP_API_URL=http://localhost:8000
+
+REACT_APP_FIREBASE_API_KEY=...
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your-project
+REACT_APP_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
+REACT_APP_FIREBASE_APP_ID=...
+```
+
+### 4. Start services
+
+**Terminal 1 — Backend:**
+
 ```bash
 cd impactlink-backend
-python testpipeline.py
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 📈 Roadmap: Enterprise Hardening (Next Steps)
-[x] Production Migration: Transition from flat JSON/ChromaDB to Supabase + Cloud Run.<br>
-[x] API Resilience: Implemented robust failover handling for inference rate limits.<br>
-[ ] Database-Level RAG Execution: Migrating application-layer Python vector filtering into a unified Supabase RPC function to process hard metadata constraints (e.g., Region) and pgvector similarity in a single atomic database query.<br>
-[ ] Enterprise Data Security: Implementing Supabase Row Level Security (RLS) for cryptographic tenant isolation, alongside a custom PII Redaction Middleware to scrub sensitive NGO data before payloads reach the LLM inference layer.<br>
-[ ] Graph-Based RAG: Transitioning to Knowledge Graphs to map funder-to-NGO relationships visually.<br>
-[ ] Financial API Integrations: Direct integration with NGO-specific accounting software for real-time spend tracking.<br>
+**Terminal 2 — Frontend:**
+
+```bash
+cd impactlink-frontend
+npm start
+```
+
+Open [http://localhost:3000](http://localhost:3000), sign in, and navigate to **Build** or **Upload**.
+
+### 5. Docker (backend only)
+
+```bash
+# From repo root — requires .env and firebase-service-account.json
+docker compose up --build
+```
+
+Backend runs at [http://localhost:8081](http://localhost:8081). Point `REACT_APP_API_URL=http://localhost:8081` in the frontend `.env`.
+
+### Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| `DATABASE_URL environment variable is required` | Add Supabase connection string to backend `.env` |
+| `FIREBASE_STORAGE_BUCKET is not set` | Add bucket name to backend `.env` |
+| Session advance times out | Drafting 10 sections can take 30–90s; timeout is 5 min in `api.js` |
+| CORS errors | Set `ALLOW_ORIGINS=http://localhost:3000` on backend |
+| Budget tool silent on Windows | Known emoji `print()` encoding issue in `generator.py`; tool fails open gracefully |
+| `401 Unauthorized` | Sign in via Firebase; check frontend Firebase config matches project |
+
+---
+
+## Demo Walkthrough
+
+**Recommended path for portfolio demos: Build from scratch**
+
+1. **Login** → complete NGO profile at `/profile`
+2. **Grants** → browse or search; note a grant ID
+3. **Build** (`/build`) → select target grant → **Start Building**
+4. Answer 7–10 slot questions (org name, mission, problem, activities, etc.)
+5. Confirm slots → backend runs:
+   - `PlanningAgent` (check logs / browser console for `agent_trace`)
+   - Phased section drafting with scoring routes
+   - `CoherenceAgent` cross-section check
+6. Review sections in right panel → **Confirm Draft & Continue**
+7. **Complete Session** → download PDF
+
+**Browser console** shows agent routing during drafting:
+
+```
+[ImpactLink Agent Trace]
+[PlanningAgent] problem_statement priority=1, evidence=[...]
+[SectionScoringAgent] budget_narrative score=68 → route=needs_tool_call
+[CoherenceAgent] fixed executive_summary: beneficiary count mismatch
+```
+
+**90-second architecture pitch:**
+
+> ImpactLink uses LangGraph to orchestrate grant drafting. A PlanningAgent analyzes the RFP before writing. Section agents draft in dependency waves, each passing through an LLM-as-Judge scorer that returns routing instructions — approve, targeted rewrite, tool call, or escalate. Deterministic tools check budget consistency; a CoherenceAgent validates cross-section alignment. The budget engine is pure Python; the LLM only handles narrative and planning. Human gates pause the graph for review at slot confirmation, draft review, and final save.
+
+---
+
+## Performance & Observability
+
+Instrumentation lives in `utils/metrics.py`. Every HTTP request and agent call can be timed.
+
+```bash
+# Aggregated stats
+curl http://localhost:8000/api/metrics
+
+# Per-session breakdown (after a build)
+curl http://localhost:8000/api/metrics/<session_id>
+```
+
+### Benchmarks (local dev, Llama 3.3 70B on Groq)
+
+| Metric | Value |
+|---|---|
+| Full 10-section scratch draft | ~20–60s (depends on retries) |
+| Single LLM call (avg) | ~1s |
+| Budget generation pipeline | ~1.3s |
+| Slot extraction per question | ~0.3–0.8s |
+
+> Retries are the main latency variable. `budget_narrative` often triggers 1–2 reflection loops when budget table alignment is weak.
+
+---
+
+## Scripts & Evaluation
+
+```bash
+cd impactlink-backend
+
+# Scoring agent smoke test
+python scripts/evaluate_generation.py
+
+# Budget engine integrity tests
+python scripts/evaluate_logic.py
+
+# Ingest grants into Supabase/pgvector
+python scripts/fetch_grants.py
+```
+
+---
+
+## Roadmap
+
+**Done**
+- [x] LangGraph multi-agent drafting pipeline (PlanningAgent, SectionSubgraph, CoherenceAgent)
+- [x] Structured scoring routes + deterministic tools
+- [x] Supabase + pgvector grant search
+- [x] Deterministic budget engine with compliance rules
+- [x] Groq key rotation and backoff (`RotatingGroq`)
+- [x] Session checkpointing in PostgreSQL
+
+**Next**
+- [ ] Section segmenter for improve flow (split `uploaded_content` → canonical keys)
+- [ ] Supabase RPC for unified metadata + vector filtering
+- [ ] Row Level Security (RLS) for tenant isolation
+- [ ] SSE progress streaming during long `draft_sections` runs
+- [ ] Batch generation eval harness against gold set (`Data/eval_gold_set.json.template`)
+- [ ] PII redaction middleware before LLM calls
+
+---
 
 <div align="center">
-<h3>Engineering Social Impact through Intelligent Automation</h3>
-<p><i>A production-grade AI platform for NGOs.</i></p>
+
+**Engineering social impact through intelligent automation**
+
+[Architecture Deep-Dive](./AI_Architecture.md) · [Live Demo](https://impactlink-cbfc5.web.app)
+
 </div>

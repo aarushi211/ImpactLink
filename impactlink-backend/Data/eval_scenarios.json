@@ -1,0 +1,108 @@
+{
+  "version": "1.0",
+  "description": "Hand-crafted NGO scenarios for repeatable pipeline evaluation. Grants are realistic metadata (not GPT proposals).",
+  "scenarios": [
+    {
+      "id": "la_urban_forestry",
+      "name": "East LA Urban Tree Canopy",
+      "description": "Community forestry NGO addressing heat island effects in disadvantaged LA neighborhoods.",
+      "slots": {
+        "org_name": "Green Future Los Angeles",
+        "mission": "Expand urban tree canopy and environmental resilience in underserved Los Angeles communities.",
+        "problem": "East Los Angeles census tracts average 12% tree canopy vs 25% citywide. Summer surface temperatures exceed 105°F, raising heat-related ER visits 18% above the county average.",
+        "activities": "1) Plant 500 native trees on public rights-of-way (led by arborist, weekly planting crews). 2) Train 40 resident stewards in tree maintenance (monthly workshops). 3) Install 25 hydration stations at planting sites. 4) Conduct quarterly canopy assessments with UCLA extension partner.",
+        "beneficiaries": "2,400 residents in Boyle Heights and East LA, primarily Latino households (78%) with median income $42,000. Outreach via schools, community centers, and door-to-door canvassing.",
+        "geography": "Boyle Heights and East Los Angeles, ZIP codes 90033, 90063, Los Angeles County, California",
+        "budget_total": "$85,000 total: personnel 55% ($46,750), materials/trees 25% ($21,250), equipment 10% ($8,500), outreach 10% ($8,500)",
+        "kpis": "1) 500 trees planted by month 18. 2) 70% 1-year survival rate. 3) 15% reduction in peak afternoon temperature at 10 monitoring sites. 4) 40 trained stewards completing certification. 5) 800 residents attending outreach events.",
+        "sustainability": "City of LA Urban Forestry will adopt maintenance for public ROW trees. Steward network continues via existing Parks afterschool contract ($12,000/year). CAL FIRE seed funding sought for expansion.",
+        "org_capacity": "Founded 2016, planted 1,200 trees across South LA with 82% survival. Executive Director is ISA-certified arborist. Partners: UCLA Extension, LA Parks, Eastside Green Coalition."
+      },
+      "grant": {
+        "id": "eval_urb_forestry_ca",
+        "title": "California Urban and Community Forestry Grant Program",
+        "agency": "CAL FIRE",
+        "description": "Funds tree planting, urban forest management, and community engagement projects that increase canopy cover, reduce urban heat island effect, and improve air quality in disadvantaged communities. Priority for environmental justice census tracts and projects with measurable canopy and temperature outcomes.",
+        "focus_areas": "urban forestry, heat island mitigation, canopy expansion, environmental justice, community stewardship, disadvantaged communities",
+        "max_award_amount": 100000,
+        "min_award_amount": 25000,
+        "close_date": "2026-09-30"
+      },
+      "budget": {
+        "max_award": 85000
+      },
+      "retrieval": {
+        "query": "Urban tree planting and heat island mitigation in Los Angeles disadvantaged communities",
+        "relevant_grant_ids": ["eval_urb_forestry_ca", "eval_urban_green_la"]
+      }
+    },
+    {
+      "id": "rural_youth_tutoring_al",
+      "name": "Rural Alabama After-School Tutoring",
+      "description": "Small education nonprofit delivering literacy tutoring in rural Alabama counties.",
+      "slots": {
+        "org_name": "Rural Reach Education Cooperative",
+        "mission": "Close literacy gaps for K-8 students in persistently underserved rural Alabama school districts.",
+        "problem": "In Wilcox and Lowndes Counties, 68% of 3rd graders read below grade level vs 38% statewide. Teacher vacancy rates exceed 22%, limiting after-school support.",
+        "activities": "1) Deliver 3x/week small-group tutoring (1:4 ratio) at 4 school sites. 2) Train 20 volunteer tutors using evidence-based Orton-Gillingham modules. 3) Distribute 600 take-home literacy kits. 4) Host monthly family literacy nights.",
+        "beneficiaries": "320 K-8 students across 4 schools; 85% qualify for free/reduced lunch; 72% Black students in rural communities with limited broadband.",
+        "geography": "Wilcox County and Lowndes County, Alabama (rural Black Belt region)",
+        "budget_total": "$62,000 total: personnel 65% ($40,300), curriculum/materials 20% ($12,400), travel 8% ($4,960), admin 7% ($4,340)",
+        "kpis": "1) 75% of students gain ≥1 reading level on DIBELS by May 2027. 2) 80% tutor retention through year 1. 3) 600 kits distributed. 4) 200 families attend literacy nights. 5) Average attendance 85% at tutoring sessions.",
+        "sustainability": "District will embed tutor stipends into Title I after-school budget ($18,000/year). United Way pledged $10,000 annual match. Parent volunteer pipeline sustains literacy nights.",
+        "org_capacity": "Operating since 2019; served 890 students with avg 1.2 grade-level reading gain. ED is former district reading specialist. Partners: AL State Dept of Education regional office, local churches, Auburn extension."
+      },
+      "grant": {
+        "id": "eval_rural_literacy_fed",
+        "title": "Education Innovation and Research: Rural Education Research",
+        "agency": "U.S. Department of Education",
+        "description": "Supports innovative approaches to improve academic outcomes for students in rural LEAs, including literacy interventions, after-school programming, and evidence-based tutoring models with measurable reading proficiency gains.",
+        "focus_areas": "rural education, literacy, after-school tutoring, K-8 reading proficiency, disadvantaged students, evidence-based instruction",
+        "max_award_amount": 75000,
+        "min_award_amount": 15000,
+        "close_date": "2026-11-15"
+      },
+      "budget": {
+        "max_award": 62000
+      },
+      "retrieval": {
+        "query": "K-12 literacy tutoring and educational equity in rural Alabama",
+        "relevant_grant_ids": ["eval_rural_literacy_fed", "eval_rural_afterschool"]
+      }
+    },
+    {
+      "id": "sf_food_security",
+      "name": "SF Food Pantry Expansion",
+      "description": "Food security nonprofit scaling culturally responsive pantry services in San Francisco.",
+      "slots": {
+        "org_name": "Bay Area Food Justice Network",
+        "mission": "Eliminate food insecurity for low-income families in San Francisco through culturally responsive pantry and nutrition programs.",
+        "problem": "In the Tenderloin and Visitacion Valley, 1 in 4 households experience food insecurity. SNAP enrollment gaps leave 3,200 eligible families without benefits assistance.",
+        "activities": "1) Operate weekly pop-up pantries at 3 sites (6,000 grocery boxes/month). 2) Provide SNAP enrollment assistance (bilingual staff). 3) Offer nutrition workshops with local chefs. 4) Coordinate with SF-Marin Food Bank for procurement.",
+        "beneficiaries": "4,500 individuals annually across 1,200 households; 64% Latino, 22% Asian American, 41% seniors; primarily renters earning <200% FPL.",
+        "geography": "Tenderloin, Visitacion Valley, and Bayview-Hunters Point, San Francisco, California",
+        "budget_total": "$95,000 total: personnel 50% ($47,500), food procurement 35% ($33,250), rent/equipment 10% ($9,500), outreach 5% ($4,750)",
+        "kpis": "1) 72,000 grocery boxes distributed in 12 months. 2) 900 households enrolled in SNAP. 3) 65% of participants report improved food security (USDA 6-item scale). 4) 48 nutrition workshops with 1,200 attendees.",
+        "sustainability": "SF Human Services Commission multi-year pantry contract ($55,000/year). Corporate sponsorship from local grocers ($20,000/year). Volunteer corps of 150 reduces labor costs.",
+        "org_capacity": "Serving SF since 2014; distributed 580,000 meals last year. Bilingual staff (English, Spanish, Cantonese). Partners: SF-Marin Food Bank, SF HSA, GLIDE."
+      },
+      "grant": {
+        "id": "eval_food_security_ca",
+        "title": "California Nutrition Incentive Program — Community Food Access",
+        "agency": "California Department of Food and Agriculture",
+        "description": "Funds community-based organizations expanding access to nutritious food in low-income communities. Prioritizes culturally responsive distribution, SNAP linkage, and measurable food security outcomes.",
+        "focus_areas": "food security, nutrition access, SNAP enrollment, low-income communities, culturally responsive services, food justice",
+        "max_award_amount": 100000,
+        "min_award_amount": 30000,
+        "close_date": "2026-08-01"
+      },
+      "budget": {
+        "max_award": 95000
+      },
+      "retrieval": {
+        "query": "Food pantry expansion food insecurity SNAP enrollment San Francisco low-income",
+        "relevant_grant_ids": ["eval_food_security_ca", "eval_hunger_relief_sf"]
+      }
+    }
+  ]
+}

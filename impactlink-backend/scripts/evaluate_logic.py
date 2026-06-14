@@ -1,87 +1,153 @@
-import sys
-import os
-import json
+"""
+scripts/evaluate_logic.py
 
-# Add the project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+Deterministic evaluation for the budget engine.
+Uses budget cases from eval_scenarios.json plus stress-test edge cases.
+
+Usage:
+    python scripts/evaluate_logic.py
+"""
+
+from __future__ import annotations
+
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(SCRIPTS))
 
 from services.budget.generator import generate_budget
 
-def run_evaluation():
-    print("🧪 Starting Deterministic Logic Evaluation (Budget Engine)\n")
-    
-    test_scenarios = [
-        {
-            "name": "Standard Urban Forestry Grant",
-            "max": 100000,
-            "proposal": {
-                "project_title": "LA Tree Canopy",
-                "key_activities": ["Planting 500 trees", "Watering", "Community outreach"],
-                "geographic_focus": ["Los Angeles, CA"],
-                "budget_breakdown": ["Personnel", "Equipment", "Supplies"]
-            }
+from eval_common import load_scenarios, print_header, save_report
+
+
+STRESS_CASES = [
+    {
+        "name": "Extreme Over-Budget Request (Stress Test)",
+        "max_award": 50000,
+        "proposal": {
+            "project_title": "Massive Reforestation",
+            "key_activities": ["Hire 50 Project Managers", "Buy 10 Trucks"],
+            "geographic_focus": ["San Francisco, CA"],
+            "budget_breakdown": ["Personnel", "Travel"],
         },
-        {
-            "name": "Extreme Over-Budget Request (Stress Test)",
-            "max": 50000,
-            "proposal": {
-                "project_title": "Massive Reforestation",
-                "key_activities": ["Hire 50 Project Managers", "Buy 10 Trucks"], # Impossible for 50k
-                "geographic_focus": ["San Francisco, CA"],
-                "budget_breakdown": ["Personnel", "Travel"]
-            }
+        "expect_error": True,
+    },
+    {
+        "name": "Low Wage Region Compliance",
+        "max_award": 25000,
+        "proposal": {
+            "project_title": "Rural Education",
+            "key_activities": ["Tutoring"],
+            "geographic_focus": ["Rural Alabama"],
+            "budget_breakdown": ["Personnel"],
         },
-        {
-            "name": "Low Wage Region Compliance",
-            "max": 25000,
-            "proposal": {
-                "project_title": "Rural Education",
-                "key_activities": ["Tutoring"],
-                "geographic_focus": ["Rural Alabama"], # Should trigger min-wage floor
-                "budget_breakdown": ["Personnel"]
+        "expect_error": False,
+    },
+]
+
+
+def _proposal_from_scenario(scenario: dict) -> dict:
+    slots = scenario["slots"]
+    profile = {
+        "project_title": scenario["name"],
+        "key_activities": [slots.get("activities", "")],
+        "geographic_focus": [slots.get("geography", "")],
+        "budget_breakdown": ["Personnel", "Equipment", "Supplies", "Outreach"],
+        "total_budget": slots.get("budget_total", ""),
+        "target_beneficiaries": [slots.get("beneficiaries", "")],
+    }
+    return profile
+
+
+def _run_budget_case(name: str, proposal: dict, max_award: int, expect_error: bool = False) -> dict:
+    import io
+    from contextlib import redirect_stdout, redirect_stderr
+
+    try:
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            budget = generate_budget(proposal, max_award)
+
+        if "error" in budget:
+            if expect_error:
+                return {"name": name, "status": "PASS", "detail": budget.get("details", "caught violation")}
+            return {"name": name, "status": "FAIL", "detail": budget.get("details", "unexpected error")}
+
+        total = budget.get("total_requested", 0)
+        items_sum = sum(item.get("amount", 0) for item in budget.get("items", []))
+        math_pass = total == max_award == items_sum
+
+        if math_pass:
+            return {
+                "name": name,
+                "status": "PASS",
+                "detail": f"total=${total:,}, items_sum=${items_sum:,}",
+                "total_requested": total,
             }
+        return {
+            "name": name,
+            "status": "FAIL",
+            "detail": f"math mismatch total={total} sum={items_sum} expected={max_award}",
         }
-    ]
+    except Exception as exc:
+        if expect_error:
+            return {"name": name, "status": "PASS", "detail": f"caught exception: {exc}"}
+        return {"name": name, "status": "CRASH", "detail": str(exc)}
 
-    results = []
-    
-    for tc in test_scenarios:
-        print(f"--- Running: {tc['name']} ---")
-        try:
-            budget = generate_budget(tc['proposal'], tc['max'])
-            
-            if "error" in budget:
-                print(f"❌ Handled expected failure: {budget['details']}")
-                results.append({"name": tc['name'], "status": "PASS (Caught Violation)"})
-                continue
 
-            # Verification logic
-            total = budget.get("total_requested", 0)
-            items_sum = sum(item["amount"] for item in budget.get("items", []))
-            
-            # Check 1: Math Integrity
-            math_pass = (total == tc['max'] == items_sum)
-            
-            # Check 2: Minimum Wage Compliance
-            # (In a real test, we would look up the specific min wage and check line items)
-            
-            if math_pass:
-                print(f"✅ PASS: Total (${total:,}) matches max and sum of parts.")
-                results.append({"name": tc['name'], "status": "PASS"})
-            else:
-                print(f"❌ FAIL: Math mismatch. Total: {total}, Sum: {items_sum}, Expected: {tc['max']}")
-                results.append({"name": tc['name'], "status": "FAIL"})
-                
-        except Exception as e:
-            print(f"💥 CRASH: {e}")
-            results.append({"name": tc['name'], "status": f"CRASH: {e}"})
-        print()
+def run_evaluation() -> dict:
+    cases = []
 
-    print("="*40)
-    print("EVALUATION SUMMARY")
-    print("="*40)
-    for res in results:
-        print(f"{res['status']}: {res['name']}")
+    for scenario in load_scenarios():
+        budget_cfg = scenario.get("budget") or {}
+        max_award = budget_cfg.get("max_award")
+        if not max_award:
+            continue
+        cases.append({
+            "name": f"Scenario: {scenario['id']}",
+            "max_award": max_award,
+            "proposal": _proposal_from_scenario(scenario),
+            "expect_error": False,
+        })
+
+    cases.extend(STRESS_CASES)
+
+    results = [_run_budget_case(**case) for case in cases]
+    passed = sum(1 for r in results if r["status"] == "PASS")
+    return {
+        "eval_type": "budget_logic",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "aggregate": {
+            "total": len(results),
+            "passed": passed,
+            "failed": len(results) - passed,
+            "pass_rate": round(passed / max(len(results), 1), 3),
+        },
+        "results": results,
+    }
+
+
+def main() -> int:
+    print_header("ImpactLink Budget Logic Evaluation")
+    report = run_evaluation()
+
+    for row in report["results"]:
+        icon = "PASS" if row["status"] == "PASS" else row["status"]
+        print(f"  [{icon}] {row['name']}: {row['detail']}")
+
+    agg = report["aggregate"]
+    print(f"\nPass rate: {agg['passed']}/{agg['total']} ({agg['pass_rate']:.0%})")
+
+    out_path = save_report(
+        f"budget_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        report,
+    )
+    print(f"Report saved: {out_path}")
+    return 0 if agg["failed"] == 0 else 1
+
 
 if __name__ == "__main__":
-    run_evaluation()
+    raise SystemExit(main())

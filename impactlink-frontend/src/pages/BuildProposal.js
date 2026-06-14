@@ -21,6 +21,206 @@ function loadJsPDF() {
 
 const STEP_ICONS = ["🎯","⚡","👥","🏛","📊","💰","🌱"];
 
+const ORCHESTRATION_STEPS = [
+  { id: "vocab",    agent: "VocabExtractor",   label: "Extract funder vocabulary" },
+  { id: "slots",    agent: "SlotExtractor",    label: "Collect organization details" },
+  { id: "plan",     agent: "PlanningAgent",    label: "Analyze grant & build drafting plan" },
+  { id: "wave1",    agent: "SectionSubgraph",  label: "Wave 1 — problem, solution, beneficiaries" },
+  { id: "wave2",    agent: "SectionSubgraph",  label: "Wave 2 — goals, evaluation, budget" },
+  { id: "wave3",    agent: "SectionSubgraph",  label: "Wave 3 — executive summary, sustainability" },
+  { id: "coherence",agent: "CoherenceAgent",   label: "Cross-section coherence check" },
+  { id: "review",   agent: "Human Gate",       label: "Ready for your review" },
+];
+
+const DRAFTING_STEP_IDS = ["plan", "wave1", "wave2", "wave3", "coherence"];
+
+const AGENT_COLORS = {
+  VocabExtractor:   "#8b5cf6",
+  SlotExtractor:    "#6366f1",
+  PlanningAgent:    "#a78bfa",
+  draft_sections:   "#6c63ff",
+  SectionDraftAgent:"#6c63ff",
+  SectionScoringAgent:"#f59e0b",
+  SectionRewriteAgent:"#ef4444",
+  SectionToolAgent: "#10b981",
+  CoherenceAgent:   "#14b8a6",
+  "Human Gate":     "#22c55e",
+};
+
+function stepStatusFromGate(stepId, gate, isDrafting) {
+  const order = ORCHESTRATION_STEPS.map(s => s.id);
+  const idx = order.indexOf(stepId);
+
+  if (gate === "none" && stepId === "vocab") return "active";
+  if (gate === "slot_filling") {
+    if (idx < 1) return "done";
+    if (stepId === "slots") return "active";
+    return "pending";
+  }
+  if (gate === "slot_confirm") {
+    if (idx < 2) return "done";
+    if (stepId === "plan") return "active";
+    return "pending";
+  }
+  if (isDrafting) {
+    if (idx < 2) return "done";
+    if (DRAFTING_STEP_IDS.includes(stepId)) return "active";
+    return "pending";
+  }
+  if (["draft_review", "final_save", "complete"].includes(gate)) {
+    if (stepId === "review") return gate === "draft_review" ? "active" : "done";
+    return idx < order.length - 1 ? "done" : "pending";
+  }
+  return "pending";
+}
+
+function AgentOrchestrationPanel({ gate, loading, agentTrace, draftingPlan, compact }) {
+  const [draftTick, setDraftTick] = useState(0);
+  const isDrafting = loading && !["slot_filling", "none"].includes(gate);
+
+  useEffect(() => {
+    if (!isDrafting) return undefined;
+    const t = setInterval(() => setDraftTick(n => n + 1), 4000);
+    return () => clearInterval(t);
+  }, [isDrafting]);
+
+  const activeDraftStep = DRAFTING_STEP_IDS[draftTick % DRAFTING_STEP_IDS.length];
+
+  const trace = agentTrace || [];
+  const priorities = draftingPlan?.section_priorities
+    ?.slice()
+    .sort((a, b) => a.priority - b.priority)
+    .slice(0, 3) || [];
+
+  if (!gate || gate === "none") return null;
+
+  return (
+    <div style={{
+      marginBottom: compact ? 12 : 18,
+      background: "#0c0c18",
+      border: "1px solid #2a2a4e",
+      borderRadius: 12,
+      overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "10px 14px",
+        borderBottom: "1px solid #1e1e30",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "linear-gradient(90deg, #12122a, #0c0c18)",
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: "#a5b4fc",
+          letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          Agent Orchestration
+        </span>
+        {isDrafting && (
+          <span style={{ fontSize: 10, color: "#6c63ff", fontWeight: 700,
+            animation: "pulse 1.5s ease-in-out infinite" }}>
+            ⟳ LangGraph running…
+          </span>
+        )}
+      </div>
+
+      <div style={{ padding: compact ? "10px 12px" : "12px 14px" }}>
+        {/* Pipeline */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {ORCHESTRATION_STEPS.map((step) => {
+            let status = stepStatusFromGate(step.id, gate, isDrafting);
+            if (isDrafting && DRAFTING_STEP_IDS.includes(step.id)) {
+              status = step.id === activeDraftStep ? "active"
+                : DRAFTING_STEP_IDS.indexOf(step.id) < DRAFTING_STEP_IDS.indexOf(activeDraftStep)
+                  ? "done" : "pending";
+            }
+            const color = AGENT_COLORS[step.agent] || "#6c63ff";
+            const dot = status === "done" ? "✓" : status === "active" ? "●" : "○";
+            const dotColor = status === "done" ? "#22c55e"
+              : status === "active" ? color : "#333";
+
+            return (
+              <div key={step.id} style={{
+                display: "flex", alignItems: "flex-start", gap: 8,
+                opacity: status === "pending" ? 0.45 : 1,
+                transition: "opacity 0.3s",
+              }}>
+                <span style={{
+                  color: dotColor, fontSize: 10, fontWeight: 800,
+                  width: 14, flexShrink: 0, marginTop: 2,
+                }}>{dot}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color }}>{step.agent}</span>
+                  <p style={{ margin: "1px 0 0", fontSize: 11, color: "#888", lineHeight: 1.4 }}>
+                    {step.label}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Planning priorities */}
+        {priorities.length > 0 && (
+          <div style={{
+            marginTop: 12, padding: "10px 12px",
+            background: "#111120", borderRadius: 8,
+            border: "1px solid #1e1e30",
+          }}>
+            <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700,
+              color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              PlanningAgent priorities
+            </p>
+            {priorities.map((p) => (
+              <p key={p.key} style={{ margin: "4px 0", fontSize: 11, color: "#999", lineHeight: 1.4 }}>
+                <span style={{ color: "#ccc", fontWeight: 600 }}>
+                  {p.key.replace(/_/g, " ")}
+                </span>
+                {" "}(p{p.priority})
+                {p.evidence_needed?.length > 0 && (
+                  <span style={{ color: "#666" }}> — needs {p.evidence_needed.slice(0, 2).join(", ")}</span>
+                )}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {/* Decision log */}
+        {trace.length > 0 && (
+          <div style={{
+            marginTop: 12, padding: "10px 12px",
+            background: "#080810", borderRadius: 8,
+            border: "1px solid #1a1a28",
+            maxHeight: compact ? 140 : 200, overflowY: "auto",
+          }}>
+            <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 700,
+              color: "#555", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Decision log
+            </p>
+            {trace.map((entry, i) => (
+              <div key={i} style={{
+                marginBottom: 6, fontSize: 11, lineHeight: 1.45,
+                fontFamily: "ui-monospace, 'Cascadia Code', monospace",
+              }}>
+                <span style={{
+                  color: AGENT_COLORS[entry.agent] || "#6c63ff",
+                  fontWeight: 700,
+                }}>[{entry.agent}]</span>
+                <span style={{ color: "#777" }}> {entry.decision}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {isDrafting && (
+          <p style={{ margin: "10px 0 0", fontSize: 10, color: "#555", lineHeight: 1.5 }}>
+            Drafting 10 sections with PlanningAgent → SectionSubgraph (score/route/retry) → CoherenceAgent.
+            This usually takes 30–90 seconds.
+          </p>
+        )}
+      </div>
+
+      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+    </div>
+  );
+}
+
 // Animated typing dots
 function TypingDots() {
   return (
@@ -619,12 +819,18 @@ export default function BuildProposal() {
   const allApproved    = totalSections > 0 && approvedCount === totalSections;
   const hasStarted     = messages.length > 0;
   const loading        = session.loading;
+  const showOrchestration = hasStarted && session.gate !== "none";
+  const agentTrace = session.data.agent_trace || [];
+  const draftingPlan = session.data.drafting_plan;
+  const showRightPanel = showOrchestration;
+  const ORCHESTRATION_PANEL_WIDTH = "28%";
+  const HEADER_HEIGHT = 112; // Nav (64px) + app bar (48px)
 
   // ── render ────────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)",
-      display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", background: "var(--bg)",
+      display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <Nav />
 
       {/* App bar */}
@@ -632,7 +838,7 @@ export default function BuildProposal() {
         background: "#13131f", borderBottom: "1px solid #1e1e30",
         padding: "0 24px", height: 48,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: 12, position: "sticky", top: 64, zIndex: 90,
+        gap: 12, flexShrink: 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={() => navigate(-1)}
@@ -705,20 +911,29 @@ export default function BuildProposal() {
         </div>
       </div>
 
-      {/* Body — two-column: chat left, sections right */}
-      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+      {/* Body — main content + fixed orchestration strip */}
+      <div style={{
+        flex: 1, minHeight: 0, display: "flex", overflow: "hidden",
+        marginRight: showRightPanel ? ORCHESTRATION_PANEL_WIDTH : 0,
+      }}>
 
-        {/* ── Chat panel (left) ─────────────────── */}
+        {/* ── Main panel: chat + sections ─────────────────── */}
         <div style={{
-          width: totalSections > 0 ? "45%" : "100%",
-          flexShrink: 0,
+          flex: 1,
+          width: showRightPanel ? undefined : "100%",
+          minWidth: 0,
+          minHeight: 0,
           display: "flex", flexDirection: "column",
-          borderRight: totalSections > 0 ? "1px solid var(--border)" : "none",
-          transition: "width 0.3s",
+          overflow: "hidden",
         }}>
 
           {/* Chat messages */}
-          <div style={{ flex:1, overflowY:"auto", padding:"24px 28px 16px" }}>
+          <div style={{
+            flex: totalSections > 0 ? "0 1 42%" : 1,
+            overflowY: "auto",
+            padding: "24px 28px 16px",
+            minHeight: 0,
+          }}>
 
             {/* Empty / start state */}
             {!hasStarted && (
@@ -959,12 +1174,150 @@ export default function BuildProposal() {
             <div ref={chatEndRef} />
           </div>
 
+          {/* Proposal sections (main area) */}
+          {totalSections > 0 && (
+            <div style={{
+              flex: 1, overflowY: "auto", minHeight: 0,
+              padding: "20px 28px 24px",
+              borderTop: "1px solid var(--border)",
+              background: "#0f0f18",
+            }}>
+              <div style={{ display:"flex", alignItems:"center",
+                justifyContent:"space-between", marginBottom:16 }}>
+                <p style={{ margin:0, fontWeight:700, color:"#fff", fontSize:14 }}>
+                  Your Proposal Sections
+                </p>
+                <p style={{ margin:0, color: allApproved ? "var(--green)" : "#555",
+                  fontSize:12, fontWeight:600 }}>
+                  {approvedCount}/{totalSections} approved
+                </p>
+              </div>
+
+              <div style={{ height:4, background:"#1e1e30", borderRadius:2,
+                marginBottom:20, overflow:"hidden" }}>
+                <div style={{
+                  height:"100%",
+                  width: `${(approvedCount/totalSections)*100}%`,
+                  background:"var(--accent)",
+                  borderRadius:2,
+                  transition:"width 0.4s",
+                }} />
+              </div>
+
+              {session.gate === "draft_review" && !done && (
+                <div style={{
+                  marginBottom: 16, padding: "14px 16px",
+                  background: "#1a1a2e", border: "1px solid var(--accent)",
+                  borderRadius: 10, display: "flex",
+                  alignItems: "center", justifyContent: "space-between", gap: 12,
+                }}>
+                  <p style={{ margin: 0, color: "#aaa", fontSize: 12, lineHeight: 1.5 }}>
+                    Review sections below, then confirm to advance the LangGraph session.
+                  </p>
+                  <button
+                    onClick={handleConfirmDraftReview}
+                    disabled={session.loading}
+                    style={{
+                      background: "var(--accent)", border: "none", color: "#fff",
+                      padding: "8px 16px", borderRadius: 8, fontSize: 12,
+                      fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                      opacity: session.loading ? 0.6 : 1,
+                    }}
+                  >
+                    {session.loading ? "⟳ Saving…" : "Confirm Draft & Continue"}
+                  </button>
+                </div>
+              )}
+
+              {session.gate === "final_save" && !done && (
+                <div style={{
+                  marginBottom: 16, padding: "14px 16px",
+                  background: "#0d2e1a", border: "1px solid #166534",
+                  borderRadius: 10, display: "flex",
+                  alignItems: "center", justifyContent: "space-between", gap: 12,
+                }}>
+                  <p style={{ margin: 0, color: "#2d5a3d", fontSize: 12, lineHeight: 1.5 }}>
+                    Draft saved to session. Complete to reach the final graph node.
+                  </p>
+                  <button
+                    onClick={handleCompleteSession}
+                    disabled={session.loading}
+                    style={{
+                      background: "#166534", border: "none", color: "#fff",
+                      padding: "8px 16px", borderRadius: 8, fontSize: 12,
+                      fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                      opacity: session.loading ? 0.6 : 1,
+                    }}
+                  >
+                    {session.loading ? "⟳ Finishing…" : "Complete Session"}
+                  </button>
+                </div>
+              )}
+
+              <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+                {secOrder.map((key, idx) => {
+                  const sec = sections[key];
+                  if (!sec) return null;
+                  return (
+                    <DraftCard
+                      key={key}
+                      stepKey={key}
+                      title={sec.title}
+                      content={sec.content}
+                      approved={sec.approved}
+                      icon={STEP_ICONS[idx] || "✦"}
+                      onApprove={() => handleApprove(key)}
+                      onRevise={(newContent) => handleRevise(key, newContent)}
+                    />
+                  );
+                })}
+              </div>
+
+              {allApproved && (
+                <div style={{
+                  marginTop:20, background:"#0d2e1a",
+                  border:"1px solid #166534", borderRadius:12,
+                  padding:"20px 24px",
+                  display:"flex", alignItems:"center", justifyContent:"space-between",
+                }}>
+                  <div>
+                    <p style={{ margin:"0 0 3px", fontWeight:700,
+                      color:"var(--green)", fontSize:15 }}>
+                      ✓ All sections approved
+                    </p>
+                    <p style={{ margin:0, color:"#2d5a3d", fontSize:12 }}>
+                      Your proposal is ready to download
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <button onClick={() => navigate("/grants")} style={{
+                      background: "none",
+                      border:"1px solid #2d5a3d", color:"var(--green)",
+                      padding:"11px 22px", borderRadius:9,
+                      fontSize:13, fontWeight:700, cursor:"pointer",
+                    }}>
+                      Find Grants →
+                    </button>
+                    <button onClick={handlePDF} disabled={pdfLoading} style={{
+                      background: pdfLoading ? "#1a1a28" : "#e63946",
+                      border:"none", color:"#fff",
+                      padding:"11px 22px", borderRadius:9,
+                      fontSize:13, fontWeight:700, cursor:"pointer",
+                    }}>
+                      {pdfLoading ? "⟳ Generating…" : "↓ Download PDF"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Input bar */}
           {hasStarted && !done && (
             <div style={{
               padding:"12px 20px", borderTop:"1px solid var(--border)",
               display:"flex", gap:8, alignItems:"flex-end",
-              background:"#0d0d16",
+              background:"#0d0d16", flexShrink: 0,
             }}>
               <textarea
                 ref={inputRef}
@@ -1008,146 +1361,31 @@ export default function BuildProposal() {
             </div>
           )}
         </div>
-
-        {/* ── Sections panel (right) ────────────── */}
-        {totalSections > 0 && (
-          <div style={{
-            flex:1, overflowY:"auto",
-            padding:"24px 28px 80px",
-            background:"#0f0f18",
-          }}>
-            <div style={{ display:"flex", alignItems:"center",
-              justifyContent:"space-between", marginBottom:16 }}>
-              <p style={{ margin:0, fontWeight:700, color:"#fff", fontSize:14 }}>
-                Your Proposal Sections
-              </p>
-              <p style={{ margin:0, color: allApproved ? "var(--green)" : "#555",
-                fontSize:12, fontWeight:600 }}>
-                {approvedCount}/{totalSections} approved
-              </p>
-            </div>
-
-            {/* Progress bar */}
-            <div style={{ height:4, background:"#1e1e30", borderRadius:2,
-              marginBottom:20, overflow:"hidden" }}>
-              <div style={{
-                height:"100%",
-                width: `${totalSections > 0 ? (approvedCount/totalSections)*100 : 0}%`,
-                background:"var(--accent)",
-                borderRadius:2,
-                transition:"width 0.4s",
-              }} />
-            </div>
-
-            {session.gate === "draft_review" && !done && (
-              <div style={{
-                marginBottom: 16, padding: "14px 16px",
-                background: "#1a1a2e", border: "1px solid var(--accent)",
-                borderRadius: 10, display: "flex",
-                alignItems: "center", justifyContent: "space-between", gap: 12,
-              }}>
-                <p style={{ margin: 0, color: "#aaa", fontSize: 12, lineHeight: 1.5 }}>
-                  Review sections below, then confirm to advance the LangGraph session.
-                </p>
-                <button
-                  onClick={handleConfirmDraftReview}
-                  disabled={session.loading}
-                  style={{
-                    background: "var(--accent)", border: "none", color: "#fff",
-                    padding: "8px 16px", borderRadius: 8, fontSize: 12,
-                    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-                    opacity: session.loading ? 0.6 : 1,
-                  }}
-                >
-                  {session.loading ? "⟳ Saving…" : "Confirm Draft & Continue"}
-                </button>
-              </div>
-            )}
-
-            {session.gate === "final_save" && !done && (
-              <div style={{
-                marginBottom: 16, padding: "14px 16px",
-                background: "#0d2e1a", border: "1px solid #166534",
-                borderRadius: 10, display: "flex",
-                alignItems: "center", justifyContent: "space-between", gap: 12,
-              }}>
-                <p style={{ margin: 0, color: "#2d5a3d", fontSize: 12, lineHeight: 1.5 }}>
-                  Draft saved to session. Complete to reach the final graph node.
-                </p>
-                <button
-                  onClick={handleCompleteSession}
-                  disabled={session.loading}
-                  style={{
-                    background: "#166534", border: "none", color: "#fff",
-                    padding: "8px 16px", borderRadius: 8, fontSize: 12,
-                    fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
-                    opacity: session.loading ? 0.6 : 1,
-                  }}
-                >
-                  {session.loading ? "⟳ Finishing…" : "Complete Session"}
-                </button>
-              </div>
-            )}
-
-            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              {secOrder.map((key, idx) => {
-                const sec = sections[key];
-                if (!sec) return null;
-                return (
-                  <DraftCard
-                    key={key}
-                    stepKey={key}
-                    title={sec.title}
-                    content={sec.content}
-                    approved={sec.approved}
-                    icon={STEP_ICONS[idx] || "✦"}
-                    onApprove={() => handleApprove(key)}
-                    onRevise={(newContent) => handleRevise(key, newContent)}
-                  />
-                );
-              })}
-            </div>
-
-            {/* All approved banner */}
-            {allApproved && (
-              <div style={{
-                marginTop:20, background:"#0d2e1a",
-                border:"1px solid #166534", borderRadius:12,
-                padding:"20px 24px",
-                display:"flex", alignItems:"center", justifyContent:"space-between",
-              }}>
-                <div>
-                  <p style={{ margin:"0 0 3px", fontWeight:700,
-                    color:"var(--green)", fontSize:15 }}>
-                    ✓ All sections approved
-                  </p>
-                  <p style={{ margin:0, color:"#2d5a3d", fontSize:12 }}>
-                    Your proposal is ready to download
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button onClick={() => navigate("/grants")} style={{
-                    background: "none",
-                    border:"1px solid #2d5a3d", color:"var(--green)",
-                    padding:"11px 22px", borderRadius:9,
-                    fontSize:13, fontWeight:700, cursor:"pointer",
-                  }}>
-                    Find Grants →
-                  </button>
-                  <button onClick={handlePDF} disabled={pdfLoading} style={{
-                    background: pdfLoading ? "#1a1a28" : "#e63946",
-                    border:"none", color:"#fff",
-                    padding:"11px 22px", borderRadius:9,
-                    fontSize:13, fontWeight:700, cursor:"pointer",
-                  }}>
-                    {pdfLoading ? "⟳ Generating…" : "↓ Download PDF"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* ── Fixed right strip: stays visible while chat scrolls ── */}
+      {showRightPanel && (
+        <div style={{
+          position: "fixed",
+          right: 0,
+          top: HEADER_HEIGHT,
+          bottom: 0,
+          width: ORCHESTRATION_PANEL_WIDTH,
+          overflowY: "auto",
+          padding: "16px 12px 24px",
+          background: "#0c0c14",
+          borderLeft: "1px solid #1a1a28",
+          zIndex: 80,
+        }}>
+          <AgentOrchestrationPanel
+            compact
+            gate={session.gate}
+            loading={loading}
+            agentTrace={agentTrace}
+            draftingPlan={draftingPlan}
+          />
+        </div>
+      )}
     </div>
   );
 }

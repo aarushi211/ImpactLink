@@ -1,0 +1,71 @@
+{
+  "mode": "offline_keyword",
+  "k": 5,
+  "catalog_size": 10,
+  "aggregate": {
+    "scenarios": 3,
+    "mean_precision@5": 0.4,
+    "mean_recall@5": 1.0
+  },
+  "results": [
+    {
+      "scenario_id": "la_urban_forestry",
+      "query": "Urban tree planting and heat island mitigation in Los Angeles disadvantaged communities",
+      "relevant_grant_ids": [
+        "eval_urb_forestry_ca",
+        "eval_urban_green_la"
+      ],
+      "retrieved_ids": [
+        "eval_urban_green_la",
+        "eval_urb_forestry_ca",
+        "eval_rural_afterschool",
+        "eval_food_security_ca",
+        "eval_distractor_highway"
+      ],
+      "precision@5": 0.4,
+      "recall@5": 1.0,
+      "missing_from_catalog": [],
+      "status": "ok"
+    },
+    {
+      "scenario_id": "rural_youth_tutoring_al",
+      "query": "K-12 literacy tutoring and educational equity in rural Alabama",
+      "relevant_grant_ids": [
+        "eval_rural_literacy_fed",
+        "eval_rural_afterschool"
+      ],
+      "retrieved_ids": [
+        "eval_rural_literacy_fed",
+        "eval_rural_afterschool",
+        "eval_distractor_highway",
+        "eval_distractor_marine",
+        "eval_distractor_nsf_physics"
+      ],
+      "precision@5": 0.4,
+      "recall@5": 1.0,
+      "missing_from_catalog": [],
+      "status": "ok"
+    },
+    {
+      "scenario_id": "sf_food_security",
+      "query": "Food pantry expansion food insecurity SNAP enrollment San Francisco low-income",
+      "relevant_grant_ids": [
+        "eval_food_security_ca",
+        "eval_hunger_relief_sf"
+      ],
+      "retrieved_ids": [
+        "eval_hunger_relief_sf",
+        "eval_food_security_ca",
+        "eval_urb_forestry_ca",
+        "eval_distractor_highway",
+        "eval_distractor_marine"
+      ],
+      "precision@5": 0.4,
+      "recall@5": 1.0,
+      "missing_from_catalog": [],
+      "status": "ok"
+    }
+  ],
+  "eval_type": "retrieval",
+  "timestamp": "2026-06-14T01:32:33.131340+00:00"
+}

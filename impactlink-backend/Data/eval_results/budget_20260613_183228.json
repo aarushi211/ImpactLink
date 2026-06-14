@@ -1,0 +1,41 @@
+{
+  "eval_type": "budget_logic",
+  "timestamp": "2026-06-14T01:32:28.684540+00:00",
+  "aggregate": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "pass_rate": 1.0
+  },
+  "results": [
+    {
+      "name": "Scenario: la_urban_forestry",
+      "status": "PASS",
+      "detail": "total=$85,000, items_sum=$85,000",
+      "total_requested": 85000
+    },
+    {
+      "name": "Scenario: rural_youth_tutoring_al",
+      "status": "PASS",
+      "detail": "total=$62,000, items_sum=$62,000",
+      "total_requested": 62000
+    },
+    {
+      "name": "Scenario: sf_food_security",
+      "status": "PASS",
+      "detail": "total=$95,000, items_sum=$95,000",
+      "total_requested": 95000
+    },
+    {
+      "name": "Extreme Over-Budget Request (Stress Test)",
+      "status": "PASS",
+      "detail": "Labor cap $37,500 is too low to support any staff at $32.0/hr."
+    },
+    {
+      "name": "Low Wage Region Compliance",
+      "status": "PASS",
+      "detail": "total=$25,000, items_sum=$25,000",
+      "total_requested": 25000
+    }
+  ]
+}
