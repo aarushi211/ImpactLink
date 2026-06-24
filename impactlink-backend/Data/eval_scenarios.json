@@ -1,107 +1,110 @@
 {
-  "version": "1.0",
-  "description": "Hand-crafted NGO scenarios for repeatable pipeline evaluation. Grants are realistic metadata (not GPT proposals).",
+  "version": "2.0",
+  "description": "Hand-crafted NGO scenarios aligned with grants in the PostgreSQL grants table (CA-focused). Regenerate catalog: python scripts/sync_eval_grants_from_db.py",
   "scenarios": [
     {
       "id": "la_urban_forestry",
-      "name": "East LA Urban Tree Canopy",
-      "description": "Community forestry NGO addressing heat island effects in disadvantaged LA neighborhoods.",
+      "name": "East LA Urban Greening (Lower LA River)",
+      "description": "Community greening NGO expanding tree canopy and open space in disadvantaged LA neighborhoods — targets RMC / Prop 4 grants in DB.",
       "slots": {
         "org_name": "Green Future Los Angeles",
-        "mission": "Expand urban tree canopy and environmental resilience in underserved Los Angeles communities.",
-        "problem": "East Los Angeles census tracts average 12% tree canopy vs 25% citywide. Summer surface temperatures exceed 105°F, raising heat-related ER visits 18% above the county average.",
-        "activities": "1) Plant 500 native trees on public rights-of-way (led by arborist, weekly planting crews). 2) Train 40 resident stewards in tree maintenance (monthly workshops). 3) Install 25 hydration stations at planting sites. 4) Conduct quarterly canopy assessments with UCLA extension partner.",
-        "beneficiaries": "2,400 residents in Boyle Heights and East LA, primarily Latino households (78%) with median income $42,000. Outreach via schools, community centers, and door-to-door canvassing.",
-        "geography": "Boyle Heights and East Los Angeles, ZIP codes 90033, 90063, Los Angeles County, California",
-        "budget_total": "$85,000 total: personnel 55% ($46,750), materials/trees 25% ($21,250), equipment 10% ($8,500), outreach 10% ($8,500)",
-        "kpis": "1) 500 trees planted by month 18. 2) 70% 1-year survival rate. 3) 15% reduction in peak afternoon temperature at 10 monitoring sites. 4) 40 trained stewards completing certification. 5) 800 residents attending outreach events.",
-        "sustainability": "City of LA Urban Forestry will adopt maintenance for public ROW trees. Steward network continues via existing Parks afterschool contract ($12,000/year). CAL FIRE seed funding sought for expansion.",
-        "org_capacity": "Founded 2016, planted 1,200 trees across South LA with 82% survival. Executive Director is ISA-certified arborist. Partners: UCLA Extension, LA Parks, Eastside Green Coalition."
+        "mission": "Expand urban tree canopy, open space, and environmental resilience in underserved Los Angeles communities along the Lower LA River corridor.",
+        "problem": "East Los Angeles and Lower LA River adjacent communities average 12% tree canopy vs 25% countywide. Summer surface temperatures exceed 105°F. Disadvantaged communities lack equitable access to parks and green space.",
+        "activities": "1) Plant 500 native trees and shrubs on public rights-of-way and vacant lots. 2) Restore 2 acres of riparian buffer along the Lower LA River. 3) Train 40 resident stewards in tree maintenance. 4) Conduct quarterly habitat and canopy assessments with UCLA extension partner.",
+        "beneficiaries": "2,400 residents in Boyle Heights, Vernon, and Southeast LA, primarily Latino households (78%) in disadvantaged communities per CalEnviroScreen.",
+        "geography": "Lower Los Angeles River corridor, Boyle Heights and East LA, ZIP codes 90033, 90063, Los Angeles County, California",
+        "budget_total": "$150,000 total: personnel 50% ($75,000), materials/plants 30% ($45,000), equipment 12% ($18,000), outreach 8% ($12,000)",
+        "kpis": "1) 500 trees/shrubs planted by month 18. 2) 2 acres riparian habitat restored. 3) 70% 1-year plant survival. 4) 40 trained stewards certified. 5) 15% reduction in peak afternoon temperature at 8 monitoring sites.",
+        "sustainability": "LA County Parks adopts ROW maintenance. Steward network continues via Eastside Green Coalition ($15,000/year). Pursue RMC Prop 4 follow-on funding for phase 2.",
+        "org_capacity": "Founded 2016; restored 1,200 trees across South LA with 82% survival. ED is ISA-certified arborist. Partners: UCLA Extension, Eastside Green Coalition, local RMC stakeholders."
       },
       "grant": {
-        "id": "eval_urb_forestry_ca",
-        "title": "California Urban and Community Forestry Grant Program",
-        "agency": "CAL FIRE",
-        "description": "Funds tree planting, urban forest management, and community engagement projects that increase canopy cover, reduce urban heat island effect, and improve air quality in disadvantaged communities. Priority for environmental justice census tracts and projects with measurable canopy and temperature outcomes.",
-        "focus_areas": "urban forestry, heat island mitigation, canopy expansion, environmental justice, community stewardship, disadvantaged communities",
-        "max_award_amount": 100000,
-        "min_award_amount": 25000,
-        "close_date": "2026-09-30"
+        "id": "154743",
+        "grant_id": "154743",
+        "title": "Proposition 4 – Wildfire and Forest Resilience",
+        "agency": "San Gabriel and Lower Los Angeles Rivers and Mountains Conservancy",
+        "description": "The RMC awards grants toward creating open space, habitat restoration, expanding green space in disadvantaged communities, and protecting watersheds of the San Gabriel and Lower Los Angeles Rivers. Projects should demonstrate community benefit, habitat value, and resilience outcomes.",
+        "focus_areas": "open space, habitat restoration, green space, disadvantaged communities, Lower Los Angeles River, watershed protection, forest resilience",
+        "max_award_amount": 2000000,
+        "min_award_amount": 50000,
+        "close_date": "Ongoing"
       },
       "budget": {
-        "max_award": 85000
+        "max_award": 150000
       },
       "retrieval": {
-        "query": "Urban tree planting and heat island mitigation in Los Angeles disadvantaged communities",
-        "relevant_grant_ids": ["eval_urb_forestry_ca", "eval_urban_green_la"]
+        "query": "Urban tree planting green space habitat restoration Lower Los Angeles River disadvantaged communities",
+        "relevant_grant_ids": ["154743", "79595", "79610", "79601", "8237", "149622"]
       }
     },
     {
-      "id": "rural_youth_tutoring_al",
-      "name": "Rural Alabama After-School Tutoring",
-      "description": "Small education nonprofit delivering literacy tutoring in rural Alabama counties.",
+      "id": "ca_library_community",
+      "name": "CA Library Community Literacy Program",
+      "description": "Public library district running collaborative literacy and community impact programs — targets LSTA Community Impact Grants in DB.",
       "slots": {
-        "org_name": "Rural Reach Education Cooperative",
-        "mission": "Close literacy gaps for K-8 students in persistently underserved rural Alabama school districts.",
-        "problem": "In Wilcox and Lowndes Counties, 68% of 3rd graders read below grade level vs 38% statewide. Teacher vacancy rates exceed 22%, limiting after-school support.",
-        "activities": "1) Deliver 3x/week small-group tutoring (1:4 ratio) at 4 school sites. 2) Train 20 volunteer tutors using evidence-based Orton-Gillingham modules. 3) Distribute 600 take-home literacy kits. 4) Host monthly family literacy nights.",
-        "beneficiaries": "320 K-8 students across 4 schools; 85% qualify for free/reduced lunch; 72% Black students in rural communities with limited broadband.",
-        "geography": "Wilcox County and Lowndes County, Alabama (rural Black Belt region)",
-        "budget_total": "$62,000 total: personnel 65% ($40,300), curriculum/materials 20% ($12,400), travel 8% ($4,960), admin 7% ($4,340)",
-        "kpis": "1) 75% of students gain ≥1 reading level on DIBELS by May 2027. 2) 80% tutor retention through year 1. 3) 600 kits distributed. 4) 200 families attend literacy nights. 5) Average attendance 85% at tutoring sessions.",
-        "sustainability": "District will embed tutor stipends into Title I after-school budget ($18,000/year). United Way pledged $10,000 annual match. Parent volunteer pipeline sustains literacy nights.",
-        "org_capacity": "Operating since 2019; served 890 students with avg 1.2 grade-level reading gain. ED is former district reading specialist. Partners: AL State Dept of Education regional office, local churches, Auburn extension."
+        "org_name": "Riverside County Library Literacy Collaborative",
+        "mission": "Expand equitable access to literacy, digital skills, and community learning programs through California public libraries.",
+        "problem": "In Riverside County, 42% of adults struggle with basic literacy and 28% of households lack reliable broadband. Rural branches serve communities 20+ miles from workforce training centers.",
+        "activities": "1) Deliver 3x/week adult literacy tutoring at 5 library branches. 2) Launch bilingual family literacy nights (English/Spanish). 3) Distribute 800 take-home literacy kits. 4) Partner with local schools for after-school reading mentors.",
+        "beneficiaries": "1,200 adults and 600 K-5 students across 5 library branches; 70% low-income; 55% Latino; includes rural Coachella Valley communities.",
+        "geography": "Riverside County, California — Coachella, Indio, and Mecca library branches",
+        "budget_total": "$95,000 total: personnel 60% ($57,000), curriculum/materials 22% ($20,900), technology 10% ($9,500), outreach 8% ($7,600)",
+        "kpis": "1) 75% of adult learners improve ≥1 literacy level within 12 months. 2) 600 students attend after-school reading sessions. 3) 800 kits distributed. 4) 250 families attend literacy nights. 5) 85% average program attendance.",
+        "sustainability": "County library general fund commits $25,000/year. Friends of the Library annual gala raises $12,000. Volunteer tutor pipeline of 45 active tutors.",
+        "org_capacity": "Library system serves 1.5M residents; 2019-2024 literacy pilot reached 2,100 adults. Program lead is credentialed reading specialist. Partners: CA State Library, local school districts, United Way Inland Empire."
       },
       "grant": {
-        "id": "eval_rural_literacy_fed",
-        "title": "Education Innovation and Research: Rural Education Research",
-        "agency": "U.S. Department of Education",
-        "description": "Supports innovative approaches to improve academic outcomes for students in rural LEAs, including literacy interventions, after-school programming, and evidence-based tutoring models with measurable reading proficiency gains.",
-        "focus_areas": "rural education, literacy, after-school tutoring, K-8 reading proficiency, disadvantaged students, evidence-based instruction",
-        "max_award_amount": 75000,
-        "min_award_amount": 15000,
-        "close_date": "2026-11-15"
-      },
-      "budget": {
-        "max_award": 62000
-      },
-      "retrieval": {
-        "query": "K-12 literacy tutoring and educational equity in rural Alabama",
-        "relevant_grant_ids": ["eval_rural_literacy_fed", "eval_rural_afterschool"]
-      }
-    },
-    {
-      "id": "sf_food_security",
-      "name": "SF Food Pantry Expansion",
-      "description": "Food security nonprofit scaling culturally responsive pantry services in San Francisco.",
-      "slots": {
-        "org_name": "Bay Area Food Justice Network",
-        "mission": "Eliminate food insecurity for low-income families in San Francisco through culturally responsive pantry and nutrition programs.",
-        "problem": "In the Tenderloin and Visitacion Valley, 1 in 4 households experience food insecurity. SNAP enrollment gaps leave 3,200 eligible families without benefits assistance.",
-        "activities": "1) Operate weekly pop-up pantries at 3 sites (6,000 grocery boxes/month). 2) Provide SNAP enrollment assistance (bilingual staff). 3) Offer nutrition workshops with local chefs. 4) Coordinate with SF-Marin Food Bank for procurement.",
-        "beneficiaries": "4,500 individuals annually across 1,200 households; 64% Latino, 22% Asian American, 41% seniors; primarily renters earning <200% FPL.",
-        "geography": "Tenderloin, Visitacion Valley, and Bayview-Hunters Point, San Francisco, California",
-        "budget_total": "$95,000 total: personnel 50% ($47,500), food procurement 35% ($33,250), rent/equipment 10% ($9,500), outreach 5% ($4,750)",
-        "kpis": "1) 72,000 grocery boxes distributed in 12 months. 2) 900 households enrolled in SNAP. 3) 65% of participants report improved food security (USDA 6-item scale). 4) 48 nutrition workshops with 1,200 attendees.",
-        "sustainability": "SF Human Services Commission multi-year pantry contract ($55,000/year). Corporate sponsorship from local grocers ($20,000/year). Volunteer corps of 150 reduces labor costs.",
-        "org_capacity": "Serving SF since 2014; distributed 580,000 meals last year. Bilingual staff (English, Spanish, Cantonese). Partners: SF-Marin Food Bank, SF HSA, GLIDE."
-      },
-      "grant": {
-        "id": "eval_food_security_ca",
-        "title": "California Nutrition Incentive Program — Community Food Access",
-        "agency": "California Department of Food and Agriculture",
-        "description": "Funds community-based organizations expanding access to nutritious food in low-income communities. Prioritizes culturally responsive distribution, SNAP linkage, and measurable food security outcomes.",
-        "focus_areas": "food security, nutrition access, SNAP enrollment, low-income communities, culturally responsive services, food justice",
-        "max_award_amount": 100000,
-        "min_award_amount": 30000,
-        "close_date": "2026-08-01"
+        "id": "86477",
+        "grant_id": "86477",
+        "title": "2025 – 2026 LSTA Community Impact Grants",
+        "agency": "CA State Library",
+        "description": "Funding for libraries and eligible organizations to support local and collaborative projects that address community needs and align with community aspirations. Projects should demonstrate measurable community impact, partnership, and alignment with literacy or community development goals.",
+        "focus_areas": "community impact, libraries, literacy, collaborative projects, local needs, California communities",
+        "max_award_amount": 250000,
+        "min_award_amount": 10000,
+        "close_date": "Ongoing"
       },
       "budget": {
         "max_award": 95000
       },
       "retrieval": {
-        "query": "Food pantry expansion food insecurity SNAP enrollment San Francisco low-income",
-        "relevant_grant_ids": ["eval_food_security_ca", "eval_hunger_relief_sf"]
+        "query": "Library community literacy collaborative programs California LSTA community impact",
+        "relevant_grant_ids": ["86477"]
+      }
+    },
+    {
+      "id": "la_community_resilience",
+      "name": "Baldwin Hills Community Climate Resilience",
+      "description": "Community nonprofit serving disadvantaged LA neighborhoods — targets Baldwin Hills Conservancy consolidated grants in DB.",
+      "slots": {
+        "org_name": "South LA Climate and Community Alliance",
+        "mission": "Build climate resilience and community wellbeing in disadvantaged Los Angeles neighborhoods through parks, green infrastructure, and resident leadership.",
+        "problem": "Baldwin Hills and adjacent South LA communities face extreme heat, limited park access, and legacy pollution burdens. Fewer than 3 acres of parkland per 1,000 residents in target neighborhoods.",
+        "activities": "1) Develop 1.5-acre community green space with native landscaping and shade structures. 2) Train 25 resident climate ambassadors. 3) Host quarterly community resilience workshops. 4) Coordinate with Baldwin Hills Conservancy on habitat connectivity.",
+        "beneficiaries": "3,100 residents in Baldwin Hills, View Park, and Leimert Park; 85% disadvantaged community members; 62% Black, 22% Latino households.",
+        "geography": "Baldwin Hills, View Park-Windsor Hills, and Leimert Park, Los Angeles County, California",
+        "budget_total": "$120,000 total: personnel 48% ($57,600), construction/materials 35% ($42,000), outreach 12% ($14,400), admin 5% ($6,000)",
+        "kpis": "1) 1.5 acres green space completed by month 15. 2) 25 certified climate ambassadors. 3) 600 residents attend workshops. 4) 20% increase in park utilization. 5) Document 10°F shade temperature reduction at peak hours.",
+        "sustainability": "LA County Parks maintenance agreement for completed green space. Ambassador network sustained through existing CBO coalition ($18,000/year in-kind). BH Conservancy partnership for phase 2 habitat links.",
+        "org_capacity": "Operating since 2018; completed 4 community greening projects in South LA. ED has 12 years environmental justice organizing experience. Partners: Baldwin Hills Conservancy, Community Coalition, LA County Public Health."
+      },
+      "grant": {
+        "id": "149622",
+        "grant_id": "149622",
+        "title": "BH UWC Consolidated Grant Program",
+        "agency": "Baldwin Hills Conservancy",
+        "description": "The Consolidated Grant Program prioritizes projects that directly and meaningfully benefit Disadvantaged Communities and Vulnerable Populations. Projects should align with the BH UWC Community and Climate Resilience Framework, including habitat, parks, and community wellbeing outcomes.",
+        "focus_areas": "disadvantaged communities, climate resilience, Baldwin Hills, community benefit, habitat, parks, vulnerable populations",
+        "max_award_amount": 500000,
+        "min_award_amount": 25000,
+        "close_date": "Ongoing"
+      },
+      "budget": {
+        "max_award": 120000
+      },
+      "retrieval": {
+        "query": "Disadvantaged communities climate resilience parks green space Baldwin Hills Los Angeles",
+        "relevant_grant_ids": ["149622", "154743", "129153"]
       }
     }
   ]

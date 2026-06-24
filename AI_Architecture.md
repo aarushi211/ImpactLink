@@ -1,6 +1,8 @@
 # 🏗️ ImpactLink: System Architecture & AI Topology
 
-This document outlines the architectural decisions, data flows, and state management paradigms powering ImpactLink. The system is designed around a core philosophy: **LLMs are probabilistic, but enterprise software must be deterministic.**
+This document outlines the architectural decisions, data flows, and state management paradigms powering ImpactLink. The core philosophy: **LLMs are probabilistic, but enterprise software must be deterministic.**
+
+**See also:** [Backend setup](./impactlink-backend/DEVELOPMENT.md) · [Evaluation](./impactlink-backend/EVALUATION.md) · [Project README](./README.md)
 
 ---
 
