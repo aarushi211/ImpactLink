@@ -108,7 +108,19 @@ class ScoringDecision(BaseModel):
 - **escalate** — max retries exhausted; flagged for human review
 
 ### 2.6 CoherenceAgent
-After all sections draft, `node_coherence_check` runs `CoherenceAgent.check()` across the full proposal. It detects cross-section contradictions (beneficiary counts, budget alignment, KPI mismatches) and applies up to 2 targeted fixes before `draft_review`.
+After all sections draft, `node_coherence_check` runs `CoherenceAgent.check()` across the full proposal before `draft_review`.
+
+**Detection method (LLM holistic review, not programmatic diff):**
+1. Each section is truncated to ~500 characters in `_sections_digest()` and concatenated into one prompt.
+2. A single Groq call (`llama-3.3-70b-versatile`, JSON mode) compares all sections together and returns a `CoherenceReport` with up to 5 structured issues (beneficiary count mismatches, budget vs. narrative gaps, KPI/goal misalignment, etc.).
+3. If parsing fails, the agent fails open (`coherent=True`) so drafting is not blocked.
+
+**Fix loop (max 2):**
+- `CoherenceAgent.top_fixes()` sorts issues by severity (`high` → `medium` → `low`) and takes the top 2.
+- For each issue, `targeted_retry_rewrite()` revises only the flagged section using the issue text as feedback.
+- Decisions are appended to `agent_trace` for demo/debug visibility.
+
+**Trade-offs:** This is one cheap cross-section pass after parallel drafting, but it is probabilistic — it can miss subtle contradictions or hallucinate false positives. A future upgrade could add deterministic checks (e.g. regex on dollar amounts, beneficiary counts) before the LLM pass.
 
 ## 3. The Hybrid RAG Pipeline (Supabase + pgvector)
 Standard Semantic RAG is insufficient for grant matching, as funding relies heavily on hard constraints (e.g., geographic boundaries, maximum award ceilings).

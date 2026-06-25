@@ -48,6 +48,23 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 docker compose up --build   # from repo root, port 8081
 ```
 
+**Note:** `docker-compose.yml` starts the **backend only** (port 8081). The frontend service block is commented out because the live demo runs on [Firebase Hosting](https://impactlink-cbfc5.web.app). For local full-stack development, run the frontend separately:
+
+```bash
+cd impactlink-frontend && npm install && npm start   # http://localhost:3000
+```
+
+Set `REACT_APP_API_URL=http://localhost:8000` in `impactlink-frontend/.env` (or `http://localhost:8081` if using Docker backend).
+
+### CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
+
+- `python scripts/evaluate_logic.py --offline` — deterministic budget compliance (no API keys)
+- `python scripts/evaluate_retrieval.py` — offline keyword retrieval against `Data/eval_grants_catalog.json`
+
+Full LLM-backed evals (`evaluate_all.py --with-pipeline`) run locally; see [EVALUATION.md](./EVALUATION.md).
+
 ---
 
 ## Codebase map

@@ -34,7 +34,11 @@ Scenarios: `Data/eval_scenarios.json` (3 hand-crafted NGO profiles aligned to gr
 ```bash
 cd impactlink-backend
 
-# Fast: budget + offline retrieval (no LLM)
+# CI-safe: deterministic budget + offline retrieval (no API keys)
+python scripts/evaluate_logic.py --offline
+python scripts/evaluate_retrieval.py
+
+# Fast: budget + offline retrieval (no LLM pipeline)
 python scripts/evaluate_all.py
 
 # Live retrieval (needs DATABASE_URL + GROQ_API_KEY)
