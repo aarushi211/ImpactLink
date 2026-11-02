@@ -46,18 +46,6 @@ export default function useUpload() {
         const title    = fileBaseName || orgName;
 
         try {
-          const initialSections = {};
-          if (data.proposal?.raw_text) {
-            initialSections["uploaded_content"] = {
-              title: "Original Proposal",
-              content: data.proposal.raw_text,
-              score: 0,
-              retries: 0,
-              flagged: false,
-              approved: true
-            };
-          }
-
           const res = await api.post("/api/work/drafts", {
             title,
             grant_title:      "",
@@ -65,8 +53,8 @@ export default function useUpload() {
             agency:           "",
             proposal_context: data.proposal,
             matches_id:       matchIds,
-            sections:         initialSections,
-            section_order:    data.proposal?.raw_text ? ["uploaded_content"] : [],
+            sections:         {},
+            section_order:    [],
           });
           const saved = res.data;
           setSavedId(saved.id);

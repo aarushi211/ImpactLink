@@ -4,11 +4,16 @@ from langgraph.graph import StateGraph, END
 from langgraph.types import interrupt
 from state.proposal_state import ProposalState
 from agents.vocab_extractor import extract_funder_vocab
-from agents.gap_analysis_agent import analyze_gaps, apply_user_adjustments
+from agents.gap_analysis_agent import (
+    analyze_gaps,
+    apply_user_adjustments,
+    validate_user_additions,
+)
 from agents.rewriter_agent import rewrite_section, retry_rewrite
 from agents.scoring_agent import score_section, needs_retry, is_flagged, MAX_RETRIES
-from utils.diff import diff_sections
+from utils.diff import diff_sections, normalize_section_headings
 import concurrent.futures
+import contextvars
 import logging
 from utils.metrics import metrics_collector
 
@@ -37,7 +42,7 @@ def node_analyze_gaps(state: ProposalState) -> dict:
             grant=state["grant"],
             funder_vocab=state["funder_vocab"],
         )
-    return {"analysis": analysis}
+    return {"analysis": analysis, "gate": "gap_review"}
 
 
 def node_gap_review(state: ProposalState) -> dict:
@@ -65,14 +70,13 @@ def node_gap_review(state: ProposalState) -> dict:
 
     # Execution resumes here after the user submits
     confirmed_gaps      = user_input.get("confirmed_gaps", [])
-    user_additions      = user_input.get("user_additions", "")
+    user_additions      = validate_user_additions(user_input.get("user_additions", ""))
     sections_to_rewrite = user_input.get("sections_to_rewrite",
                                          state["analysis"].get("sections_to_rewrite", []))
-
     updated_analysis = apply_user_adjustments(
         state["analysis"], confirmed_gaps, user_additions, sections_to_rewrite
     )
-    return {"analysis": updated_analysis}
+    return {"analysis": updated_analysis, "gate": "none"}
 
 
 def node_rewrite_sections(state: ProposalState) -> dict:
@@ -87,6 +91,7 @@ def node_rewrite_sections(state: ProposalState) -> dict:
         profile             = state["profile"]
         funder_vocab        = state["funder_vocab"]
         analysis            = state["analysis"]
+        user_additions      = validate_user_additions(analysis.get("user_additions", ""))
 
         # Preserve unrewritten sections
         new_sections = {}
@@ -109,7 +114,8 @@ def node_rewrite_sections(state: ProposalState) -> dict:
             relevant_gaps = gfs(analysis, section_key)
 
             content     = rewrite_section(section_key, title, original,
-                                          relevant_gaps, funder_vocab, grant, profile)
+                                          relevant_gaps, funder_vocab, grant, profile,
+                                          user_additions)
             retry_count = new_retry_counts.get(section_key, 0)
             last_score  = 0
             feedback    = ""
@@ -120,7 +126,9 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 feedback   = result["feedback"]
                 if not needs_retry(last_score, retry_count):
                     break
-                content     = retry_rewrite(title, content, feedback, funder_vocab)
+                content     = retry_rewrite(
+                    title, content, feedback, funder_vocab, user_additions
+                )
                 retry_count += 1
 
             section_duration = _time.perf_counter() - section_start
@@ -139,7 +147,10 @@ def node_rewrite_sections(state: ProposalState) -> dict:
             }
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-            futures = {ex.submit(rewrite_one, k): k for k in sections_to_rewrite}
+            futures = {
+                ex.submit(contextvars.copy_context().run, rewrite_one, key): key
+                for key in sections_to_rewrite
+            }
             for future in concurrent.futures.as_completed(futures):
                 key, result = future.result()
                 new_sections[key]       = result
@@ -147,8 +158,9 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 if result["flagged"] and key not in new_flagged:
                     new_flagged.append(key)
 
-        revised_text = {k: v["content"] for k, v in new_sections.items()
-                        if k in sections_to_rewrite}
+        new_sections = normalize_section_headings(new_sections)
+
+        revised_text = {k: v["content"] for k, v in new_sections.items()}
         diffs = diff_sections(original_text, revised_text)
 
         node_meta["sections_rewritten"] = len(sections_to_rewrite)
@@ -158,6 +170,7 @@ def node_rewrite_sections(state: ProposalState) -> dict:
         "retry_counts":     new_retry_counts,
         "flagged_sections": new_flagged,
         "diffs":            diffs,
+        "gate":             "draft_review",
     }
 
 
@@ -186,7 +199,7 @@ def node_draft_review(state: ProposalState) -> dict:
         if key in updated_sections:
             updated_sections[key]["content"] = edited_text
 
-    return {"sections": updated_sections}
+    return {"sections": updated_sections, "gate": "final_save"}
 
 
 def node_final_save(state: ProposalState) -> dict:
@@ -202,7 +215,7 @@ def node_final_save(state: ProposalState) -> dict:
     })
 
     # Nothing to update — user just confirmed
-    return {}
+    return {"gate": "complete"}
 
 
 # ── Graph assembly ─────────────────────────────────────────────────────────

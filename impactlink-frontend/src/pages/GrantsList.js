@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Nav, GrantCard, SectionHeader, EmptyState, CollabCard } from "../components";
 import useGrants from "../hooks/useGrants";
 import useWorkStore from "../hooks/useWorkStore";
+import useUpload from "../hooks/useUpload";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { removeDemoGrants } from "../services/grants";
@@ -35,7 +36,9 @@ function ViewToggle({ view, onChange }) {
 export default function GrantsList() {
   const { grants, proposal, hasRealData, loading: grantsLoading } = useGrants();
   const { profile } = useAuth();
-  const { proposals: savedProposals } = useWorkStore();
+  const { proposals: savedProposals, refresh: refreshWorkStore } = useWorkStore();
+  const { upload, loading: uploadLoading, error: uploadError } = useUpload();
+  const uploadInputRef = useRef(null);
 
   const [view,          setView]          = useState("grants");
   const [search,        setSearch]        = useState("");
@@ -47,15 +50,15 @@ export default function GrantsList() {
   const [collabFetched, setCollabFetched] = useState(false);
 
   // ── Saved proposal match selector ─────────────────────────────────────────
-  const [selectorOpen,       setSelectorOpen]       = useState(false);
   const [selectedProposalId, setSelectedProposalId] = useState(null);
   const [rematchGrants,      setRematchGrants]      = useState(null);  // null = use base grants
   const [rematchLoading,     setRematchLoading]     = useState(false);
   const [rematchError,       setRematchError]       = useState(null);
+  const [uploadedProposalName, setUploadedProposalName] = useState("");
 
-  // Only show selector when logged in and have saved proposals with matches
+  // Saved drafts and builds can both be matched against current grant data.
   const matchableProposals = savedProposals.filter(
-    p => p.proposal_context && (p.matches_id?.length > 0 || p.proposal_context)
+    p => p.proposal_context
   );
 
   const selectedSavedProposal = matchableProposals.find(p => p.id === selectedProposalId) || null;
@@ -66,12 +69,12 @@ export default function GrantsList() {
       setSelectedProposalId(null);
       setRematchGrants(null);
       setRematchError(null);
-      setSelectorOpen(false);
+      setUploadedProposalName("");
       return;
     }
 
     setSelectedProposalId(item.id);
-    setSelectorOpen(false);
+    setUploadedProposalName("");
     setRematchError(null);
 
     // If the saved item has stored matches, load them from session grants pool
@@ -85,7 +88,7 @@ export default function GrantsList() {
       // Sort by original match order
       matched.sort((a, b) => ids.indexOf(String(a.grant_id)) - ids.indexOf(String(b.grant_id)));
 
-      if (matched.length > 0) {
+      if (matched.length === ids.length) {
         setRematchGrants(matched);
         return;
       }
@@ -113,6 +116,51 @@ export default function GrantsList() {
         setRematchLoading(false);
       }
     }
+  };
+
+  const handleSavedProposalChange = (event) => {
+    const item = matchableProposals.find(p => p.id === event.target.value);
+    if (item) {
+      handleSelectSavedProposal(item);
+    } else {
+      setSelectedProposalId(null);
+      setRematchGrants(null);
+      setRematchError(null);
+      setUploadedProposalName("");
+    }
+  };
+
+  const handleProposalFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!/\.(pdf|docx)$/i.test(file.name)) {
+      setRematchError("Choose a PDF or DOCX proposal.");
+      return;
+    }
+
+    setRematchError(null);
+    sessionStorage.removeItem("upload_draft_id");
+    const uploaded = await upload(file);
+    if (!uploaded) return;
+
+    let uploadedMatches;
+    try {
+      uploadedMatches = removeDemoGrants(
+        JSON.parse(sessionStorage.getItem("matches") || "[]")
+      );
+    } catch (error) {
+      console.error("Could not load uploaded proposal matches.", error);
+      setRematchError("The proposal was uploaded, but its grant matches could not be loaded.");
+      return;
+    }
+
+    setUploadedProposalName(file.name.replace(/\.(pdf|docx)$/i, ""));
+    setRematchGrants(uploadedMatches);
+    setSelectedProposalId(sessionStorage.getItem("upload_draft_id") || null);
+    sessionStorage.setItem("grants_searchMode", "filter");
+    setSearchMode("filter");
+    await refreshWorkStore();
   };
 
   // ── Agentic topic search — persisted in sessionStorage so results survive navigation ──
@@ -238,80 +286,81 @@ export default function GrantsList() {
           title={isGrants ? "Matched Grants" : "NGO Collaborators"}
           subtitle={
             isGrants
-              ? (filteredGrants.length + " grant opportunities" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : hasRealData ? " matched to your proposal" : ""))
+              ? (filteredGrants.length + " grant opportunities" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : uploadedProposalName ? ` for "${uploadedProposalName}"` : hasRealData ? " matched to your proposal" : ""))
               : collabFetched
                 ? (filteredCollabs.length + " NGOs with aligned mission" + (profile ? " — excluding your org" : ""))
                 : "Mission-aligned NGOs for joint applications & partnerships"
           }
         />
 
-        {/* ── Saved Proposal Selector (grants view only, logged-in only) ────────── */}
-        {isGrants && profile && matchableProposals.length > 0 && (
+        {isGrants && (
           <div style={{
             background: "var(--bg-card)",
-            border: `1px solid ${selectedSavedProposal ? "var(--accent)" : "var(--border)"}`,
-            borderRadius: 12, padding: "12px 16px", marginBottom: 18,
-            transition: "border-color 0.2s",
+            border: "1px solid var(--border)",
+            borderRadius: 12, padding: "14px 16px", marginBottom: 18,
+            display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 13 }}>◎</span>
-              <span style={{ color: "#bbb", fontSize: 13, fontWeight: 600, flex: 1 }}>
-                {selectedSavedProposal
-                  ? <>Matching for: <span style={{ color: "var(--accent)" }}>{selectedSavedProposal.title}</span></>
-                  : "Match by saved proposal"}
-              </span>
-              {selectedSavedProposal && (
-                <button
-                  onClick={() => { setSelectedProposalId(null); setRematchGrants(null); }}
-                  style={{ background: "none", border: "none", color: "#555",
-                    cursor: "pointer", fontSize: 12, padding: "2px 6px",
-                    borderRadius: 5, transition: "color 0.15s" }}
-                  onMouseEnter={e => e.target.style.color = "var(--red)"}
-                  onMouseLeave={e => e.target.style.color = "#555"}
-                >Clear ✕</button>
-              )}
+            <label htmlFor="saved-proposal-select" style={{ color: "#bbb", fontSize: 13, fontWeight: 600 }}>
+              Match a proposal
+            </label>
+            <select
+              id="saved-proposal-select"
+              aria-label="Select a saved proposal"
+              value={selectedProposalId || ""}
+              onChange={handleSavedProposalChange}
+              disabled={!profile || matchableProposals.length === 0 || uploadLoading || rematchLoading}
+              style={{
+                flex: "1 1 240px", minWidth: 200,
+                background: "#111122", border: "1px solid var(--border)",
+                color: selectedProposalId ? "#fff" : "var(--text-dim)",
+                padding: "10px 12px", borderRadius: 8, fontSize: 13,
+                outline: "none",
+              }}
+            >
+              <option value="">
+                {profile
+                  ? matchableProposals.length ? "Choose an uploaded or saved proposal…" : "No saved proposals yet"
+                  : "Sign in to select a saved proposal"}
+              </option>
+              {matchableProposals.map(item => (
+                <option key={item.id} value={item.id}>{item.title}</option>
+              ))}
+            </select>
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              hidden
+              onChange={handleProposalFile}
+            />
+            <button
+              type="button"
+              onClick={() => uploadInputRef.current?.click()}
+              disabled={uploadLoading || rematchLoading}
+              style={{
+                background: "var(--accent)", border: "none", color: "#fff",
+                padding: "10px 16px", borderRadius: 8, fontSize: 13,
+                fontWeight: 700, cursor: uploadLoading || rematchLoading ? "wait" : "pointer",
+                opacity: uploadLoading || rematchLoading ? 0.7 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {uploadLoading ? "Uploading & matching…" : "Upload proposal"}
+            </button>
+            {selectedProposalId && (
               <button
-                onClick={() => setSelectorOpen(o => !o)}
-                style={{
-                  background: selectorOpen ? "var(--accent)" : "#1a1a2e",
-                  border: `1px solid ${selectorOpen ? "var(--accent)" : "var(--border)"}`,
-                  color: selectorOpen ? "#fff" : "#888",
-                  padding: "5px 12px", borderRadius: 7, fontSize: 12,
-                  fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+                type="button"
+                onClick={() => {
+                  setSelectedProposalId(null);
+                  setRematchGrants(null);
+                  setRematchError(null);
+                  setUploadedProposalName("");
                 }}
-              >{selectorOpen ? "Cancel" : "Choose ▾"}</button>
-            </div>
-
-            {/* Dropdown list */}
-            {selectorOpen && (
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                {matchableProposals.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelectSavedProposal(item)}
-                    style={{
-                      background: selectedProposalId === item.id ? "var(--accent)11" : "#111122",
-                      border: `1px solid ${selectedProposalId === item.id ? "var(--accent)" : "#1e1e30"}`,
-                      color: selectedProposalId === item.id ? "var(--accent)" : "#ccc",
-                      borderRadius: 8, padding: "9px 14px",
-                      textAlign: "left", cursor: "pointer",
-                      fontSize: 13, fontWeight: 600,
-                      display: "flex", alignItems: "center", gap: 10,
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={e => { if (selectedProposalId !== item.id) e.currentTarget.style.borderColor = "var(--accent)"; }}
-                    onMouseLeave={e => { if (selectedProposalId !== item.id) e.currentTarget.style.borderColor = "#1e1e30"; }}
-                  >
-                    <span style={{ fontSize: 14 }}>{item._type === "build" ? "✦" : "✍"}</span>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {item.title}
-                    </span>
-                    <span style={{ color: "#444", fontSize: 11, flexShrink: 0 }}>
-                      {item.matches_id?.length > 0 ? `${item.matches_id.length} saved matches` : "Live re-match"}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                style={{ background: "none", border: "none", color: "#888",
+                  cursor: "pointer", fontSize: 12, padding: "6px" }}
+              >
+                Clear
+              </button>
             )}
 
             {/* Loading / error states */}
@@ -325,8 +374,10 @@ export default function GrantsList() {
                 Running live grant match…
               </div>
             )}
-            {rematchError && (
-              <p style={{ color: "var(--red)", fontSize: 12, margin: "8px 0 0" }}>⚠ {rematchError}</p>
+            {(rematchError || uploadError) && (
+              <p role="alert" style={{ color: "var(--red)", fontSize: 12, margin: "8px 0 0", width: "100%" }}>
+                ⚠ {rematchError || uploadError}
+              </p>
             )}
           </div>
         )}

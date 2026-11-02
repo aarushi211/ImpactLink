@@ -72,7 +72,9 @@ class InstrumentedChatOpenAI(ChatOpenAI):
         return result
 
 
-def get_chat_model(*, json_mode: bool = False) -> InstrumentedChatOpenAI:
+def get_chat_model(
+    *, json_mode: bool = False, streaming: bool = False
+) -> InstrumentedChatOpenAI:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError(
@@ -84,6 +86,7 @@ def get_chat_model(*, json_mode: bool = False) -> InstrumentedChatOpenAI:
         "api_key": api_key,
         "timeout": 120,
         "max_retries": 2,
+        "streaming": streaming,
     }
     if json_mode:
         kwargs["model_kwargs"] = {"response_format": {"type": "json_object"}}

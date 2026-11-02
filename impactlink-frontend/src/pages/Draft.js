@@ -5,6 +5,7 @@ import useGrants from "../hooks/useGrants";
 import { useAuth } from "../context/AuthContext";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
+import api from "../services/api";
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -29,6 +30,23 @@ const SECTION_ICONS = {
   sustainability:          "08",
 };
 
+function getSectionTitle(key, section) {
+  if (key === "uploaded_content") return "Proposal";
+  return section?.title || key.replace(/_/g, " ").replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function normalizeSectionMap(sectionMap) {
+  const normalized = { ...(sectionMap || {}) };
+  if (normalized.uploaded_content && !normalized.proposal) {
+    normalized.proposal = {
+      ...normalized.uploaded_content,
+      title: "Proposal",
+    };
+    delete normalized.uploaded_content;
+  }
+  return normalized;
+}
+
 // ── Formatting toolbar actions ─────────────────────────
 function applyFormat(textarea, format) {
   if (!textarea) return null;
@@ -52,24 +70,557 @@ function applyFormat(textarea, format) {
   } else if (format === "h2") {
     newText = pre + `\n## ${sel}\n` + post;
     newCursorEnd = start + sel.length + 5;
+  } else if (format === "table") {
+    const table = sel
+      ? `| Item | Details |\n| --- | --- |\n| ${sel.replace(/\n/g, " | ")} |  |`
+      : "| Item | Details |\n| --- | --- |\n|  |  |";
+    newText = pre + table + post;
+    newCursorEnd = start + table.length;
   }
   return { newText, newCursorStart, newCursorEnd };
+}
+
+function createTextDiff(oldText, newText) {
+  const oldTokens = Array.from(oldText);
+  const newTokens = Array.from(newText);
+  let prefixLength = 0;
+  while (
+    prefixLength < oldTokens.length
+    && prefixLength < newTokens.length
+    && oldTokens[prefixLength] === newTokens[prefixLength]
+  ) {
+    prefixLength += 1;
+  }
+
+  let suffixLength = 0;
+  while (
+    suffixLength < oldTokens.length - prefixLength
+    && suffixLength < newTokens.length - prefixLength
+    && oldTokens[oldTokens.length - suffixLength - 1]
+      === newTokens[newTokens.length - suffixLength - 1]
+  ) {
+    suffixLength += 1;
+  }
+
+  const oldMiddle = oldTokens.slice(prefixLength, oldTokens.length - suffixLength);
+  const newMiddle = newTokens.slice(prefixLength, newTokens.length - suffixLength);
+  const middleDiff = [];
+  const appendMiddle = (type, text) => {
+    const previous = middleDiff[middleDiff.length - 1];
+    if (previous?.type === type) previous.text += text;
+    else middleDiff.push({ type, text });
+  };
+
+  if (!oldMiddle.length) {
+    if (newMiddle.length) appendMiddle("add", newMiddle.join(""));
+  } else if (!newMiddle.length) {
+    appendMiddle("remove", oldMiddle.join(""));
+  } else {
+    const maxDistance = oldMiddle.length + newMiddle.length;
+    const frontier = new Map([[1, 0]]);
+    const trace = [];
+    let completed = false;
+    let distance = 0;
+    let snapshotEntries = 0;
+
+    for (; distance <= maxDistance; distance += 1) {
+      snapshotEntries += frontier.size;
+      if (snapshotEntries > 4000000) break;
+      trace.push(new Map(frontier));
+      for (let diagonal = -distance; diagonal <= distance; diagonal += 2) {
+        let oldIndex;
+        if (
+          diagonal === -distance
+          || (diagonal !== distance
+            && (frontier.get(diagonal - 1) ?? -1) < (frontier.get(diagonal + 1) ?? -1))
+        ) {
+          oldIndex = frontier.get(diagonal + 1) ?? 0;
+        } else {
+          oldIndex = (frontier.get(diagonal - 1) ?? 0) + 1;
+        }
+        let newIndex = oldIndex - diagonal;
+        while (
+          oldIndex < oldMiddle.length
+          && newIndex < newMiddle.length
+          && oldMiddle[oldIndex] === newMiddle[newIndex]
+        ) {
+          oldIndex += 1;
+          newIndex += 1;
+        }
+        frontier.set(diagonal, oldIndex);
+        if (oldIndex >= oldMiddle.length && newIndex >= newMiddle.length) {
+          completed = true;
+          break;
+        }
+      }
+      if (completed) break;
+    }
+
+    if (!completed) {
+      appendMiddle("remove", oldMiddle.join(""));
+      appendMiddle("add", newMiddle.join(""));
+    } else {
+      const reversed = [];
+      let oldIndex = oldMiddle.length;
+      let newIndex = newMiddle.length;
+      for (let step = distance; step >= 0; step -= 1) {
+        const previousFrontier = trace[step];
+        const diagonal = oldIndex - newIndex;
+        const previousDiagonal = (
+          diagonal === -step
+          || (diagonal !== step
+            && (previousFrontier.get(diagonal - 1) ?? -1)
+              < (previousFrontier.get(diagonal + 1) ?? -1))
+        ) ? diagonal + 1 : diagonal - 1;
+        const previousOldIndex = previousFrontier.get(previousDiagonal) ?? 0;
+        const previousNewIndex = previousOldIndex - previousDiagonal;
+
+        while (oldIndex > previousOldIndex && newIndex > previousNewIndex) {
+          reversed.push({ type: "equal", text: oldMiddle[oldIndex - 1] });
+          oldIndex -= 1;
+          newIndex -= 1;
+        }
+        if (step > 0) {
+          if (oldIndex === previousOldIndex) {
+            reversed.push({ type: "add", text: newMiddle[newIndex - 1] });
+            newIndex -= 1;
+          } else {
+            reversed.push({ type: "remove", text: oldMiddle[oldIndex - 1] });
+            oldIndex -= 1;
+          }
+        }
+      }
+      reversed.reverse().forEach(segment => appendMiddle(segment.type, segment.text));
+    }
+  }
+
+  const result = [];
+  if (prefixLength) result.push({ type: "equal", text: oldTokens.slice(0, prefixLength).join("") });
+  result.push(...middleDiff);
+  if (suffixLength) result.push({ type: "equal", text: oldTokens.slice(oldTokens.length - suffixLength).join("") });
+
+  const merged = [];
+  const append = (type, text) => {
+    if (!text) return;
+    const previous = merged[merged.length - 1];
+    if (previous?.type === type) previous.text += text;
+    else merged.push({ type, text });
+  };
+  result.forEach(segment => append(segment.type, segment.text));
+  return merged;
+}
+
+function getVisibleDiffSegments(tokens, variant, fallback, includeRemovals = false) {
+  const source = typeof fallback === "string" ? fallback : "";
+  const visibleTypes = variant === "original"
+    ? new Set(["equal", "remove"])
+    : new Set(includeRemovals ? ["equal", "add", "remove"] : ["equal", "add"]);
+  const visibleSegments = Array.isArray(tokens)
+    ? tokens.filter(token => visibleTypes.has(token.type))
+    : [];
+  if (visibleSegments
+    .filter(token => variant === "original" ? token.type !== "add" : token.type !== "remove")
+    .map(token => token.text)
+    .join("") === source) {
+    return visibleSegments;
+  }
+  return source ? [{ type: "equal", text: source }] : [];
+}
+
+function sliceDiffSegments(segments, start, end) {
+  let offset = 0;
+  const result = [];
+  for (const segment of segments) {
+    const segmentEnd = offset + segment.text.length;
+    const from = Math.max(start, offset);
+    const to = Math.min(end, segmentEnd);
+    if (from < to) {
+      result.push({ type: segment.type, text: segment.text.slice(from - offset, to - offset) });
+    }
+    offset = segmentEnd;
+    if (offset >= end) break;
+  }
+  return result;
+}
+
+function composeRevisedDiffTokens(draftedTokens, editTokens, draftedText, revisedText) {
+  const sourceTokens = Array.isArray(draftedTokens)
+    ? draftedTokens.filter(token => token.type === "equal" || token.type === "add")
+    : [];
+  const validSource = sourceTokens.map(token => token.text).join("") === draftedText
+    ? sourceTokens
+    : (draftedText ? [{ type: "equal", text: draftedText }] : []);
+  const result = [];
+  const append = (type, text) => {
+    if (!text) return;
+    const previous = result[result.length - 1];
+    if (previous?.type === type) previous.text += text;
+    else result.push({ type, text });
+  };
+  let sourceIndex = 0;
+  let sourceOffset = 0;
+
+  const advanceSourceRange = (length, render = true) => {
+    let remaining = length;
+    while (remaining > 0 && sourceIndex < validSource.length) {
+      const source = validSource[sourceIndex];
+      const available = source.text.length - sourceOffset;
+      const count = Math.min(remaining, available);
+      if (render) {
+        append(source.type, source.text.slice(sourceOffset, sourceOffset + count));
+      }
+      sourceOffset += count;
+      remaining -= count;
+      if (sourceOffset === source.text.length) {
+        sourceIndex += 1;
+        sourceOffset = 0;
+      }
+    }
+  };
+
+  for (const token of editTokens) {
+    if (token.type === "equal") {
+      advanceSourceRange(token.text.length);
+    } else if (token.type === "remove") {
+      append("remove", token.text);
+      advanceSourceRange(token.text.length, false);
+    } else if (token.type === "add") {
+      append("add", token.text);
+    }
+  }
+
+  if (result.filter(token => token.type !== "remove").map(token => token.text).join("") !== revisedText) {
+    return revisedText ? [{ type: "equal", text: revisedText }] : [];
+  }
+  return result;
+}
+
+function renderChangeSegments(segments, keyPrefix) {
+  return segments.map((segment, index) => {
+    if (segment.type === "equal") return segment.text;
+    const style = segment.type === "add"
+      ? { background: "#dcfce7", color: "#166534", borderRadius: 3 }
+      : { background: "#fee2e2", color: "#991b1b", textDecoration: "line-through", borderRadius: 3 };
+    return (
+      <span
+        key={`${keyPrefix}-${segment.type}-${index}`}
+        style={style}
+        data-change={segment.type}
+        contentEditable={segment.type === "remove" ? false : undefined}
+        suppressContentEditableWarning
+      >
+        {segment.text}
+      </span>
+    );
+  });
+}
+
+function renderInlineMarkdown(segments, keyPrefix) {
+  const text = segments.map(segment => segment.text).join("");
+  const pattern = /\*\*[^*\n]+?\*\*|__[^_\n]+?__|`[^`\n]+?`|\*[^*\n]+?\*|_[^_\n]+?_/g;
+  const nodes = [];
+  let cursor = 0;
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > cursor) {
+      nodes.push(...renderChangeSegments(sliceDiffSegments(segments, cursor, match.index), `${keyPrefix}-text-${cursor}`));
+    }
+    const markerLength = match[0].startsWith("**") || match[0].startsWith("__") ? 2 : 1;
+    const content = sliceDiffSegments(
+      segments,
+      match.index + markerLength,
+      match.index + match[0].length - markerLength,
+    );
+    const contentNodes = renderChangeSegments(content, `${keyPrefix}-mark-${match.index}`);
+    if (markerLength === 2) {
+      nodes.push(<strong key={`${keyPrefix}-strong-${match.index}`}>{contentNodes}</strong>);
+    } else if (match[0].startsWith("`")) {
+      nodes.push(<code key={`${keyPrefix}-code-${match.index}`} style={{
+        padding: "1px 4px", background: "#f1f1f5", borderRadius: 3, fontFamily: "Consolas, monospace",
+      }}>{contentNodes}</code>);
+    } else {
+      nodes.push(<em key={`${keyPrefix}-em-${match.index}`}>{contentNodes}</em>);
+    }
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < text.length) {
+    nodes.push(...renderChangeSegments(sliceDiffSegments(segments, cursor, text.length), `${keyPrefix}-text-${cursor}`));
+  }
+  return nodes;
+}
+
+function getMarkdownCells(line) {
+  const cells = [];
+  let start = line.text.startsWith("|") ? 1 : 0;
+  for (let index = start; index <= line.text.length; index += 1) {
+    if (index !== line.text.length && line.text[index] !== "|") continue;
+    if (
+      index === line.text.length
+      && !line.text.slice(start).trim()
+      && line.text.slice(0, start).trimEnd().endsWith("|")
+    ) break;
+    let cellStart = start;
+    let cellEnd = index;
+    while (cellStart < cellEnd && /\s/.test(line.text[cellStart])) cellStart += 1;
+    while (cellEnd > cellStart && /\s/.test(line.text[cellEnd - 1])) cellEnd -= 1;
+    cells.push(sliceDiffSegments(line.segments, cellStart, cellEnd));
+    start = index + 1;
+  }
+  return cells;
+}
+
+function FormattedProposalContent({
+  tokens, variant, fallback, sectionTitle, includeRemovals = false,
+}) {
+  const segments = getVisibleDiffSegments(tokens, variant, fallback, includeRemovals);
+  const text = segments.map(segment => segment.text).join("");
+  const lines = [];
+  let offset = 0;
+  for (const lineText of text.split("\n")) {
+    const line = lineText.endsWith("\r") ? lineText.slice(0, -1) : lineText;
+    lines.push({
+      text: line,
+      segments: sliceDiffSegments(segments, offset, offset + line.length),
+    });
+    offset += lineText.length + 1;
+  }
+
+  const isTableLine = line => line.text.includes("|") && line.text.trim() !== "";
+  const isTableDivider = line => /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line.text);
+  const isHeading = line => /^(#{1,6})\s+(.+?)\s*$/.exec(line.text);
+  const isListItem = line => /^(\s*)([-*+•]|\d+[.)])(\s+)(.*)$/.exec(line.text);
+  const blocks = [];
+  const normalizeHeading = value => value.replace(/^\d{1,2}[.)]?\s+/, "").trim().toLowerCase();
+
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index];
+    if (!line.text.trim()) {
+      index += 1;
+      continue;
+    }
+
+    if (isTableLine(line)) {
+      const tableLines = [];
+      while (index < lines.length && isTableLine(lines[index])) {
+        tableLines.push(lines[index]);
+        index += 1;
+      }
+      const hasHeader = tableLines.length > 1 && isTableDivider(tableLines[1]);
+      const rows = tableLines.filter((row, rowIndex) => !(hasHeader && rowIndex === 1));
+      const heading = hasHeader ? rows.shift() : null;
+      blocks.push(
+        <div key={`table-${index}`} style={{ overflowX: "auto", margin: "14px 0 18px" }}>
+          <table style={{
+            width: "100%", borderCollapse: "collapse", font: "12px/1.55 Arial, sans-serif",
+            color: "#303044",
+          }}>
+            {heading && (
+              <thead>
+                <tr>
+                  {getMarkdownCells(heading).map((cell, cellIndex) => (
+                    <th key={cellIndex} style={{
+                      padding: "9px 10px", textAlign: "left", verticalAlign: "top",
+                      background: "#f0eff8", border: "1px solid #d8d7e3", fontWeight: 700,
+                    }}>
+                      {renderInlineMarkdown(cell, `table-head-${index}-${cellIndex}`)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {getMarkdownCells(row).map((cell, cellIndex) => (
+                    <td key={cellIndex} style={{
+                      padding: "8px 10px", textAlign: "left", verticalAlign: "top",
+                      border: "1px solid #dedde6",
+                    }}>
+                      {renderInlineMarkdown(cell, `table-cell-${index}-${rowIndex}-${cellIndex}`)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      continue;
+    }
+
+    const headingMatch = isHeading(line);
+    if (headingMatch) {
+      if (sectionTitle && normalizeHeading(headingMatch[2]) === normalizeHeading(sectionTitle)) {
+        index += 1;
+        continue;
+      }
+      const contentStart = headingMatch[0].indexOf(headingMatch[2]);
+      const level = Math.min(headingMatch[1].length, 4);
+      const HeadingTag = `h${level}`;
+      blocks.push(
+        <HeadingTag key={`heading-${index}`} style={{
+          color: "#202033", fontFamily: "Georgia, serif", lineHeight: 1.35,
+          fontSize: level === 1 ? 20 : level === 2 ? 17 : 15,
+          margin: "18px 0 9px",
+        }}>
+          {renderInlineMarkdown(sliceDiffSegments(line.segments, contentStart, line.text.length), `heading-${index}`)}
+        </HeadingTag>,
+      );
+      index += 1;
+      continue;
+    }
+
+    const listMatch = isListItem(line);
+    if (listMatch) {
+      const ordered = /^\d/.test(listMatch[2]);
+      const ListTag = ordered ? "ol" : "ul";
+      const items = [];
+      while (index < lines.length) {
+        const itemMatch = isListItem(lines[index]);
+        if (!itemMatch || /^\d/.test(itemMatch[2]) !== ordered) break;
+        const contentStart = itemMatch[1].length + itemMatch[2].length + itemMatch[3].length;
+        items.push(
+          <li key={`list-item-${index}`} style={{ paddingLeft: 4, margin: "3px 0" }}>
+            {renderInlineMarkdown(
+              sliceDiffSegments(lines[index].segments, contentStart, lines[index].text.length),
+              `list-${index}`,
+            )}
+          </li>,
+        );
+        index += 1;
+      }
+      blocks.push(
+        <ListTag key={`list-${index}`} style={{
+          margin: "8px 0 14px", paddingLeft: 26, color: "#333",
+          font: "13px/1.75 Georgia, serif",
+        }}>
+          {items}
+        </ListTag>,
+      );
+      continue;
+    }
+
+    const paragraphLines = [];
+    while (
+      index < lines.length
+      && lines[index].text.trim()
+      && !isTableLine(lines[index])
+      && !isHeading(lines[index])
+      && !isListItem(lines[index])
+    ) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+    blocks.push(
+      <p key={`paragraph-${index}`} style={{
+        margin: "0 0 12px", color: "#333", font: "13px/1.8 Georgia, serif",
+        overflowWrap: "anywhere",
+      }}>
+        {paragraphLines.map((paragraphLine, lineIndex) => (
+          <span key={lineIndex}>
+            {lineIndex > 0 && <br />}
+            {renderInlineMarkdown(paragraphLine.segments, `paragraph-${index}-${lineIndex}`)}
+          </span>
+        ))}
+      </p>,
+    );
+  }
+
+  return <>{blocks}</>;
+}
+
+function CompareEditableSection({
+  tokens, value, sectionTitle, onChange,
+}) {
+  const textareaRef = useRef(null);
+  const visibleTokens = getVisibleDiffSegments(tokens, "revised", value);
+
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <div
+      style={{
+        position: "relative", width: "100%", minHeight: "1.8em",
+        color: "#333", font: "13px/1.8 Georgia, serif", whiteSpace: "pre-wrap",
+        overflowWrap: "anywhere",
+      }}
+    >
+      <div aria-hidden="true" style={{ minHeight: "1.8em" }}>
+        {visibleTokens.map((token, index) => (
+          <span
+            key={`editor-${token.type}-${index}`}
+            style={token.type === "add"
+              ? { background: "#dcfce7", color: "#166534", borderRadius: 3 }
+              : undefined}
+          >
+            {token.text}
+          </span>
+        ))}
+      </div>
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={event => onChange(event.target.value)}
+        spellCheck
+        aria-label={`Edit revised ${sectionTitle}`}
+        style={{
+          position: "absolute", inset: 0, display: "block",
+          boxSizing: "border-box", width: "100%", height: "100%",
+          minHeight: "1.8em", margin: 0, padding: 0, border: "none",
+          borderRadius: 0, outline: "none", resize: "none", overflow: "hidden",
+          background: "transparent", color: "transparent", caretColor: "#222",
+          WebkitTextFillColor: "transparent",
+          font: "13px/1.8 Georgia, serif", whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+        }}
+      />
+    </div>
+  );
 }
 
 export default function Draft() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const grantId = searchParams.get("grant");
+  const loadId = searchParams.get("load");
 
-  const { profile } = useAuth();
+  const { profile, currentUser } = useAuth();
   const { grants, proposal } = useGrants();
   const session = useProposalSession();
+  const restoreSession = session.restore;
   const { saveDraft, updateDraft, drafts, proposals } = useWorkStore();
+  const [originalSections, setOriginalSections] = useState({});
   
   // Bridge variables for legacy render logic
   const loading      = session.loading;
-  const sections     = session.data.sections || {};
-  const sectionOrder = Object.keys(sections);
+  const sections     = normalizeSectionMap(session.data.sections);
+  const sectionDiffs = session.data.diffs?.uploaded_content && !session.data.diffs?.proposal
+    ? { ...session.data.diffs, proposal: session.data.diffs.uploaded_content }
+    : (session.data.diffs || {});
+  const [compareDiffSnapshot, setCompareDiffSnapshot] = useState({
+    sessionId: null,
+    diffs: {},
+  });
+  const cachedCompareDiffs = compareDiffSnapshot.sessionId === session.sessionId
+    ? compareDiffSnapshot.diffs
+    : {};
+  const liveCompareDiffs = Object.fromEntries(
+    Object.entries(sectionDiffs).filter(([key, tokens]) => (
+      Array.isArray(tokens) && (tokens.length > 0 || !cachedCompareDiffs[key])
+    ))
+  );
+  const compareSectionDiffs = { ...cachedCompareDiffs, ...liveCompareDiffs };
+  const sectionOrder = Array.from(new Set([
+    ...Object.keys(originalSections),
+    ...Object.keys(sections),
+  ]));
+  const sectionOrderKey = sectionOrder.join("|");
+  const sectionCount = sectionOrder.length;
   const done = session.gate === "complete" || session.gate === "draft_review" || session.gate === "final_save";
   const autoSaveDone = session.gate === "complete"; // only auto-save when truly done
   const error        = session.error;
@@ -81,10 +632,21 @@ export default function Draft() {
   const [selectedProposalId, setSelectedProposalId] = useState("");
   const [activeTab,       setActiveTab]       = useState(null);
   const [editedContent,   setEditedContent]   = useState({});
+  const [previewSections, setPreviewSections] = useState({});
   const [wordCounts,      setWordCounts]      = useState({});
   const [pdfLoading,      setPdfLoading]      = useState(false);
+  const [userInstructions, setUserInstructions] = useState("");
+  const [streamedSections, setStreamedSections] = useState({});
+  const [streamSectionOrder, setStreamSectionOrder] = useState([]);
+  const [compareMode, setCompareMode] = useState(false);
+  const [matchComparison, setMatchComparison] = useState({
+    before: null, after: null, status: "idle",
+  });
 
-  const textareaRef = useRef(null);
+  const textareaRefs = useRef({});
+  const sectionRefs = useRef({});
+  const scrollContainerRef = useRef(null);
+  const restoredSessionRef = useRef(false);
   const selectedGrant    = grants.find(g => String(g.grant_id) === String(selectedGrantId));
   // Active saved proposal (uploaded or built) — provides proposal_context for drafting
   const activeProposal   = proposals.find(p => p.id === selectedProposalId);
@@ -92,6 +654,14 @@ export default function Draft() {
   const resolvedProposal = activeProposal?.proposal_context
     || proposal
     || null;
+
+  useEffect(() => {
+    setMatchComparison({
+      before: selectedGrant?.similarity_score ?? null,
+      after: null,
+      status: "idle",
+    });
+  }, [selectedGrantId, selectedGrant?.similarity_score]);
 
   // Auto-select most recent proposal if none selected
   useEffect(() => {
@@ -107,15 +677,88 @@ export default function Draft() {
 
   useEffect(() => { if (grantId) setSelectedGrantId(grantId); }, [grantId]);
 
+  useEffect(() => {
+    const checkpointSections = session.data.original_sections;
+    const proposalSections = resolvedProposal?.sections;
+    const sourceSections = normalizeSectionMap(
+      checkpointSections && Object.keys(checkpointSections).length
+        ? checkpointSections
+        : proposalSections
+    );
+    if (!Object.keys(sourceSections).length && resolvedProposal?.raw_text) {
+      sourceSections.proposal = {
+        title: "Proposal",
+        content: resolvedProposal.raw_text,
+      };
+    }
+    if (!Object.keys(sourceSections).length) return;
+
+    setOriginalSections(Object.fromEntries(
+      Object.entries(sourceSections).map(([key, value]) => [
+        key,
+        typeof value === "string" ? value : value?.content || "",
+      ])
+    ));
+  }, [
+    session.data.original_sections,
+    session.sessionId,
+    resolvedProposal?.raw_text,
+    resolvedProposal?.sections,
+  ]);
+
+  useEffect(() => {
+    if (restoredSessionRef.current || !currentUser?.uid || loadId) return;
+    restoredSessionRef.current = true;
+
+    try {
+      const cachedSession = JSON.parse(
+        sessionStorage.getItem(`impactlink:draft-session:${currentUser.uid}`) || "null"
+      );
+      if (!cachedSession?.session_id) return;
+      if (grantId && String(cachedSession.grant_id) !== String(grantId)) return;
+
+      if (!grantId && cachedSession.grant_id) {
+        setSelectedGrantId(String(cachedSession.grant_id));
+      }
+      if (cachedSession.proposal_id) {
+        setSelectedProposalId(String(cachedSession.proposal_id));
+      }
+      if (cachedSession.saved_draft_id) {
+        setSavedDraftId(cachedSession.saved_draft_id);
+      }
+      restoreSession(cachedSession.session_id);
+    } catch (storageError) {
+      console.error("Could not restore the cached Draft Assistant session.", storageError);
+    }
+  }, [currentUser?.uid, grantId, loadId, restoreSession]);
+
 
 
   // Load saved draft if ?load=<id> is in URL
-  const loadId = searchParams.get("load");
   useEffect(() => {
     if (!loadId || !drafts.length) return;
     const saved = drafts.find(d => d.id === loadId);
     if (!saved) return;
-    const restoredSections = saved.sections || {};
+    const restoredSections = { ...(saved.sections || {}) };
+    if (restoredSections.uploaded_content) {
+      restoredSections.proposal = {
+        ...restoredSections.uploaded_content,
+        title: "Proposal",
+      };
+      delete restoredSections.uploaded_content;
+    }
+    const proposalSections = saved.proposal_context?.sections || {};
+    const sourceSections = Object.keys(proposalSections).length
+      ? proposalSections
+      : saved.proposal_context?.raw_text
+        ? { proposal: { title: "Proposal", content: saved.proposal_context.raw_text } }
+        : restoredSections;
+    setOriginalSections(Object.fromEntries(
+      Object.entries(sourceSections).map(([key, value]) => [
+        key,
+        typeof value === "string" ? value : value?.content || "",
+      ])
+    ));
     const restoredOrder    = saved.section_order || Object.keys(restoredSections);
     // Restore grant + save ID
     if (saved.grant_id) setSelectedGrantId(saved.grant_id);
@@ -134,8 +777,29 @@ export default function Draft() {
     });
     setEditedContent(ec);
     setWordCounts(wc);
+    setCompareDiffSnapshot({ sessionId: null, diffs: {} });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadId, drafts]);
+
+  useEffect(() => {
+    if (!session.sessionId) return;
+    const incomingDiffs = session.data.diffs?.uploaded_content && !session.data.diffs?.proposal
+      ? { ...session.data.diffs, proposal: session.data.diffs.uploaded_content }
+      : (session.data.diffs || {});
+    setCompareDiffSnapshot(previous => {
+      const previousDiffs = previous.sessionId === session.sessionId ? previous.diffs : {};
+      const nextDiffs = { ...previousDiffs };
+      Object.entries(incomingDiffs).forEach(([key, tokens]) => {
+        if (Array.isArray(tokens) && (tokens.length > 0 || !nextDiffs[key])) {
+          nextDiffs[key] = tokens;
+        }
+      });
+      const unchanged = previous.sessionId === session.sessionId
+        && Object.keys(nextDiffs).length === Object.keys(previousDiffs).length
+        && Object.entries(nextDiffs).every(([key, tokens]) => previousDiffs[key] === tokens);
+      return unchanged ? previous : { sessionId: session.sessionId, diffs: nextDiffs };
+    });
+  }, [session.sessionId, session.data.diffs]);
 
   useEffect(() => {
     if (sectionOrder.length > 0 && !activeTab) setActiveTab(sectionOrder[0]);
@@ -145,6 +809,30 @@ export default function Draft() {
   useEffect(() => {
     if (activeSection) setActiveTab(activeSection);
   }, [activeSection]);
+
+  useEffect(() => {
+    const root = scrollContainerRef.current;
+    if (!root || !sectionCount) return undefined;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const visibleSections = entries
+          .filter(entry => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visibleSections[0]) {
+          setActiveTab(visibleSections[0].target.dataset.sectionKey);
+        }
+      },
+      { root, rootMargin: "-12% 0px -65% 0px", threshold: 0 }
+    );
+
+    sectionOrderKey.split("|").filter(Boolean).forEach(key => {
+      const element = sectionRefs.current[key];
+      if (element) observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [sectionOrderKey, sectionCount, session.gate]);
 
   // Auto-save draft when AI fully completes (not at intermediate draft_review gate)
   useEffect(() => {
@@ -176,7 +864,7 @@ export default function Draft() {
   };
 
   const handleFormat = (format) => {
-    const ta = textareaRef.current;
+    const ta = textareaRefs.current[activeTab];
     if (!ta || !activeTab) return;
     const result = applyFormat(ta, format);
     if (!result) return;
@@ -188,24 +876,81 @@ export default function Draft() {
     }, 0);
   };
 
-
   const handleDraft = async () => {
     if (!resolvedProposal || !selectedGrant) return;
+    setCompareDiffSnapshot({ sessionId: null, diffs: {} });
     setEditedContent({});
     setActiveTab(null);
     setSavedDraftId(null);
     setSaveStatus(null);
+    setUserInstructions("");
+    setStreamedSections({});
+    setStreamSectionOrder([]);
+    setCompareMode(false);
+    setMatchComparison({
+      before: selectedGrant.similarity_score ?? null,
+      after: null,
+      status: "idle",
+    });
     session.reset();
+    if (currentUser?.uid) {
+      try {
+        sessionStorage.removeItem(`impactlink:draft-session:${currentUser.uid}`);
+      } catch (storageError) {
+        console.error("Could not clear the cached Draft Assistant session.", storageError);
+      }
+    }
     
     // Filter current sections to only include non-empty ones
     const currentSections = {};
-    const sourceSections = activeProposal?.sections || resolvedProposal?.sections || {};
+    let sourceSections = activeProposal?.sections || resolvedProposal?.sections || {};
+    if (sourceSections.uploaded_content) {
+      const savedUploadedContent = sourceSections.uploaded_content;
+      const uploadedText = resolvedProposal?.raw_text
+        || (typeof savedUploadedContent === "string"
+          ? savedUploadedContent
+          : savedUploadedContent.content || "")
+        || "";
+      sourceSections = {
+        ...Object.fromEntries(
+          Object.entries(sourceSections).filter(([key]) => key !== "uploaded_content")
+        ),
+        ...(uploadedText ? { proposal: { title: "Proposal", content: uploadedText } } : {}),
+      };
+    } else if (!Object.keys(sourceSections).length && resolvedProposal?.raw_text) {
+      sourceSections = {
+        proposal: { title: "Proposal", content: resolvedProposal.raw_text },
+      };
+    }
     Object.entries(sourceSections).forEach(([k, v]) => {
-      if (v.content?.trim()) currentSections[k] = v;
+      const content = typeof v === "string" ? v : v?.content || "";
+      if (content.trim()) {
+        currentSections[k] = typeof v === "string" ? content : { ...v, content };
+      }
     });
+    setOriginalSections(Object.fromEntries(
+      Object.entries(currentSections).map(([key, value]) => [
+        key,
+        typeof value === "string" ? value : value.content || "",
+      ])
+    ));
 
     try {
-        await session.start("improve", selectedGrant, profile || {}, currentSections);
+        const sessionId = await session.start("improve", selectedGrant, profile || {}, currentSections);
+        if (currentUser?.uid && sessionId) {
+          try {
+            sessionStorage.setItem(
+              `impactlink:draft-session:${currentUser.uid}`,
+              JSON.stringify({
+                session_id: sessionId,
+                grant_id: String(selectedGrant.grant_id),
+                proposal_id: selectedProposalId || null,
+              })
+            );
+          } catch (storageError) {
+            console.error("Could not cache the Draft Assistant session ID.", storageError);
+          }
+        }
     } catch (e) {
         console.error("Improve start error:", e);
     }
@@ -213,7 +958,74 @@ export default function Draft() {
 
   const handleAdvance = async (payload = {}) => {
       try {
-          await session.advance(payload);
+          const shouldStreamDraft = Array.isArray(payload.sections_to_rewrite)
+            && Object.prototype.hasOwnProperty.call(payload, "user_additions");
+          let result;
+          if (shouldStreamDraft) {
+            const sectionKeys = payload.sections_to_rewrite;
+            setStreamSectionOrder(sectionKeys);
+            setStreamedSections(Object.fromEntries(sectionKeys.map(key => [key, ""])));
+            result = await session.advanceStream(payload, (sectionKey, content) => {
+              setStreamedSections(previous => ({
+                ...previous,
+                [sectionKey]: (previous[sectionKey] || "") + content,
+              }));
+            });
+            setCompareMode(true);
+          } else {
+            result = await session.advance(payload);
+          }
+
+          if (shouldStreamDraft && result?.gate === "draft_review" && selectedGrant) {
+            setMatchComparison(previous => ({ ...previous, status: "updating" }));
+            try {
+              const proposalForMatch = {
+                ...resolvedProposal,
+                sections: Object.fromEntries(
+                  Object.entries(result.sections || {}).map(([key, section]) => [
+                    key,
+                    section.content || "",
+                  ])
+                ),
+              };
+              delete proposalForMatch.raw_text;
+
+              const matchResponse = await api.post("/api/match", {
+                proposal: proposalForMatch,
+                top_k: 21,
+                grant_id: String(selectedGrant.grant_id),
+              });
+              const updatedMatch = (matchResponse.data.matches || []).find(
+                grant => String(grant.grant_id) === String(selectedGrant.grant_id)
+              );
+              if (!updatedMatch) {
+                setMatchComparison(previous => ({ ...previous, status: "unavailable" }));
+              } else {
+                setMatchComparison(previous => ({
+                  ...previous,
+                  after: updatedMatch.similarity_score,
+                  status: "updated",
+                }));
+                try {
+                  const storedMatches = JSON.parse(sessionStorage.getItem("matches") || "[]");
+                  const hasCachedMatch = storedMatches.some(
+                    grant => String(grant.grant_id) === String(updatedMatch.grant_id)
+                  );
+                  const refreshedMatches = hasCachedMatch
+                    ? storedMatches.map(grant => String(grant.grant_id) === String(updatedMatch.grant_id)
+                      ? { ...grant, ...updatedMatch }
+                      : grant)
+                    : [...storedMatches, updatedMatch];
+                  sessionStorage.setItem("matches", JSON.stringify(refreshedMatches));
+                } catch (storageError) {
+                  console.error("Could not update cached grant match.", storageError);
+                }
+              }
+            } catch (matchError) {
+              console.error("Could not recalculate grant match for the new draft.", matchError);
+              setMatchComparison(previous => ({ ...previous, status: "unavailable" }));
+            }
+          }
       } catch (e) {
           console.error("Advance error:", e);
       }
@@ -230,6 +1042,7 @@ export default function Draft() {
           content: currentSections?.[key] ?? editedContent[key] ?? sections[key]?.content ?? "",
         };
       });
+      let persistedDraftId = savedDraftId;
       if (savedDraftId) {
         await updateDraft(savedDraftId, secToSave);
       } else {
@@ -244,7 +1057,24 @@ export default function Draft() {
           sections:         secToSave,
           section_order:    sectionOrder,
         });
-        if (saved) setSavedDraftId(saved.id);
+        if (saved) {
+          persistedDraftId = saved.id;
+          setSavedDraftId(saved.id);
+        }
+      }
+      if (currentUser?.uid) {
+        try {
+          const cacheKey = `impactlink:draft-session:${currentUser.uid}`;
+          const cachedSession = JSON.parse(sessionStorage.getItem(cacheKey) || "null");
+          if (cachedSession?.session_id && persistedDraftId) {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              ...cachedSession,
+              saved_draft_id: persistedDraftId,
+            }));
+          }
+        } catch (storageError) {
+          console.error("Could not cache the saved Draft Assistant ID.", storageError);
+        }
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(null), 2500);
@@ -374,9 +1204,12 @@ export default function Draft() {
   };
 
   const totalWords  = Object.values(wordCounts).reduce((a, b) => a + b, 0);
-  const hasSections = sectionOrder.length > 0;
+  const hasSections = sectionCount > 0;
   const activeContentValue = activeTab ? (editedContent[activeTab] ?? sections[activeTab]?.content ?? "") : "";
-  const currentIndex = sectionOrder.indexOf(activeTab);
+  const scrollToSection = (key) => {
+    setActiveTab(key);
+    sectionRefs.current[key]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#1e1e2e", display: "flex", flexDirection: "column" }}>
@@ -401,13 +1234,40 @@ export default function Draft() {
               border: "1px solid #2e2e4e", borderRadius: 5, padding: "2px 8px", fontSize: 10, fontWeight: 700, flexShrink: 0,
               transition: "color 0.3s",
             }}>
-              {`${selectedGrant.similarity_score}% match`}
+              {matchComparison.status === "updated"
+                ? `${matchComparison.before}% → ${matchComparison.after}% match`
+                : matchComparison.status === "updating"
+                  ? `${matchComparison.before}% → updating…`
+                  : `${selectedGrant.similarity_score}% match`}
             </span>
           )}
         </div>
 
         {/* Right: actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {(hasSections || resolvedProposal?.raw_text) && (
+            <div style={{ display: "flex", gap: 4, marginRight: 6 }}>
+              {[
+                { label: "Edit draft", value: false },
+                { label: "Compare versions", value: true },
+              ].map(option => (
+                <button
+                  key={option.label}
+                  type="button"
+                  aria-pressed={compareMode === option.value}
+                  onClick={() => setCompareMode(option.value)}
+                  style={{
+                    background: compareMode === option.value ? "#2b2944" : "transparent",
+                    border: "1px solid #2a2a3e", borderRadius: 6,
+                    color: compareMode === option.value ? "#d9d4ff" : "#777",
+                    padding: "6px 9px", fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
           {hasSections && (
             <span style={{ color: "#444", fontSize: 11, marginRight: 4 }}>
               {totalWords.toLocaleString()} words
@@ -549,7 +1409,7 @@ export default function Draft() {
             {sectionOrder.map(key => (
               <div
                 key={key}
-                onClick={() => setActiveTab(key)}
+                onClick={() => scrollToSection(key)}
                 style={{
                   display: "flex", alignItems: "center", gap: 9,
                   padding: "8px 10px", borderRadius: 7, cursor: "pointer",
@@ -563,7 +1423,7 @@ export default function Draft() {
                 </span>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: 11, fontWeight: activeTab === key ? 700 : 400, color: activeTab === key ? "#e0e0f0" : "#555", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {sections[key]?.title}
+                      {getSectionTitle(key, sections[key])}
                   </p>
                   {wordCounts[key] && <p style={{ fontSize: 9, color: "#333", margin: 0 }}>{wordCounts[key]}w</p>}
                 </div>
@@ -588,10 +1448,10 @@ export default function Draft() {
         </div>
 
         {/* Center — Word-like editor */}
-        <div style={{ flex: 1, background: "#2a2a3a", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 0 80px" }}>
+        <div ref={scrollContainerRef} style={{ flex: 1, background: "#2a2a3a", overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", padding: "32px 0 80px" }}>
 
           {/* Formatting toolbar */}
-          {activeTab && sections[activeTab] && (
+          {activeTab && sections[activeTab] && !previewSections[activeTab] && (
             <div style={{
               width: 760, marginBottom: 8,
               background: "#13131f", border: "1px solid #2a2a3e",
@@ -602,6 +1462,7 @@ export default function Draft() {
                 { label: "B", title: "Bold",   fmt: "bold",   style: { fontWeight: 900 } },
                 { label: "H2", title: "Heading", fmt: "h2",   style: { fontSize: 10 } },
                 { label: "• List", title: "Bullet list", fmt: "bullet", style: {} },
+                { label: "Table", title: "Insert table", fmt: "table", style: {} },
               ].map(btn => (
                 <button
                   key={btn.fmt}
@@ -635,7 +1496,7 @@ export default function Draft() {
           )}
 
           {/* Gated Review Overlay */}
-          {session.gate !== "none" && session.gate !== "draft_review" && session.gate !== "final_save" && session.gate !== "complete" && (
+          {session.gate !== "none" && session.gate !== "draft_review" && session.gate !== "final_save" && session.gate !== "complete" && !session.loading && (
             <div style={{
               width: 760, background: "#fff", borderRadius: 12, padding: "40px",
               boxShadow: "0 10px 40px rgba(0,0,0,0.5)", color: "#1a1a2e"
@@ -668,12 +1529,50 @@ export default function Draft() {
                       </li>
                     )}
                   </ul>
+                  <div style={{ marginBottom: 20 }}>
+                    <label htmlFor="draft-user-instructions" style={{
+                      display: "block", fontSize: 14, fontWeight: 700,
+                      color: "#222", marginBottom: 6,
+                    }}>
+                      Instructions for this rewrite <span style={{ color: "#888", fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    <p style={{ color: "#666", fontSize: 12, margin: "0 0 8px" }}>
+                      Say what to emphasize, avoid, or clarify. We’ll use these as writing preferences while preserving verified facts and grant requirements.
+                    </p>
+                    <textarea
+                      id="draft-user-instructions"
+                      value={userInstructions}
+                      onChange={e => setUserInstructions(e.target.value)}
+                      maxLength={2000}
+                      placeholder="For example: Avoid promising specific outcomes we haven't measured. Emphasize our existing youth mentorship activities."
+                      disabled={session.loading}
+                      style={{
+                        width: "100%", minHeight: 100, resize: "vertical",
+                        boxSizing: "border-box", padding: 12, borderRadius: 8,
+                        border: "1px solid #d8d8e2", background: "#f8f8fc",
+                        color: "#222", fontSize: 13, lineHeight: 1.5,
+                      }}
+                    />
+                    <div style={{ color: "#888", fontSize: 11, textAlign: "right", marginTop: 4 }}>
+                      {userInstructions.length}/2000
+                    </div>
+                  </div>
                   <button 
-                    onClick={() => handleAdvance({ confirmed_gaps: [], sections_to_rewrite: session.data.analysis?.sections_to_rewrite || [] })}
+                    onClick={() => handleAdvance({
+                      confirmed_gaps: [],
+                      sections_to_rewrite: session.data.analysis?.sections_to_rewrite || [],
+                      user_additions: userInstructions,
+                    })}
+                    disabled={session.loading}
                     style={{ background: "var(--accent)", border: "none", color: "#fff", padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%" }}
                   >
-                    Confirm & Start Drafting
+                    {session.loading ? "Preparing draft…" : "Confirm & Start Drafting"}
                   </button>
+                  {error && (
+                    <p role="alert" style={{ color: "#b91c1c", fontSize: 12, margin: "10px 0 0" }}>
+                      Drafting could not continue: {error}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -750,10 +1649,10 @@ export default function Draft() {
                 {!resolvedProposal ? "Upload or select a saved proposal" : !selectedGrant ? "Select a grant to begin" : "Ready to draft"}
               </p>
               <p style={{ color: "#888", fontSize: 14, maxWidth: 340, margin: "0 auto 24px" }}>
-                {!resolvedProposal ? "Go to Upload to parse your proposal, or pick a saved one below." : "Choose a target grant from the left panel and click Draft."}
+                {!resolvedProposal ? "Go to Grants to upload a proposal, or pick a saved one below." : "Choose a target grant from the left panel and click Draft."}
               </p>
               {!proposal && (
-                <button onClick={() => navigate("/upload")} style={{ background: "#7c6fef", border: "none", color: "#fff", padding: "12px 28px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <button onClick={() => navigate("/grants")} style={{ background: "#7c6fef", border: "none", color: "#fff", padding: "12px 28px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                   Upload Proposal
                 </button>
               )}
@@ -761,23 +1660,228 @@ export default function Draft() {
           )}
 
           {/* Loading state */}
-          {session.loading && (
+          {session.loading && streamSectionOrder.length === 0 && (
             <div style={{ width: 760, background: "#fff", borderRadius: 12, padding: "80px", textAlign: "center", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }}>
               <p style={{ color: "var(--accent)", fontSize: 18, fontWeight: 700 }}>
-                {session.gate === "gap_analysis" ? "Analyzing gaps..." : "Processing..."}
+                {Object.keys(streamedSections).length
+                  ? "Drafting your updated proposal…"
+                  : session.gate === "gap_analysis" ? "Analyzing gaps..." : "Processing..."}
               </p>
-              <p style={{ color: "#bbb", fontSize: 13, marginTop: 12 }}>This helps us build a more persuasive proposal</p>
+              <p style={{ color: "#bbb", fontSize: 13, marginTop: 12 }}>
+                {Object.keys(streamedSections).length
+                  ? "Your draft will appear below as each section is written."
+                  : "This helps us build a more persuasive proposal"}
+              </p>
+            </div>
+          )}
+
+          {session.loading && streamSectionOrder.length > 0 && (
+            <div style={{
+              width: 760, marginTop: 14, background: "#fff", borderRadius: 12,
+              padding: "28px 40px", boxShadow: "0 10px 40px rgba(0,0,0,0.35)",
+            }}>
+              {streamSectionOrder.map(key => {
+                const content = streamedSections[key] || "";
+                return (
+                <section key={key} style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <h3 style={{ color: "#1a1a2e", font: "700 16px Georgia, serif", margin: 0 }}>
+                      {key.replace(/_/g, " ").replace(/\b\w/g, char => char.toUpperCase())}
+                    </h3>
+                    <span style={{
+                      color: content ? "#765fe8" : "#888",
+                      background: content ? "#f0edff" : "#f3f3f6",
+                      borderRadius: 20, padding: "4px 9px",
+                      fontSize: 10, fontWeight: 700,
+                    }}>
+                      {content ? "Drafting" : "Preparing"}
+                    </span>
+                  </div>
+                  {content ? (
+                    <p aria-live="polite" style={{
+                      color: "#333", font: "14px/1.9 Georgia, serif",
+                      whiteSpace: "pre-wrap", margin: 0,
+                    }}>
+                      {content}<span style={{ color: "#7c6fef" }} aria-hidden="true">▍</span>
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 34 }}>
+                      <span aria-label="Waiting for section draft" style={{
+                        width: 18, height: 18, boxSizing: "border-box",
+                        border: "2px solid #e5e1fb", borderTopColor: "#7c6fef",
+                        borderRadius: "50%", animation: "draft-section-spin 0.8s linear infinite",
+                      }} />
+                      <span style={{ color: "#999", fontSize: 13 }}>Preparing this section…</span>
+                    </div>
+                  )}
+                </section>
+                );
+              })}
+              <style>{`
+                @keyframes draft-section-spin {
+                  to { transform: rotate(360deg); }
+                }
+              `}</style>
             </div>
           )}
 
           {/* The Document — white page */}
-          {(session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete") && activeTab && editedContent[activeTab] !== undefined && (
-            <div style={{
+          {(session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete")
+            && compareMode && (
+              <div style={{
+                width: "min(1200px, calc(100% - 32px))",
+                background: "#fff", borderRadius: 12, overflow: "hidden",
+                boxShadow: "0 10px 50px rgba(0,0,0,0.5)", marginBottom: 24,
+              }}>
+                <div style={{
+                  background: "#13131f", padding: "18px 28px",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <div>
+                    <p style={{ color: "#7c6fef", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 3px" }}>
+                      Full proposal comparison
+                    </p>
+                    <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, margin: 0 }}>
+                      {selectedGrant?.title || "Grant Proposal"}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 12, color: "#aaa", fontSize: 11 }}>
+                    <span><span style={{ background: "#dcfce7", color: "#166534", padding: "2px 5px" }}>Green</span> added</span>
+                    <span><span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 5px", textDecoration: "line-through" }}>Red</span> removed</span>
+                  </div>
+                </div>
+                <div style={{
+                  display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  alignItems: "start",
+                }}>
+                  {[
+                    { label: "Original proposal", variant: "original" },
+                    { label: "Revised proposal", variant: "revised" },
+                  ].map(column => (
+                    <div key={column.variant} style={{
+                      minWidth: 0,
+                      borderRight: column.variant === "original" ? "1px solid #e8e8f0" : "none",
+                    }}>
+                      <div style={{
+                        position: "sticky", top: 0, zIndex: 2,
+                        background: "#f7f7fb", borderBottom: "1px solid #e8e8f0",
+                        padding: "12px 24px", color: "#343247", fontSize: 12, fontWeight: 800,
+                      }}>
+                        {column.label}
+                      </div>
+                      <div style={{ padding: "4px 24px 28px" }}>
+                        <header style={{
+                          padding: "22px 0 18px", marginBottom: 4,
+                          borderBottom: "2px solid #e6e4ef",
+                        }}>
+                          <p style={{
+                            margin: "0 0 8px", color: "#7066ad", font: "700 9px/1.4 Arial, sans-serif",
+                            letterSpacing: "0.12em", textTransform: "uppercase",
+                          }}>
+                            ImpactLink · Grant proposal
+                          </p>
+                          <h1 style={{
+                            margin: "0 0 8px", color: "#19192c",
+                            font: "700 25px/1.25 Georgia, serif",
+                          }}>
+                            {selectedGrant?.title || "Grant Proposal"}
+                          </h1>
+                          {(selectedGrant?.agency || proposal?.organization_name) && (
+                            <p style={{
+                              margin: 0, color: "#6b6b7b", font: "12px/1.5 Arial, sans-serif",
+                            }}>
+                              {[selectedGrant?.agency, proposal?.organization_name].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
+                        </header>
+                        {sectionOrder.map((key, index) => {
+                          const original = originalSections[key]
+                            ?? resolvedProposal?.sections?.[key]?.content
+                            ?? resolvedProposal?.sections?.[key]
+                            ?? sections[key]?.content
+                            ?? "";
+                          const draftedContent = sections[key]?.content ?? original;
+                          const revised = editedContent[key] ?? draftedContent;
+                          const hasManualChanges = revised !== draftedContent;
+                          const draftedDiffTokens = compareSectionDiffs[key];
+                          const revisionTokens = hasManualChanges
+                            ? composeRevisedDiffTokens(
+                              draftedDiffTokens,
+                              createTextDiff(draftedContent, revised),
+                              draftedContent,
+                              revised,
+                            )
+                            : draftedDiffTokens;
+                          return (
+                            <section
+                              key={key}
+                              id={column.variant === "revised" ? `draft-section-${key}` : undefined}
+                              data-section-key={column.variant === "revised" ? key : undefined}
+                              ref={column.variant === "revised"
+                                ? element => { sectionRefs.current[key] = element; }
+                                : undefined}
+                              style={{
+                                padding: "22px 0 18px",
+                                borderBottom: index < sectionOrder.length - 1 ? "1px solid #ececf3" : "none",
+                                scrollMarginTop: 56,
+                              }}
+                            >
+                              <div style={{
+                                display: "flex", alignItems: "center",
+                                justifyContent: "space-between", gap: 12,
+                                marginBottom: key !== "proposal" && key !== "uploaded_content" ? 14 : 0,
+                              }}>
+                                {key !== "proposal" && key !== "uploaded_content" ? (
+                                  <h2 style={{
+                                    font: "700 17px/1.35 Georgia, serif", color: "#1a1a2e",
+                                    margin: 0,
+                                  }}>
+                                    {SECTION_ICONS[key] || String(index + 1).padStart(2, "0")}
+                                    {"  "}
+                                    {getSectionTitle(key, sections[key])}
+                                  </h2>
+                                ) : <span />}
+                                </div>
+                                {column.variant === "original" ? (
+                                  <FormattedProposalContent
+                                    tokens={draftedDiffTokens}
+                                    variant="original"
+                                    fallback={original}
+                                    sectionTitle={getSectionTitle(key, sections[key])}
+                                  />
+                                ) : (
+                                  <CompareEditableSection
+                                    tokens={revisionTokens}
+                                    value={revised}
+                                    sectionTitle={getSectionTitle(key, sections[key])}
+                                    onChange={value => handleEdit(key, value)}
+                                  />
+                                )}
+                            </section>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          {(session.gate === "draft_review" || session.gate === "final_save" || session.gate === "complete")
+            && !compareMode && sectionOrder.map(key => (
+            <div
+              key={key}
+              id={`draft-section-${key}`}
+              data-section-key={key}
+              ref={element => { sectionRefs.current[key] = element; }}
+              onMouseDown={() => setActiveTab(key)}
+              style={{
               width: 760,
               background: "#ffffff",
               borderRadius: 12,
               boxShadow: "0 10px 50px rgba(0,0,0,0.5)",
               overflow: "hidden",
+              marginBottom: 24,
+              scrollMarginTop: 16,
             }}>
               {/* Document header strip */}
               <div style={{ background: "#13131f", padding: "14px 56px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -792,61 +1896,83 @@ export default function Draft() {
               </div>
 
               {/* Section header */}
-              <div style={{ padding: "32px 56px 0" }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 20 }}>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: "#c8c5f8", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                    {SECTION_ICONS[activeTab]}
-                  </span>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: "#1a1a2e", margin: 0, letterSpacing: "-0.02em", fontFamily: "Georgia, serif" }}>
-                    {sections[activeTab].title}
-                  </h2>
+              {key !== "proposal" && key !== "uploaded_content" && (
+                <div style={{ padding: "32px 56px 0" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 20 }}>
+                    <span style={{ fontSize: 11, fontWeight: 900, color: "#c8c5f8", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                      {SECTION_ICONS[key] || "00"}
+                    </span>
+                    <h2 style={{ fontSize: 18, fontWeight: 800, color: "#1a1a2e", margin: 0, letterSpacing: "-0.02em", fontFamily: "Georgia, serif" }}>
+                      {getSectionTitle(key, sections[key])}
+                    </h2>
+                  </div>
+                  <div style={{ height: 1, background: "#e8e8f4", marginBottom: 28 }} />
                 </div>
-                <div style={{ height: 1, background: "#e8e8f4", marginBottom: 28 }} />
-              </div>
+              )}
 
               {/* Editable content */}
               <div style={{ padding: "0 56px 48px" }}>
-                <textarea
-                  ref={textareaRef}
-                  value={activeContentValue}
-                  onChange={e => handleEdit(activeTab, e.target.value)}
-                  spellCheck
-                  style={{
-                    width: "100%", minHeight: 420,
-                    border: "none", outline: "none",
-                    resize: "none", background: "transparent",
-                    fontFamily: "Georgia, 'Times New Roman', serif",
-                    fontSize: 14, lineHeight: 2,
-                    color: "#1a1a2e",
-                    caretColor: "#7c6fef",
-                    boxSizing: "border-box",
-                  }}
-                  placeholder="Content will appear here once drafted…"
-                />
+                <div style={{
+                  display: "flex", justifyContent: "flex-end", gap: 6, marginBottom: 8,
+                }}>
+                  {[
+                    { label: "Edit text", preview: false },
+                    { label: "Formatted preview", preview: true },
+                  ].map(option => (
+                    <button
+                      key={option.label}
+                      type="button"
+                      aria-pressed={Boolean(previewSections[key]) === option.preview}
+                      onClick={() => setPreviewSections(previous => ({
+                        ...previous,
+                        [key]: option.preview,
+                      }))}
+                      style={{
+                        border: "1px solid #e2e1eb", borderRadius: 5,
+                        background: Boolean(previewSections[key]) === option.preview ? "#f0edff" : "#fff",
+                        color: "#49465e", padding: "5px 8px", fontSize: 10, cursor: "pointer",
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                {previewSections[key] ? (
+                  <div style={{
+                    minHeight: 240, padding: "10px 0", color: "#1a1a2e",
+                    font: "13px/1.8 Georgia, serif",
+                  }}>
+                    <FormattedProposalContent
+                      variant="revised"
+                      fallback={editedContent[key] ?? sections[key]?.content ?? originalSections[key] ?? ""}
+                      sectionTitle={getSectionTitle(key, sections[key])}
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    ref={element => { textareaRefs.current[key] = element; }}
+                    value={editedContent[key] ?? sections[key]?.content ?? originalSections[key] ?? ""}
+                    onFocus={() => setActiveTab(key)}
+                    onChange={e => handleEdit(key, e.target.value)}
+                    spellCheck
+                    style={{
+                      width: "100%", minHeight: 420,
+                      border: "none", outline: "none",
+                      resize: "vertical", background: "transparent",
+                      font: "13px/1.8 Georgia, 'Times New Roman', serif",
+                      color: "#1a1a2e", caretColor: "#7c6fef",
+                      boxSizing: "border-box", whiteSpace: "pre-wrap",
+                    }}
+                    placeholder="Content will appear here once drafted…"
+                  />
+                )}
               </div>
 
-              {/* Page footer */}
-              <div style={{ background: "#f8f8fc", borderTop: "1px solid #eeeef8", padding: "10px 56px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <button
-                  disabled={currentIndex <= 0}
-                  onClick={() => setActiveTab(sectionOrder[currentIndex - 1])}
-                  style={{ background: "none", border: "none", color: currentIndex > 0 ? "#7c6fef" : "#ccc", fontSize: 12, cursor: currentIndex > 0 ? "pointer" : "default", fontWeight: 600, padding: 0 }}
-                >
-                  ← {currentIndex > 0 ? sections[sectionOrder[currentIndex - 1]]?.title : ""}
-                </button>
-                <span style={{ color: "#bbb", fontSize: 11 }}>
-                  {currentIndex + 1} / {sectionOrder.length}
-                </span>
-                <button
-                  disabled={currentIndex >= sectionOrder.length - 1}
-                  onClick={() => setActiveTab(sectionOrder[currentIndex + 1])}
-                  style={{ background: "none", border: "none", color: currentIndex < sectionOrder.length - 1 ? "#7c6fef" : "#ccc", fontSize: 12, cursor: currentIndex < sectionOrder.length - 1 ? "pointer" : "default", fontWeight: 600, padding: 0 }}
-                >
-                  {currentIndex < sectionOrder.length - 1 ? sections[sectionOrder[currentIndex + 1]]?.title : ""} →
-                </button>
+              <div style={{ background: "#f8f8fc", borderTop: "1px solid #eeeef8", padding: "10px 56px", color: "#888", fontSize: 11 }}>
+                {wordCounts[key] || 0} words
               </div>
             </div>
-          )}
+          ))}
 
           {/* Writing next section indicator */}
           {loading && hasSections && (
@@ -900,9 +2026,22 @@ export default function Draft() {
 
             <div style={{ background: "#1a1a28", borderRadius: 6, padding: "8px 10px", marginBottom: 12 }}>
               <p style={{ color: "#444", fontSize: 9, fontWeight: 700, textTransform: "uppercase", margin: "0 0 3px" }}>
-                Match
+                Match score
               </p>
-              <p style={{ color: "var(--accent)", fontWeight: 800, fontSize: 18, margin: 0 }}>{selectedGrant.similarity_score}%</p>
+              <p style={{ color: "var(--accent)", fontWeight: 800, fontSize: 18, margin: "0 0 4px" }}>
+                {matchComparison.status === "updated"
+                  ? `${matchComparison.before}% → ${matchComparison.after}%`
+                  : `${selectedGrant.similarity_score}%`}
+              </p>
+              <p style={{ color: "#666", fontSize: 9, margin: 0 }}>
+                {matchComparison.status === "updated"
+                  ? "Original proposal → new draft"
+                  : matchComparison.status === "updating"
+                    ? "Recalculating for new draft…"
+                    : matchComparison.status === "unavailable"
+                      ? "New draft match score unavailable"
+                      : "Original proposal match"}
+              </p>
             </div>
 
             {selectedGrant.close_date && (

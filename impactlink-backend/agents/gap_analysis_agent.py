@@ -12,6 +12,19 @@ from dotenv import load_dotenv
 load_dotenv()
 log = logging.getLogger(__name__)
 
+MAX_USER_ADDITIONS_CHARS = 2000
+
+
+def validate_user_additions(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError("User instructions must be plain text.")
+    if len(value) > MAX_USER_ADDITIONS_CHARS:
+        raise ValueError(
+            f"User instructions must be {MAX_USER_ADDITIONS_CHARS} characters or fewer."
+        )
+    return value.strip()
+
+
 def _get_llm():
     return get_chat_model()
 
@@ -32,6 +45,9 @@ A gap is one of:
 DO NOT flag things that are not required by this grant.
 DO NOT be vague — each gap must reference specific grant language and specific
 proposal content (or absence of it).
+For every gap, set "section" to one of the exact section keys shown in the proposal
+below. Never invent section keys. When there is one section named PROPOSAL, use
+"proposal" as the section key.
 
 Return ONLY a JSON object with this exact structure:
 {{
@@ -50,7 +66,12 @@ Return ONLY a JSON object with this exact structure:
   "sections_to_rewrite": ["executive_summary", "evaluation_plan"]
 }}
 
-severity: "high" = likely to cause rejection | "medium" = will lower score | "low" = minor polish"""),
+severity: "high" = likely to cause rejection | "medium" = will lower score | "low" = minor polish
+
+List a section in "sections_to_rewrite" only when one or more listed gaps in that
+section requires a change. Do not select every section for general polishing, and
+leave "sections_to_rewrite" empty when the proposal already addresses the requirements.
+"""),
     ("user", """GRANT TITLE: {grant_title}
 GRANT AGENCY: {grant_agency}
 GRANT DESCRIPTION:
@@ -101,10 +122,34 @@ def analyze_gaps(
     try:
         result = json.loads(raw.strip())
         _validate_analysis(result)
-        return result
+        return _normalize_section_keys(result, existing_sections)
     except (json.JSONDecodeError, ValueError) as e:
         log.warning("gap_analysis: JSON parse failed — %s\nRaw: %s", e, raw)
         return _empty_analysis()
+
+
+def _normalize_section_keys(analysis: dict, existing_sections: dict[str, str]) -> dict:
+    """Map model gap references to the sole key when the input is one whole document."""
+    if len(existing_sections) != 1:
+        return analysis
+
+    section_key = next(iter(existing_sections))
+    gap_categories = (
+        "missing_content",
+        "weak_evidence",
+        "wrong_vocabulary",
+        "misalignment",
+    )
+    has_gaps = False
+    for category in gap_categories:
+        gaps = analysis.get(category, [])
+        if gaps:
+            has_gaps = True
+        for gap in gaps:
+            gap["section"] = section_key
+
+    analysis["sections_to_rewrite"] = [section_key] if has_gaps else []
+    return analysis
 
 
 def apply_user_adjustments(

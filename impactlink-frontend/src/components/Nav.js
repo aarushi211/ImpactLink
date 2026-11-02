@@ -12,7 +12,6 @@ export default function Nav() {
     { label: "Build Proposal",  path: "/build" },
     { label: "Draft Assistant", path: "/draft" },
     { label: "Budget Builder",  path: "/budget" },
-    { label: "Upload",          path: "/upload" },
   ];
 
   return (

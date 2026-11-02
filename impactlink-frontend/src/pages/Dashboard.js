@@ -265,7 +265,7 @@ export default function Dashboard() {
                 <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>
                   Upload a proposal to see relevant grant opportunities
                 </p>
-                <button onClick={() => navigate("/upload")}
+                <button onClick={() => navigate("/grants")}
                   style={{ background: "var(--accent)", border: "none",
                     color: "#fff", padding: "10px 22px", borderRadius: 8,
                     fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
@@ -281,7 +281,7 @@ export default function Dashboard() {
                 { icon: "✦", label: "Build a Proposal",    sub: "Start with a guided application outline", path: "/build"   },
                 { icon: "✍", label: "Draft Assistant",     sub: "Prepare sections for a specific funder", path: "/draft"   },
                 { icon: "💰", label: "Budget Builder",      sub: "Generate a localized line-item budget",  path: "/budget"  },
-                { icon: "⬆", label: "Upload Proposal",     sub: "Find relevant grants for your project",  path: "/upload"  },
+                { icon: "⬆", label: "Find Grants",         sub: "Upload a proposal or choose a saved one", path: "/grants" },
               ].map(a => (
                 <div key={a.label} onClick={() => navigate(a.path)}
                   style={{ background: "var(--bg-card)", border: "1px solid var(--border)",

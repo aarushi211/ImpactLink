@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, storage
 import os
+import json
 import logging
 from dotenv import load_dotenv
 load_dotenv()  # Must happen before os.getenv calls below
@@ -40,7 +41,12 @@ from services.ngo_store import register, get_profile, update_profile, list_colla
 from services.ngo_collab import find_similar_ngos
 from services.auth import verify_token
 
-from api.session import create_session, advance_session, get_session_status
+from api.session import (
+    create_session,
+    advance_session,
+    stream_advance_session,
+    get_session_status,
+)
 from utils.metrics import metrics_collector
 
 import time as _time
@@ -89,6 +95,7 @@ app.add_middleware(
 class ProposalRequest(BaseModel):
     proposal: dict
     top_k: int = 5
+    grant_id: Optional[str] = None
 
 class DraftRequest(BaseModel):
     proposal: dict
@@ -231,7 +238,7 @@ def export_summary_csv():
 
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token)):
-    if not file.filename.endswith((".pdf", ".docx")):
+    if not file.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(400, "Only PDF or DOCX files are supported.")
     file_bytes = await file.read()
     
@@ -245,12 +252,22 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
         log.warning("Storage upload failed: %s", e)
 
     proposal = parse_proposal(file_bytes, file.filename)
+    if "error" in proposal:
+        log.error("Proposal parsing failed: %s", proposal.get("details", "Unknown parsing error"))
+        raise HTTPException(
+            422,
+            "Unable to extract proposal text. Please verify the file is a valid PDF or DOCX.",
+        )
     matches = await asyncio.to_thread(find_similar_grants, proposal, 5)
     return {"proposal": proposal, "matches": matches}
 
 @app.post("/api/match")
 def match(req: ProposalRequest):
-    return {"matches": find_similar_grants(req.proposal, req.top_k)}
+    return {
+        "matches": find_similar_grants(
+            req.proposal, req.top_k, include_grant_id=req.grant_id
+        )
+    }
 
 
 # ── Budget routes ──────────────────────────────────────────────
@@ -388,10 +405,37 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
     except ValueError as e:
         if "Unauthorized" in str(e):
             raise HTTPException(403, str(e))
+        if "User instructions" in str(e):
+            raise HTTPException(422, str(e))
         raise HTTPException(404, str(e))
     except Exception as e:
         log.exception("Session advance failed")
         raise HTTPException(500, "Internal session error")
+
+
+@app.post("/api/session/{session_id}/advance/stream")
+async def session_advance_stream(
+    session_id: str,
+    body: dict = {},
+    uid: str = Depends(verify_token),
+):
+    def events():
+        try:
+            for event in stream_advance_session(session_id, body, user_id=uid):
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+        except ValueError as e:
+            message = str(e)
+            log.warning("Streamed session advance rejected: %s", message)
+            yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+        except Exception:
+            log.exception("Streamed session advance failed")
+            yield f"data: {json.dumps({'type': 'error', 'message': 'Draft generation failed. Please try again.'})}\n\n"
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 @app.get("/api/session/{session_id}")
 async def session_status(session_id: str, uid: str = Depends(verify_token)):

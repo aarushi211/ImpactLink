@@ -48,15 +48,17 @@ Or manually:
 
 import uuid
 import logging
-from typing import Optional
+from typing import Iterator, Optional
 
 from langgraph.types import Command
 import os
 from psycopg_pool import ConnectionPool
 from langgraph.checkpoint.postgres import PostgresSaver
 
+from agents.gap_analysis_agent import validate_user_additions
 from flows.improve_flow import build_improve_graph
 from flows.scratch_flow import build_scratch_graph
+from utils.diff import normalize_section_headings
 
 log = logging.getLogger(__name__)
 
@@ -113,6 +115,33 @@ def _get_graph_state(session_id: str, flow: str) -> dict:
     graph = _graph_for(flow)
     state = graph.get_state(_config(session_id))
     return state.values if state else {}
+
+
+def _pending_interrupt(snapshot) -> Optional[dict]:
+    """Return the active interrupt payload from a LangGraph state snapshot."""
+    for task in getattr(snapshot, "tasks", ()):
+        for pending in getattr(task, "interrupts", ()):
+            value = getattr(pending, "value", None)
+            if isinstance(value, dict):
+                return value
+    return None
+
+
+def _find_interrupts(value):
+    """Find interrupt payloads in flat or node-nested stream update chunks."""
+    if isinstance(value, dict):
+        if "__interrupt__" in value:
+            return value["__interrupt__"]
+        for nested in value.values():
+            found = _find_interrupts(nested)
+            if found is not None:
+                return found
+    elif isinstance(value, (list, tuple)):
+        for nested in value:
+            found = _find_interrupts(nested)
+            if found is not None:
+                return found
+    return None
 
 
 def _check_ownership(state_values: dict, user_id: Optional[str]):
@@ -186,6 +215,7 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     if flow == "improve":
         for key, val in body.get("original_sections", {}).items():
             original_sections[key] = val if isinstance(val, str) else val.get("content", "")
+        original_sections = normalize_section_headings(original_sections)
 
     # Initial state — same shape as ProposalState TypedDict
     initial_state = {
@@ -216,6 +246,7 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     raw_result = graph.invoke(initial_state, config)
     response   = _extract_gate_response(raw_result)
     response["session_id"] = session_id
+    response["original_sections"] = original_sections
 
     return response
 
@@ -265,6 +296,9 @@ def advance_session(
 
     _check_ownership(state_values, user_id)
 
+    if state_values.get("gate") == "gap_review" and "user_additions" in user_input:
+        validate_user_additions(user_input["user_additions"])
+
     if state_values.get("gate") == "complete":
         return {
             "gate":       "complete",
@@ -290,6 +324,79 @@ def advance_session(
     return response
 
 
+def stream_advance_session(
+    session_id: str,
+    user_input: Optional[dict] = None,
+    user_id: Optional[str] = None,
+) -> Iterator[dict]:
+    """Resume a session and yield rewrite tokens followed by its next gate."""
+    user_input = user_input or {}
+    state_values = None
+    flow = None
+
+    for candidate_flow in ("improve", "scratch"):
+        state = _get_graph_state(session_id, candidate_flow)
+        if state:
+            state_values = state
+            flow = state.get("flow", candidate_flow)
+            break
+
+    if not state_values:
+        raise ValueError(f"Session not found: {session_id}")
+
+    _check_ownership(state_values, user_id)
+    if state_values.get("gate") == "gap_review" and "user_additions" in user_input:
+        validate_user_additions(user_input["user_additions"])
+
+    if state_values.get("gate") == "complete":
+        yield {
+            "type": "complete",
+            "response": {
+                "gate": "complete",
+                "session_id": session_id,
+                "sections": state_values.get("sections", {}),
+            },
+        }
+        return
+
+    graph = _graph_for(flow)
+    interrupts = None
+    for mode, chunk in graph.stream(
+        Command(resume=user_input),
+        _config(session_id),
+        stream_mode=["messages", "updates"],
+    ):
+        if mode == "messages":
+            message, metadata = chunk
+            if "draft_section_stream" not in metadata.get("tags", []):
+                continue
+            content = message.content
+            if isinstance(content, str) and content:
+                yield {
+                    "type": "token",
+                    "section_key": metadata.get("section_key", ""),
+                    "content": content,
+                }
+        elif mode == "updates":
+            stream_interrupts = _find_interrupts(chunk)
+            if stream_interrupts is not None:
+                interrupts = stream_interrupts
+
+    if interrupts:
+        raw_result = {"__interrupt__": interrupts}
+    else:
+        snapshot = graph.get_state(_config(session_id))
+        pending = _pending_interrupt(snapshot)
+        raw_result = (
+            {"__interrupt__": [pending]}
+            if pending
+            else (snapshot.values if snapshot else {})
+        )
+    response = _extract_gate_response(raw_result)
+    response["session_id"] = session_id
+    yield {"type": "complete", "response": response}
+
+
 # ── Session status ─────────────────────────────────────────────────────────────
 
 def get_session_status(
@@ -302,10 +409,14 @@ def get_session_status(
     """
     # Try both flows
     state_values = None
+    snapshot = None
+    flow = None
     for candidate_flow in ("improve", "scratch"):
-        sv = _get_graph_state(session_id, candidate_flow)
-        if sv:
-            state_values = sv
+        candidate_snapshot = _graph_for(candidate_flow).get_state(_config(session_id))
+        if candidate_snapshot and candidate_snapshot.values:
+            snapshot = candidate_snapshot
+            state_values = candidate_snapshot.values
+            flow = candidate_flow
             break
 
     if not state_values:
@@ -313,14 +424,18 @@ def get_session_status(
 
     _check_ownership(state_values, user_id)
 
-    return {
+    pending = _pending_interrupt(snapshot) if snapshot else None
+    response = dict(pending or {})
+    response.update({
         "session_id":       session_id,
-        "flow":             state_values.get("flow"),
-        "gate":             state_values.get("gate", "none"),
-        "flagged_sections": state_values.get("flagged_sections", []),
-        "sections":         state_values.get("sections", {}),
-        "analysis":         state_values.get("analysis"),
-        "slots":            state_values.get("slots", {}),
-        "diffs":            state_values.get("diffs", {}),
-        "funder_vocab":     state_values.get("funder_vocab", []),
-    }
+        "flow":             state_values.get("flow", flow),
+        "gate":             response.get("gate", state_values.get("gate", "none")),
+        "flagged_sections": response.get("flagged_sections", state_values.get("flagged_sections", [])),
+        "sections":         response.get("sections", state_values.get("sections", {})),
+        "original_sections": state_values.get("original_sections", {}),
+        "analysis":         response.get("analysis", state_values.get("analysis")),
+        "slots":            response.get("slots", state_values.get("slots", {})),
+        "diffs":            response.get("diffs", state_values.get("diffs", {})),
+        "funder_vocab":     response.get("funder_vocab", state_values.get("funder_vocab", [])),
+    })
+    return response

@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import { createSession, advanceSession, getSessionStatus } from "../services/api";
+import {
+  createSession,
+  advanceSession,
+  advanceSessionStream,
+  getSessionStatus,
+} from "../services/api";
 
 /**
  * useProposalSession — Managed state for a Gated Proposal Flow.
@@ -48,7 +53,11 @@ export default function useProposalSession(initialSessionId = null) {
   };
 
   const advance = async (userInput = {}) => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      const missingSessionError = new Error("Start a Draft Assistant session before advancing.");
+      setError(missingSessionError.message);
+      throw missingSessionError;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -57,6 +66,26 @@ export default function useProposalSession(initialSessionId = null) {
       return res;
     } catch (err) {
       setError(err.response?.data?.detail || err.message || "Failed to advance session");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const advanceStream = async (userInput = {}, onToken = () => {}) => {
+    if (!sessionId) {
+      const missingSessionError = new Error("Start a Draft Assistant session before advancing.");
+      setError(missingSessionError.message);
+      throw missingSessionError;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await advanceSessionStream(sessionId, userInput, onToken);
+      _sync(res);
+      return res;
+    } catch (err) {
+      setError(err.message || "Failed to advance session");
       throw err;
     } finally {
       setLoading(false);
@@ -75,6 +104,13 @@ export default function useProposalSession(initialSessionId = null) {
       setLoading(false);
     }
   }, [sessionId, _sync]);
+
+  const restore = useCallback((id) => {
+    setSessionId(id);
+    setGate("none");
+    setData({});
+    setError(null);
+  }, []);
 
   // Re-hydrate if sessionId changes (e.g. from URL param)
   useEffect(() => {
@@ -97,7 +133,9 @@ export default function useProposalSession(initialSessionId = null) {
     error,
     start,
     advance,
+    advanceStream,
     refresh,
+    restore,
     setGate,
     setData,
     reset: () => {

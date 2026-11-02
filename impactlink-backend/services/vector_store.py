@@ -87,6 +87,11 @@ def clean_html(text: str) -> str:
 
 
 def proposal_to_text(proposal: dict) -> str:
+    sections = proposal.get("sections") or {}
+    section_text = "\n".join(
+        f"{key}: {value.get('content', '') if isinstance(value, dict) else value}"
+        for key, value in sections.items()
+    )[:12000]
     return f"""
     Title: {proposal.get('project_title', '')}
     Mission: {proposal.get('primary_mission', '')}
@@ -95,6 +100,7 @@ def proposal_to_text(proposal: dict) -> str:
     Activities: {', '.join(proposal.get('key_activities', []))}
     SDGs: {', '.join(proposal.get('sdg_alignment', []))}
     Cause Area: {proposal.get('cause_area', '')}
+    Draft sections: {section_text}
     """.strip()
 
 
@@ -143,6 +149,25 @@ def _vector_search(embedding: list, n_results: int) -> list[dict]:
                 LIMIT %s
             """, (vec_str, vec_str, n_results))
             return cur.fetchall()
+
+
+def _vector_search_grant(embedding: list, grant_id: str) -> dict | None:
+    """Fetch one requested grant with its similarity to the proposal."""
+    pool = _get_pool()
+    vec_str = "[" + ",".join(str(v) for v in embedding) + "]"
+    with pool.connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""
+                SELECT
+                    grant_id, title, agency, award_floor, award_ceiling,
+                    application_url, portal_url, close_date, focus_areas,
+                    contact_email, contact_name, funding_method, estimated_total,
+                    description, eligibility,
+                    1 - (embedding <=> %s::vector) AS similarity
+                FROM grants
+                WHERE grant_id = %s
+            """, (vec_str, grant_id))
+            return cur.fetchone()
 
 
 # ── Pydantic models ───────────────────────────────────────────────────────────
@@ -207,7 +232,9 @@ Return JSON array now:""")
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
+def find_similar_grants(
+    proposal: dict, top_k: int = 5, include_grant_id: str | None = None
+) -> list:
     """
     Full proposal → vector search → LLM re-rank → top_k results.
     Replaces the ChromaDB-backed version; no local file dependency.
@@ -216,6 +243,12 @@ def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
     proposal_embedding = model.encode(proposal_to_text(proposal)).tolist()
 
     rows = _vector_search(proposal_embedding, n_results=20)
+    if include_grant_id and all(
+        str(row["grant_id"]) != str(include_grant_id) for row in rows
+    ):
+        requested_grant = _vector_search_grant(proposal_embedding, include_grant_id)
+        if requested_grant:
+            rows.append(requested_grant)
     if not rows:
         log.warning("find_similar_grants: no rows returned from pgvector")
         return []

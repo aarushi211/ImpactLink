@@ -519,10 +519,10 @@ export default function Budget() {
               <p style={{ marginTop: 12, color: "#444", fontSize: 12 }}>
                 No proposal uploaded yet.{" "}
                 <span
-                  onClick={() => navigate("/upload")}
+                  onClick={() => navigate("/grants")}
                   style={{ color: "var(--accent)", cursor: "pointer", fontWeight: 600 }}
                 >
-                  Upload one first
+                  Choose or upload one in Grants
                 </span>{" "}
                 to get a localized budget.
               </p>
