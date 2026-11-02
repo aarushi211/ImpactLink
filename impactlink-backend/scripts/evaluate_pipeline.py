@@ -39,9 +39,8 @@ from eval_common import (
     load_scenario,
     load_scenarios,
     print_header,
-    print_key_pool_status,
     save_report,
-    setup_eval_llm_runtime,
+    setup_openai_runtime,
     summarize_agent_trace,
     summarize_sections,
     validate_scenario,
@@ -214,12 +213,12 @@ def main() -> int:
         parser.error("Specify --all or --scenario <id>")
 
     print_header("ImpactLink Pipeline Evaluation")
-    key_count = setup_eval_llm_runtime()
+    llm_ready = setup_openai_runtime()
     print(f"Scenarios: {len(scenarios)} | Mode: {'quick' if args.quick else 'full'}")
-    if key_count == 0:
-        print("Aborting: set GROQ_API_KEY in .env before running pipeline eval.\n")
+    if not llm_ready:
+        print("Aborting: set OPENAI_API_KEY in .env before running pipeline eval.\n")
         return 1
-    print("Rate-limit messages will print as [EVAL] when rotation/retry occurs.\n")
+    print()
 
     results = []
     for scenario in scenarios:
@@ -265,7 +264,6 @@ def main() -> int:
     out_name = args.output or f"pipeline_{report['mode']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     out_path = save_report(out_name, report)
     print(f"\nReport saved: {out_path}")
-    print_key_pool_status()
 
     failed = sum(1 for r in results if r["status"] != "ok")
     return 1 if failed else 0

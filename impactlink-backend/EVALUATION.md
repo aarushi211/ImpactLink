@@ -41,7 +41,7 @@ python scripts/evaluate_retrieval.py
 # Fast: budget + offline retrieval (no LLM pipeline)
 python scripts/evaluate_all.py
 
-# Live retrieval (needs DATABASE_URL + GROQ_API_KEY)
+# Live retrieval (needs DATABASE_URL + OPENAI_API_KEY)
 python scripts/evaluate_retrieval.py --live
 
 # Budget + retrieval + quick pipeline
@@ -55,7 +55,7 @@ python scripts/evaluate_pipeline.py --all --quick      # ~1 min
 python scripts/evaluate_generation.py
 ```
 
-Reports → `Data/eval_results/*.json`. LLM runs print `[EVAL]` messages for Groq key rotation and 429 retries.
+Reports → `Data/eval_results/*.json`. LLM runs use the configured OpenAI model; monitor API spend in the OpenAI platform dashboard.
 
 ---
 

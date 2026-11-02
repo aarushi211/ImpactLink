@@ -1,25 +1,17 @@
 """
 services/budget/rules.py
 """
-import os
-import random
 from typing import Set
 
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 
 from .models import CategoryType, GrantRules
 from .constants import INDIRECT_CATEGORIES_DEFAULT
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm() -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+def _get_llm():
+    return get_chat_model()
 
 
 def resolve_indirect_categories(rules: GrantRules) -> Set[CategoryType]:

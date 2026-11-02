@@ -19,15 +19,15 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPTS))
 
 from agents.scoring_agent import score_section
-from eval_common import load_scenario, print_header, print_key_pool_status, setup_eval_llm_runtime
+from eval_common import load_scenario, print_header, setup_openai_runtime
 
 
 def evaluate_generation() -> int:
     print_header("ScoringAgent Smoke Test")
-    if setup_eval_llm_runtime() == 0:
-        print("Aborting: set GROQ_API_KEY in .env")
+    if not setup_openai_runtime():
+        print("Aborting: set OPENAI_API_KEY in .env")
         return 1
-    print("Rate-limit messages will print as [EVAL] when rotation/retry occurs.\n")
+    print()
 
     scenario = load_scenario("la_urban_forestry")
     grant = scenario["grant"]
@@ -78,11 +78,9 @@ def evaluate_generation() -> int:
 
     if len(results) == 2 and results[1] > results[0]:
         print("PASS: stronger draft scored higher than weak draft.")
-        print_key_pool_status()
         return 0
 
     print("WARN: expected stronger draft to outscore weak draft.")
-    print_key_pool_status()
     return 1
 
 

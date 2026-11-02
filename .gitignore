@@ -17,3 +17,4 @@ testpipeline.py
 langgraph_sessions.db
 impactlink-backend/langgraph_sessions.db
 *.json
+.venv/

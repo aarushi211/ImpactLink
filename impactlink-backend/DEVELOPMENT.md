@@ -9,7 +9,7 @@ Local setup, API reference, and operational notes for `impactlink-backend/`.
 - Python 3.11+
 - Supabase PostgreSQL with `pgvector` enabled
 - Firebase project (Auth + Storage)
-- Groq API key ([console.groq.com](https://console.groq.com))
+- OpenAI API key ([OpenAI platform](https://platform.openai.com/api-keys))
 
 ---
 
@@ -18,7 +18,8 @@ Local setup, API reference, and operational notes for `impactlink-backend/`.
 Create `impactlink-backend/.env`:
 
 ```env
-GROQ_API_KEY=gsk_...                    # comma-separate for key rotation
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-6.1-sol
 DATABASE_URL=postgresql://postgres:...@db....supabase.co:5432/postgres
 FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 ALLOW_ORIGINS=http://localhost:3000
@@ -47,6 +48,10 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 docker compose up --build   # from repo root, port 8081
 ```
+
+Docker Compose reads `${...}` values from a repo-root `.env` file (or the shell
+environment). The backend `.env` file is used when running Python directly; it
+is not automatically loaded by Compose. Keep API keys out of version control.
 
 **Note:** `docker-compose.yml` starts the **backend only** (port 8081). The frontend service block is commented out because the live demo runs on [Firebase Hosting](https://impactlink-cbfc5.web.app). For local full-stack development, run the frontend separately:
 
@@ -83,7 +88,7 @@ impactlink-backend/
 │   ├── vector_store.py     # pgvector search + topic rerank
 │   ├── parser.py           # PDF/DOCX parsing
 │   └── budget/             # Deterministic budget engine
-├── utils/llm.py            # RotatingGroq key pool
+├── utils/llm.py            # Shared OpenAI model configuration + call metrics
 ├── utils/metrics.py        # Latency instrumentation
 ├── load_vectors.py         # Seed grants into PostgreSQL
 └── scripts/                # Eval + grant ingestion
@@ -187,7 +192,16 @@ curl http://localhost:8000/api/metrics/<session_id>
 
 Instrumentation: `utils/metrics.py` (decorator + `/api/metrics`).
 
-### Benchmarks (local, Groq Llama 3.3 70B)
+### LLM provider
+
+The backend uses OpenAI's `gpt-6.1-sol` by default. Override `OPENAI_MODEL` to
+select another compatible Chat Completions model. Structured-output calls
+require a model that supports JSON Schema outputs. Set `OPENAI_API_KEY` as a
+local environment variable or in `.env`; in Cloud Run, store it as a Secret
+Manager secret and expose it to the service as `OPENAI_API_KEY`. Never commit
+the key. API usage is billed separately from ChatGPT subscriptions.
+
+### Benchmarks (local)
 
 | Metric | Typical |
 |---|---|

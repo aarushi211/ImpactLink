@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-import random
 import re
 from typing import Literal
 
@@ -17,14 +15,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import timed
 
 load_dotenv()
 log = logging.getLogger(__name__)
-
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
 MAX_COHERENCE_FIXES = 2
 
@@ -72,16 +67,8 @@ PROPOSAL SECTIONS:
 ])
 
 
-def _get_llm() -> RotatingGroq:
-    from config import GROQ_API_KEY
-
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0,
-        groq_api_key=key,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
+def _get_llm():
+    return get_chat_model(json_mode=True)
 
 
 def _sections_digest(sections: dict) -> str:

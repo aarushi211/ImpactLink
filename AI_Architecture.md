@@ -13,7 +13,7 @@ ImpactLink operates on a serverless, decoupled architecture prioritizing asynchr
 - **Client Layer**: React 18 SPA utilizing Server-Sent Events (SSE) for low-latency streaming of AI agent states.
 - **Orchestration Layer**: FastAPI (Python) serving as the asynchronous gateway, managing LangGraph state machines and connection pooling.
 - **Data Layer**: Supabase (PostgreSQL) handling normalized relational data, `pgvector` embeddings, and Row Level Security (RLS) for tenant isolation.
-- **Inference Layer**: Groq LPU clusters running `Llama-3.3-70b-versatile` for high-speed, parallelized generation.
+- **Inference Layer**: OpenAI API using `gpt-6.1-sol` for proposal drafting, scoring, and structured agent outputs.
 
 ---
 
@@ -112,7 +112,7 @@ After all sections draft, `node_coherence_check` runs `CoherenceAgent.check()` a
 
 **Detection method (LLM holistic review, not programmatic diff):**
 1. Each section is truncated to ~500 characters in `_sections_digest()` and concatenated into one prompt.
-2. A single Groq call (`llama-3.3-70b-versatile`, JSON mode) compares all sections together and returns a `CoherenceReport` with up to 5 structured issues (beneficiary count mismatches, budget vs. narrative gaps, KPI/goal misalignment, etc.).
+2. A single OpenAI call (JSON mode) compares all sections together and returns a `CoherenceReport` with up to 5 structured issues (beneficiary count mismatches, budget vs. narrative gaps, KPI/goal misalignment, etc.).
 3. If parsing fails, the agent fails open (`coherent=True`) so drafting is not blocked.
 
 **Fix loop (max 2):**

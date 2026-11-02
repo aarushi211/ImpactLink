@@ -33,16 +33,14 @@ import os
 import json
 import re
 import time
-import random
 import logging
 from psycopg_pool import ConnectionPool
 from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
 from typing import List, Literal
 from sentence_transformers import SentenceTransformer
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from langchain_core.prompts import ChatPromptTemplate
-from config import USE_GROQ, GROQ_API_KEY
 
 log = logging.getLogger(__name__)
 
@@ -50,10 +48,6 @@ MODEL_NAME = "all-MiniLM-L6-v2"
 DB_URL     = os.getenv("DATABASE_URL")
 if not DB_URL:
     raise ValueError("DATABASE_URL environment variable is required.")
-
-# Parse keys once at module level (same as RotatingGroq does)
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
 _pool: ConnectionPool | None = None
 _embedding_model = None
@@ -82,25 +76,8 @@ def _get_model() -> SentenceTransformer:
     return _embedding_model
 
 
-def _get_llm() -> RotatingGroq:
-    """
-    Always constructs a fresh RotatingGroq with a pre-selected valid key.
-
-    Why: with_structured_output() initialises the underlying Groq client
-    at chain-build time, BEFORE _generate() is ever called.  If we rely
-    solely on the key rotation inside _generate/_agenerate, the client is
-    created with whatever stale/empty key was set on the instance, causing
-    a 401 before a single token is produced.
-
-    Passing the key explicitly at construction time guarantees the Groq
-    client is initialised with a real key on every call.
-    """
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    log.info("🔄 Using Groq Key: %s...", str(key)[:7])
-    return RotatingGroq(
-        model="llama-3.3-70b-versatile",
-        groq_api_key=key,
-    )
+def _get_llm():
+    return get_chat_model()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -254,14 +231,12 @@ def find_similar_grants(proposal: dict, top_k: int = 5) -> list:
             "vector_score":  round(float(row["similarity"]) * 100, 1),
         })
 
-    # ── LLM re-rank with retry + key rotation per attempt ────────────────────
+    # ── LLM re-rank with retries ─────────────────────────────────────────────
     log.info("Re-ranking %d candidates with LLM", len(initial_candidates))
     refined_data: dict = {}
 
     for attempt in range(3):
         try:
-            # Fresh instance each attempt — guarantees with_structured_output()
-            # initialises the Groq client with a valid, freshly-rotated key.
             llm = _get_llm()
             structured_llm = llm.with_structured_output(ReRankerList)
             chain = RERANK_PROMPT | structured_llm

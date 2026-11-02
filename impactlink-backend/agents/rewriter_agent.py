@@ -2,10 +2,8 @@
 agents/rewriter_agent.py
 """
 
-import os
-import random
 import logging
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
@@ -14,14 +12,8 @@ from agents.vocab_extractor import vocab_to_prompt_str
 load_dotenv()
 log = logging.getLogger(__name__)
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm(temperature: float = 0.3) -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=temperature, groq_api_key=key)
+def _get_llm():
+    return get_chat_model()
 
 
 REWRITE_PROMPT = ChatPromptTemplate.from_messages([
@@ -115,7 +107,7 @@ def rewrite_section(
         if gaps_for_section
         else "No specific gaps identified — polish vocabulary and evidence."
     )
-    llm      = _get_llm(temperature=0.3)
+    llm      = _get_llm()
     chain    = REWRITE_PROMPT | llm
     response = chain.invoke({
         "section_title":    section_title,
@@ -150,7 +142,7 @@ def targeted_retry_rewrite(
     general_feedback: str,
     funder_vocab: list[str],
 ) -> str:
-    llm = _get_llm(temperature=0.3)
+    llm = _get_llm()
     chain = TARGETED_RETRY_PROMPT | llm
     response = chain.invoke({
         "section_title": section_title,
@@ -169,7 +161,7 @@ def retry_rewrite(
     scorer_feedback: str,
     funder_vocab:    list[str],
 ) -> str:
-    llm      = _get_llm(temperature=0.3)
+    llm      = _get_llm()
     chain    = RETRY_PROMPT | llm
     response = chain.invoke({
         "section_title":   section_title,

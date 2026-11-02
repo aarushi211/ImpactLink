@@ -12,7 +12,7 @@ Usage:
         ...
 
     # Manual style — for finer-grained control
-    with metrics_collector.timer("llm_call", "groq_generate", session_id="abc"):
+    with metrics_collector.timer("llm_call", "openai_generate", session_id="abc"):
         result = llm.invoke(...)
 
     # Query results

@@ -2,20 +2,16 @@
 services/budget/generator.py  —  Personnel-first budget pipeline
 """
 
-import os
-import random
-from typing import Optional, List, Set
+from typing import Optional, List
 
-from utils.llm import RotatingGroq
-from utils.metrics import timed, metrics_collector
+from utils.llm import get_chat_model
+from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
 
 from .models import (
-    CategoryType, BudgetAllocationPlan, BudgetCategory,
-    BudgetLineItem, LocalizedBudget, ComplianceViolation, GrantRules,
+    CategoryType, BudgetAllocationPlan, LocalizedBudget, ComplianceViolation, GrantRules,
 )
-from .constants import PERSONNEL_CATEGORIES, INDIRECT_CATEGORIES_DEFAULT
+from .constants import PERSONNEL_CATEGORIES
 from .utils import (
     load_locality_index, resolve_multiplier,
     get_minimum_wage, compute_labor_cap, allocations_to_line_items,
@@ -24,14 +20,8 @@ from .rules import extract_grant_rules, resolve_indirect_categories, resolve_una
 from .compliance import enforce_grant_rules
 from .personnel import extract_personnel_from_proposal, compute_personnel_budget
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm() -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+def _get_llm():
+    return get_chat_model()
 
 
 def _proposal_preferred_categories(proposal: dict) -> List[str]:

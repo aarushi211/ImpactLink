@@ -27,7 +27,7 @@ from evaluate_logic import run_evaluation as run_budget_eval
 from evaluate_retrieval import run_offline_eval
 from evaluate_pipeline import run_scenario, _aggregate_results
 
-from eval_common import load_scenarios, print_header, print_key_pool_status, save_report, setup_eval_llm_runtime
+from eval_common import load_scenarios, print_header, save_report, setup_openai_runtime
 
 
 def main() -> int:
@@ -59,11 +59,10 @@ def main() -> int:
 
     if args.with_pipeline:
         print("\n[3/3] Pipeline (LLM)")
-        if setup_eval_llm_runtime() == 0:
-            print("  Skipping pipeline: GROQ_API_KEY not set.")
+        if not setup_openai_runtime():
+            print("  Skipping pipeline: OPENAI_API_KEY not set.")
             exit_code = 1
         else:
-            print("  Rate-limit messages will print as [EVAL] when rotation/retry occurs.")
             scenarios = load_scenarios()
             if args.scenario:
                 scenarios = [s for s in scenarios if s["id"] == args.scenario]
@@ -87,7 +86,6 @@ def main() -> int:
             print(f"  -> {ok} ok, {failed} failed")
             if failed:
                 exit_code = 1
-            print_key_pool_status()
 
     out_path = save_report(
         f"combined_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",

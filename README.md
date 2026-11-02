@@ -26,7 +26,7 @@ ImpactLink helps nonprofits **match grants**, **draft multi-section proposals**,
 | Budget engine | Wage floors, indirect caps, personnel modeling — no LLM math |
 | Improve flow | Gap analysis + targeted rewrites on uploaded proposals |
 
-**Stack:** React · FastAPI · LangGraph · Groq (Llama 3.3 70B) · Supabase PostgreSQL · Firebase Auth
+**Stack:** React · FastAPI · LangGraph · OpenAI API · Supabase PostgreSQL · Firebase Auth
 
 ---
 
@@ -37,7 +37,7 @@ React SPA  ──REST──▶  FastAPI
                         ├── LangGraph sessions (scratch + improve flows)
                         ├── pgvector grant search
                         └── Budget engine (deterministic)
-              Groq API · Supabase PG · Firebase Storage
+              OpenAI API · Supabase PG · Firebase Storage
 ```
 
 **Scratch flow:** slot Q&A → plan → draft 10 sections (scored + retried) → coherence check → human review → PDF.
@@ -76,7 +76,7 @@ cd impactlink-frontend && npm install && npm start
 
 Open [localhost:3000](http://localhost:3000) → sign in → **Build** or **Grants**.
 
-Full setup (Supabase, Firebase, Groq keys): **[impactlink-backend/DEVELOPMENT.md](./impactlink-backend/DEVELOPMENT.md)**
+Full setup (Supabase, Firebase, OpenAI API key): **[impactlink-backend/DEVELOPMENT.md](./impactlink-backend/DEVELOPMENT.md)**
 
 ---
 

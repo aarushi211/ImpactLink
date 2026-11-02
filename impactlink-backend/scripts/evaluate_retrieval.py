@@ -29,10 +29,9 @@ from eval_common import (
     load_scenarios,
     precision_at_k,
     print_header,
-    print_key_pool_status,
     recall_at_k,
     save_report,
-    setup_eval_llm_runtime,
+    setup_openai_runtime,
 )
 
 
@@ -172,10 +171,10 @@ def main() -> int:
 
     if args.live:
         print("Mode: live vector DB\n")
-        if setup_eval_llm_runtime() == 0:
-            print("Aborting: GROQ_API_KEY required for live retrieval reranking.")
+        if not setup_openai_runtime():
+            print("Aborting: OPENAI_API_KEY required for live retrieval reranking.")
             return 1
-        print("Rate-limit messages will print as [EVAL] when rotation/retry occurs.\n")
+        print()
         report = run_live_eval(k=args.k)
     else:
         print("Mode: offline keyword ranker (no DB required)\n")
@@ -204,9 +203,6 @@ def main() -> int:
     out_name = args.output or f"retrieval_{report['mode']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     out_path = save_report(out_name, report)
     print(f"Report saved: {out_path}")
-    if args.live:
-        print_key_pool_status()
-
     return 0
 
 

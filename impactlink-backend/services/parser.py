@@ -1,6 +1,5 @@
 import os
 import re
-import random
 import tempfile
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -8,12 +7,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 from sentence_transformers import SentenceTransformer
-from utils.llm import RotatingGroq
-from config import GROQ_API_KEY
-
-# Parse keys once at module level (mirrors vector_store.py)
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
+from utils.llm import get_chat_model
 
 
 # ── Embedder ──────────────────────────────────────────────────────────────────
@@ -54,21 +48,8 @@ CRITICAL: Return ONLY a valid JSON object matching the requested schema."""),
 ])
 
 
-def _get_llm() -> RotatingGroq:
-    """
-    Always returns a fresh RotatingGroq with a pre-selected valid key.
-
-    with_structured_output() initialises the Groq HTTP client at chain-build
-    time — before _generate() ever runs — so key rotation inside _generate
-    is too late.  Passing the key explicitly at construction time ensures
-    every chain invocation starts with a valid credential.
-    """
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0,
-        groq_api_key=key,
-    )
+def _get_llm():
+    return get_chat_model()
 
 
 # ── Semantic chunk selector ───────────────────────────────────────────────────
@@ -134,10 +115,9 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
         else:
             context = full_text
 
-        print(f"🧠 Extracting features using Groq ({len(context)} chars)...")
+        print(f"🧠 Extracting features using OpenAI ({len(context)} chars)...")
 
-        # 3. Build chain with a fresh LLM instance each call so the Groq client
-        #    is always initialised with a valid, freshly-rotated key.
+        # 3. Build chain with a fresh LLM instance for this extraction call.
         llm = _get_llm()
         chain = EXTRACTION_PROMPT | llm.with_structured_output(ProposalFeatures)
         result = chain.invoke({"text": context})

@@ -2,11 +2,9 @@
 agents/gap_analysis_agent.py
 """
 
-import os
 import json
-import random
 import logging
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
@@ -14,14 +12,8 @@ from dotenv import load_dotenv
 load_dotenv()
 log = logging.getLogger(__name__)
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm() -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=key)
+def _get_llm():
+    return get_chat_model()
 
 
 GAP_PROMPT = ChatPromptTemplate.from_messages([

@@ -7,7 +7,7 @@ Shared helpers for ImpactLink offline evaluation harnesses.
 from __future__ import annotations
 
 import json
-import logging
+import os
 import statistics
 import sys
 from collections import Counter
@@ -21,113 +21,16 @@ from agents.slot_extractor import SLOT_DEFINITIONS, initial_slots, slots_to_prof
 DATA_DIR = Path(__file__).resolve().parent.parent / "Data"
 RESULTS_DIR = DATA_DIR / "eval_results"
 
-_EVAL_LLM_LOGGER = "utils.llm"
-_EVAL_LLM_HOOKED = False
-
-
-class _EvalGroqLogHandler(logging.Handler):
-    """Surface Groq pool rotation / retry messages in eval console output."""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        try:
-            msg = record.getMessage()
-            if "[Sync]" in msg and "retrying in" in msg:
-                if "rate-limited" in msg:
-                    print(
-                        f"[EVAL] Rate limited (429) - rotating key and retrying. {msg}",
-                        flush=True,
-                    )
-                else:
-                    print(f"[EVAL] Transient LLM error - retrying. {msg}", flush=True)
-            elif "All keys cooling down" in msg:
-                print(
-                    f"[EVAL] All Groq keys are rate-limited - waiting for cooldown. {msg}",
-                    flush=True,
-                )
-            elif "[Pool]" in msg and ("sync" in msg or "async" in msg):
-                print(f"[EVAL] {msg}", flush=True)
-            elif "quarantined" in msg:
-                print(f"[EVAL] {msg}", flush=True)
-        except Exception:
-            self.handleError(record)
-
-
-def setup_eval_llm_runtime() -> int:
-    """
-    Enable visible Groq key-pool rotation for LLM-backed eval scripts.
-
-    Uses the shared KEY_POOL from utils.llm (same as production RotatingGroq).
-    Prints when keys are rotated, rate-limited, or cooling down.
-
-    Returns the number of API keys loaded from GROQ_API_KEY.
-    """
-    global _EVAL_LLM_HOOKED
-
+def setup_openai_runtime() -> bool:
     load_dotenv()
+    if not os.getenv("OPENAI_API_KEY"):
+        print("[EVAL] WARNING: OPENAI_API_KEY is not set. LLM evals will fail.", flush=True)
+        return False
 
-    from utils.llm import KEY_POOL, _KEYS
+    from utils.llm import MODEL_NAME
 
-    logger = logging.getLogger(_EVAL_LLM_LOGGER)
-    if not any(isinstance(h, _EvalGroqLogHandler) for h in logger.handlers):
-        handler = _EvalGroqLogHandler()
-        handler.setLevel(logging.INFO)
-        logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
-
-    if not _EVAL_LLM_HOOKED:
-        original_report = KEY_POOL.report_rate_limit
-
-        def report_rate_limit_with_notice(key: str) -> None:
-            print(
-                f"[EVAL] Rate limited (429) on key ...{key[-4:]}. "
-                "Quarantining 60s and rotating to next key.",
-                flush=True,
-            )
-            original_report(key)
-
-        KEY_POOL.report_rate_limit = report_rate_limit_with_notice  # type: ignore[method-assign]
-        _EVAL_LLM_HOOKED = True
-
-    n = len(_KEYS)
-    if n == 0:
-        print("[EVAL] WARNING: GROQ_API_KEY is not set. LLM evals will fail.", flush=True)
-    elif n == 1:
-        print(
-            "[EVAL] Groq: 1 API key loaded. "
-            "Add comma-separated keys in GROQ_API_KEY for rotation.",
-            flush=True,
-        )
-    else:
-        print(
-            f"[EVAL] Groq: {n} API keys loaded - rotation and 429 retry enabled.",
-            flush=True,
-        )
-    return n
-
-
-def print_key_pool_status() -> None:
-    """Print end-of-run summary for Groq key pool health."""
-    try:
-        from utils.llm import KEY_POOL
-
-        status = KEY_POOL.status()
-    except Exception:
-        return
-
-    cooling = [s for s in status if s["cooling_down"]]
-    failures = sum(s["failures"] for s in status)
-    if not cooling and failures == 0:
-        return
-
-    print("[EVAL] Key pool summary:", flush=True)
-    for row in status:
-        if row["cooling_down"] or row["failures"]:
-            print(
-                f"  ...{row['key_suffix']}: failures={row['failures']}, "
-                f"cooldown={row['cooldown_remaining_s']}s",
-                flush=True,
-            )
+    print(f"[EVAL] OpenAI model: {MODEL_NAME}", flush=True)
+    return True
 
 
 def load_json(path: Path) -> Any:

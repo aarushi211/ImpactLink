@@ -4,7 +4,7 @@ scripts/evaluate_logic.py
 Deterministic evaluation for the budget engine.
 
 Usage:
-    python scripts/evaluate_logic.py              # full pipeline (needs GROQ_API_KEY)
+    python scripts/evaluate_logic.py              # full pipeline (needs OPENAI_API_KEY)
     python scripts/evaluate_logic.py --offline    # compliance math only (CI-safe)
 """
 
@@ -240,7 +240,7 @@ def main() -> int:
     parser.add_argument(
         "--offline",
         action="store_true",
-        help="Run deterministic compliance tests only (no GROQ_API_KEY)",
+        help="Run deterministic compliance tests only (no OPENAI_API_KEY)",
     )
     args = parser.parse_args()
 

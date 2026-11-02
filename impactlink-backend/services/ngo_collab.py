@@ -2,18 +2,13 @@
 services/ngo_collab.py — fixed: no module-level LLM singleton
 """
 
-import os
 import json
 import re
-import random
 from sentence_transformers import SentenceTransformer
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from langchain_core.prompts import ChatPromptTemplate
 
 MODEL_NAME = "all-MiniLM-L6-v2"
-
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
 _embedding_model = None
 
@@ -25,10 +20,8 @@ def _get_model():
     return _embedding_model
 
 
-def _get_llm(temperature: float = 0.2) -> RotatingGroq:
-    from config import GROQ_API_KEY
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(model="llama-3.3-70b-versatile", temperature=temperature, groq_api_key=key)
+def _get_llm():
+    return get_chat_model()
 
 
 # ── Location helpers ──────────────────────────────────────────────────────────
@@ -183,7 +176,7 @@ def find_similar_ngos(
 
     try:
         # Fresh LLM — plain invoke (no with_structured_output), still needs valid key
-        llm      = _get_llm(temperature=0.2)
+        llm      = _get_llm()
         chain    = COLLAB_PROMPT | llm
         resp     = chain.invoke({
             "proposal": json.dumps({

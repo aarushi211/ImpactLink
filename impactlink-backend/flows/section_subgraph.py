@@ -15,8 +15,6 @@ node_draft_sections in scratch_flow.py calls this in parallel via ThreadPoolExec
 from __future__ import annotations
 
 import logging
-import os
-import random
 import time
 from typing import Optional
 
@@ -44,24 +42,13 @@ from agents.tools.grant_requirements import (
 )
 from agents.vocab_extractor import vocab_to_prompt_str
 from state.proposal_state import SectionResult
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import metrics_collector
 
 log = logging.getLogger(__name__)
 
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
-
-
-def _get_llm(temperature: float = 0.3) -> RotatingGroq:
-    from config import GROQ_API_KEY
-
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=temperature,
-        groq_api_key=key,
-    )
+def _get_llm():
+    return get_chat_model()
 
 
 class SectionDraftAgent:
@@ -77,7 +64,7 @@ class SectionDraftAgent:
         drafting_plan: Optional[dict] = None,
         prior_sections_context: str = "",
     ) -> str:
-        llm = _get_llm(temperature=0.3)
+        llm = _get_llm()
         chain = SECTION_PROMPT | llm
 
         instructions = section["instructions"]

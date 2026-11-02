@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-import random
 import re
 from typing import Optional
 
@@ -19,14 +17,11 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 from agents.prompts import SECTIONS
-from utils.llm import RotatingGroq
+from utils.llm import get_chat_model
 from utils.metrics import timed
 
 load_dotenv()
 log = logging.getLogger(__name__)
-
-_RAW_KEYS = os.getenv("GROQ_API_KEY", "")
-GROQ_KEYS = [k.strip() for k in _RAW_KEYS.split(",") if k.strip()]
 
 # Phased drafting waves — later waves receive summaries from earlier waves.
 DRAFTING_WAVES: list[list[str]] = [
@@ -163,16 +158,8 @@ NGO PROFILE:
 ])
 
 
-def _get_llm() -> RotatingGroq:
-    from config import GROQ_API_KEY
-
-    key = random.choice(GROQ_KEYS) if GROQ_KEYS else GROQ_API_KEY
-    return RotatingGroq(
-        model="llama-3.3-70b-versatile",
-        temperature=0,
-        groq_api_key=key,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
+def _get_llm():
+    return get_chat_model(json_mode=True)
 
 
 def _default_plan(funder_vocab: list[str]) -> DraftingPlan:
