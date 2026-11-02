@@ -75,11 +75,10 @@ export default function GrantDetail() {
               <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.7, margin: 0 }}>{grant.description}</p>
             </div>
 
-            {/* AI Match Explanation */}
-            <div style={{ background: "#0f0f1e", border: "1px solid #2a2a4e", borderRadius: 16, padding: 24 }}>
+            {/* Match explanation */}
+            <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <span>✦</span>
-                <h3 style={{ fontWeight: 700, color: "var(--accent)", fontSize: 15, margin: 0 }}>Why This Matches Your Profile</h3>
+                <h3 style={{ fontWeight: 700, color: "var(--accent)", fontSize: 15, margin: 0 }}>How this aligns with your profile</h3>
               </div>
               <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.7, margin: "0 0 14px" }}>{grant.match_explanation}</p>
               <div style={{ background: "#1a1a30", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10 }}>
@@ -147,7 +146,7 @@ export default function GrantDetail() {
                 fontSize: 15, fontWeight: 700, cursor: "pointer",
               }}
             >
-              ✍ Draft Proposal with AI
+              ✍ Draft proposal
             </button>
             <button style={{
               width: "100%", background: "var(--bg-card)", border: "1px solid var(--border)",
@@ -164,7 +163,7 @@ export default function GrantDetail() {
                  fontSize: 14, fontWeight: 700, cursor: "pointer",
                }}
              >
-               💰 Build Budget with AI
+               💰 Build budget
              </button>
 
             {/* Grant Details */}

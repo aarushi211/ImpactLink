@@ -134,7 +134,7 @@ export default function Profile() {
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{
               width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-              background: "linear-gradient(135deg, var(--accent), #4f46e5)",
+              background: "var(--accent-dim)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontWeight: 900, fontSize: 24, color: "#fff",
             }}>

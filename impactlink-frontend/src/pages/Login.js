@@ -191,7 +191,7 @@ export default function Login() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
           <span style={{ fontSize: 28 }}>⊚</span>
           <span style={{ fontWeight: 800, fontSize: 22, color: "#fff", letterSpacing: "-0.02em" }}>
-            ImpactLink AI
+            ImpactLink
           </span>
         </div>
         <h2 style={{
@@ -202,13 +202,13 @@ export default function Login() {
           <span style={{ color: "var(--accent)" }}>smarter funding.</span>
         </h2>
         <p style={{ color: "#555", fontSize: 14, lineHeight: 1.8, margin: 0, maxWidth: 340 }}>
-          Find matching grants, draft winning proposals with AI,
+          Find relevant grants and prepare stronger proposals,
           and connect with NGOs working on the same mission.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
           {[
-            { icon: "✦", text: "AI grant matching from 150+ real sources" },
+            { icon: "✦", text: "Grant matching from verified sources" },
             { icon: "✍", text: "Proposal drafting agents tailored per funder" },
             { icon: "💰", text: "Locality-aware budget builder" },
             { icon: "🤝", text: "NGO collaboration network (coming soon)" },

@@ -143,7 +143,7 @@ function ChatMessage({ msg }) {
       {!isUser && (
         <div style={{
           width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-          background: "linear-gradient(135deg, var(--accent), #4f46e5)",
+          background: "var(--accent-dim)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: 11, fontWeight: 800, color: "#fff", marginRight: 8, alignSelf: "flex-end",
         }}>✦</div>
@@ -633,7 +633,7 @@ export default function Budget() {
               </p>
               <p style={{ color: "#555", fontSize: 13, maxWidth: 360, margin: "0 auto" }}>
                 Select a grant, set the maximum amount, and click Build Budget.
-                The AI will generate a localized line-item breakdown based on your proposal.
+                Generate a location-aware line-item breakdown based on your proposal.
               </p>
             </div>
           )}
@@ -655,7 +655,7 @@ export default function Budget() {
           }}>
             <div style={{
               width: 28, height: 28, borderRadius: "50%",
-              background: "linear-gradient(135deg, var(--accent), #4f46e5)",
+              background: "var(--accent-dim)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 12, fontWeight: 800, color: "#fff",
             }}>✦</div>
@@ -703,7 +703,7 @@ export default function Budget() {
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0" }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--accent), #4f46e5)",
+                  background: "var(--accent-dim)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 11, color: "#fff",
                 }}>✦</div>

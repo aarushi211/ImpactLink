@@ -35,13 +35,13 @@ export default function Upload() {
 
         <div style={{ marginBottom: 36 }}>
           <p style={{ color: "var(--accent)", fontSize: 13, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>
-            Mission Brain
+            Proposal matching
           </p>
           <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.03em", color: "#fff", margin: "0 0 8px" }}>
             Upload Your Proposal
           </h1>
           <p style={{ color: "var(--text-muted)", fontSize: 15 }}>
-            Our AI will parse your mission, match grants, and score your application readiness.
+            We’ll review your proposal and identify relevant grant opportunities.
           </p>
         </div>
 
@@ -124,7 +124,7 @@ export default function Upload() {
             transition: "all 0.2s",
           }}
         >
-          {loading ? "⏳ Analyzing proposal..." : "✦ Analyze & Match Grants"}
+          {loading ? "Reviewing proposal..." : "Review proposal & find grants"}
         </button>
 
         {/* What happens next */}
@@ -135,10 +135,10 @@ export default function Upload() {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { icon: "◎", label: "Parse",   desc: "AI extracts your mission, beneficiaries, SDGs, and cause area" },
-                { icon: "✦", label: "Match",   desc: "Vector search finds the most relevant grants from our database" },
-                { icon: "◈", label: "Score",   desc: "LLM scores your proposal readiness and gives improvement tips" },
-                { icon: "✍", label: "Explain", desc: "RAG explains why each grant matches your specific mission" },
+                { icon: "◎", label: "Review",  desc: "Identify your mission, beneficiaries, and project focus" },
+                { icon: "✦", label: "Match",   desc: "Find relevant opportunities in the grants database" },
+                { icon: "◈", label: "Assess",  desc: "Highlight proposal strengths and areas to improve" },
+                { icon: "✍", label: "Explain", desc: "See how each opportunity relates to your mission" },
               ].map((step, i) => (
                 <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
                   <div style={{

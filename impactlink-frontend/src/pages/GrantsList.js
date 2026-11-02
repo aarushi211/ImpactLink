@@ -13,8 +13,8 @@ function ViewToggle({ view, onChange }) {
       onClick={() => onChange(id)}
       style={{
         display: "flex", alignItems: "center", gap: 7,
-        background: view === id ? (id === "grants" ? "var(--accent)" : "#7c3aed") : "var(--bg-card)",
-        border: `1px solid ${view === id ? (id === "grants" ? "var(--accent)" : "#7c3aed") : "var(--border)"}`,
+        background: view === id ? "var(--accent-dim)" : "var(--bg-card)",
+        border: `1px solid ${view === id ? "var(--accent-dim)" : "var(--border)"}`,
         color: view === id ? "#fff" : "var(--text-dim)",
         padding: "9px 18px", borderRadius: 9,
         fontSize: 13, fontWeight: 700, cursor: "pointer",
@@ -238,7 +238,7 @@ export default function GrantsList() {
           title={isGrants ? "Matched Grants" : "NGO Collaborators"}
           subtitle={
             isGrants
-              ? (filteredGrants.length + " grants ranked by AI match score" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : hasRealData ? " for your proposal" : ""))
+              ? (filteredGrants.length + " grant opportunities" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : hasRealData ? " matched to your proposal" : ""))
               : collabFetched
                 ? (filteredCollabs.length + " NGOs with aligned mission" + (profile ? " — excluding your org" : ""))
                 : "Mission-aligned NGOs for joint applications & partnerships"
@@ -338,11 +338,11 @@ export default function GrantsList() {
           {isGrants && (
             <div style={{ display: "flex", background: "var(--bg-card)",
               border: "1px solid var(--border)", borderRadius: 10, padding: 3, flexShrink: 0 }}>
-              {[["filter","⌕ Filter"],["ai","⬡ AI Search"]].map(function([mode, label]) {
+              {[["filter","Filter"],["ai","Topic search"]].map(function([mode, label]) {
                 return (
                   <button key={mode} onClick={function() { setSearchMode(mode); sessionStorage.setItem("grants_searchMode", mode); setAiResults(null); sessionStorage.removeItem("grants_aiResults"); setAiError(null); }} style={{
                     background: searchMode === mode
-                      ? (mode === "ai" ? "#6C63FF" : "var(--border)")
+                      ? "var(--accent-dim)"
                       : "none",
                     border: "none",
                     color: searchMode === mode ? "#fff" : "var(--text-dim)",
@@ -372,12 +372,12 @@ export default function GrantsList() {
             </div>
           )}
 
-          {/* AI agentic search bar */}
+          {/* Topic search */}
           {isGrants && searchMode === "ai" && (
             <div style={{ display: "flex", gap: 8, flex: 1, minWidth: 260 }}>
               <div style={{ position: "relative", flex: 1 }}>
                 <span style={{ position: "absolute", left: 14, top: "50%",
-                  transform: "translateY(-50%)", color: "#6C63FF", fontSize: 14 }}>⬡</span>
+                  transform: "translateY(-50%)", color: "var(--accent)", fontSize: 14 }}>⌕</span>
                 <input
                   value={aiQuery}
                   onChange={function(e) { setAiQuery(e.target.value); sessionStorage.setItem("grants_aiQuery", e.target.value); }}
@@ -385,7 +385,7 @@ export default function GrantsList() {
                   placeholder="Describe a topic… e.g. 'affordable housing LA' or 'youth mental health'"
                   style={{
                     width: "100%", background: "var(--bg-card)",
-                    border: "1px solid #6C63FF55",
+                    border: "1px solid var(--border)",
                     borderRadius: 10, padding: "10px 14px 10px 38px",
                     color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box",
                   }}
@@ -395,7 +395,7 @@ export default function GrantsList() {
                 onClick={runAiSearch}
                 disabled={aiLoading || !aiQuery.trim()}
                 style={{
-                  background: "#6C63FF", border: "none", color: "#fff",
+                  background: "var(--accent-dim)", border: "none", color: "#fff",
                   padding: "10px 20px", borderRadius: 10, fontSize: 13,
                   fontWeight: 700, cursor: aiLoading ? "not-allowed" : "pointer",
                   opacity: (!aiQuery.trim() || aiLoading) ? 0.6 : 1,
@@ -448,7 +448,7 @@ export default function GrantsList() {
         {isGrants && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-            {/* AI search results */}
+            {/* Topic search results */}
             {searchMode === "ai" && (
               <>
                 {aiError && (
@@ -460,17 +460,17 @@ export default function GrantsList() {
                 {aiLoading && (
                   <div style={{ textAlign: "center", padding: "50px 0" }}>
                     <div style={{ width: 32, height: 32, margin: "0 auto 14px",
-                      border: "3px solid #1e1e30", borderTop: "3px solid #6C63FF",
+                      border: "3px solid var(--border)", borderTop: "3px solid var(--accent)",
                       borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
                     <style>{"@keyframes spin { to { transform: rotate(360deg); } }"}</style>
-                    <p style={{ color: "#444", fontSize: 13 }}>AI is finding the most relevant grants…</p>
+                    <p style={{ color: "#9da89e", fontSize: 13 }}>Searching grant opportunities…</p>
                   </div>
                 )}
                 {!aiLoading && aiResults !== null && (
                   <>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <span style={{ color: "#6C63FF", fontSize: 12, fontWeight: 700 }}>
-                        ⬡ AI Search
+                      <span style={{ color: "var(--accent)", fontSize: 12, fontWeight: 700 }}>
+                        Topic search
                       </span>
                       <span style={{ color: "#444", fontSize: 12 }}>
                         {aiResults.length} results for "{aiQuery}"
@@ -488,8 +488,8 @@ export default function GrantsList() {
                   </>
                 )}
                 {!aiLoading && aiResults === null && !aiError && (
-                  <EmptyState icon="⬡" title="AI Semantic Search"
-                    subtitle="Type any topic above and the AI will find the most relevant grants using semantic similarity — not just keyword matching." />
+                  <EmptyState icon="⌕" title="Search by topic"
+                    subtitle="Describe your program or community needs to find related opportunities in the grants database." />
                 )}
               </>
             )}
@@ -502,7 +502,7 @@ export default function GrantsList() {
                   : filteredGrants.length > 0
                   ? filteredGrants.map(function(grant) { return <GrantCard key={grant.grant_id} grant={grant} />; })
                   : activeGrants.length === 0
-                    ? <EmptyState icon="◎" title="No live grant matches yet" subtitle="Upload a proposal to find matching grants, or use AI Search to search the live grants database by topic." />
+                    ? <EmptyState icon="◎" title="No grant matches yet" subtitle="Upload a proposal to find relevant opportunities, or use topic search to explore the grants database." />
                     : <EmptyState icon="◎" title="No grants match your filters" subtitle="Try adjusting your search or fit level filter" />
                 }
               </>
@@ -516,7 +516,7 @@ export default function GrantsList() {
               <div style={{ textAlign: "center", padding: "60px 0" }}>
                 <div style={{
                   width: 36, height: 36, margin: "0 auto 16px",
-                  border: "3px solid #1e1e30", borderTop: "3px solid #7c3aed",
+                  border: "3px solid var(--border)", borderTop: "3px solid var(--accent)",
                   borderRadius: "50%", animation: "spin 0.8s linear infinite",
                 }} />
                 <style>{"@keyframes spin { to { transform: rotate(360deg); } }"}</style>

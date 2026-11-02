@@ -16,7 +16,7 @@ export default function Nav() {
   ];
 
   return (
-    <nav style={{
+    <nav className="app-nav" style={{
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "0 40px", height: 64,
       borderBottom: "1px solid var(--border)",
@@ -26,44 +26,35 @@ export default function Nav() {
       {/* Logo */}
       <div
         onClick={() => navigate("/")}
-        style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+        style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
       >
-        <span style={{ fontSize: 22 }}>⊚</span>
-        <span style={{ fontWeight: 800, fontSize: 18, color: "#fff",
-          letterSpacing: "-0.02em" }}>
-          ImpactLink AI
+        <span style={{
+          width: 32, height: 32, display: "grid", placeItems: "center",
+          borderRadius: 9, background: "#1a1a2e", color: "var(--accent)",
+          fontSize: 12, fontWeight: 800, letterSpacing: "0.02em",
+        }}>IL</span>
+        <span style={{ fontWeight: 700, fontSize: 17, color: "#fff",
+          letterSpacing: "-0.025em" }}>
+          ImpactLink
         </span>
       </div>
 
       {/* Links */}
-      <div style={{ display: "flex", gap: 28, fontSize: 13 }}>
-        {links.map(link => (
-          <span
-            key={link.path}
-            onClick={() => navigate(link.path)}
-            style={{
-              cursor: "pointer",
-              color: pathname === link.path ? "var(--accent)" : "var(--text-dim)",
-              fontWeight: pathname === link.path ? 600 : 400,
-              transition: "color 0.15s",
-              // Highlight "Build Proposal" even when not active
-              ...(link.path === "/build" && pathname !== "/build" ? {
-                color: "#a89ff5",
-              } : {}),
-            }}
-            onMouseEnter={e => { if (pathname !== link.path) e.target.style.color = "#bbb"; }}
-            onMouseLeave={e => {
-              if (pathname !== link.path)
-                e.target.style.color = link.path === "/build" ? "#a89ff5" : "var(--text-dim)";
-            }}
-          >
-            {link.path === "/build" && (
-              <span style={{ marginRight: 4, fontSize: 11 }}>✍</span>
-            )}
-            {link.label}
-          </span>
-        ))}
-      </div>
+      {profile && (
+        <div className="app-nav-links">
+          {links.map(link => (
+            <button
+              className="app-nav-link"
+              key={link.path}
+              type="button"
+              aria-current={pathname === link.path ? "page" : undefined}
+              onClick={() => navigate(link.path)}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Right — avatar / auth */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -72,11 +63,11 @@ export default function Nav() {
             <span
               onClick={() => navigate("/profile")}
               style={{
-                color: "#555", fontSize: 12, cursor: "pointer",
+                color: "var(--text-muted)", fontSize: 12, cursor: "pointer",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={e => e.target.style.color = "#bbb"}
-              onMouseLeave={e => e.target.style.color = "#555"}
+              onMouseEnter={e => e.target.style.color = "#fff"}
+              onMouseLeave={e => e.target.style.color = "var(--text-muted)"}
             >
               {profile.org_name.length > 18
                 ? profile.org_name.slice(0,18) + "…"
@@ -86,13 +77,13 @@ export default function Nav() {
               onClick={() => navigate("/profile")}
               style={{
                 width: 36, height: 36, borderRadius: "50%", cursor: "pointer",
-                background: "linear-gradient(135deg, var(--accent), var(--accent-dim))",
+                background: "var(--accent-dim)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontWeight: 800, fontSize: 14, color: "#fff",
                 border: "2px solid transparent",
                 transition: "border-color 0.15s",
               }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "#a89ff5"}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
               onMouseLeave={e => e.currentTarget.style.borderColor = "transparent"}
               title="View profile"
             >
@@ -118,13 +109,13 @@ export default function Nav() {
           <button
             onClick={logout}
             style={{
-              background: "transparent", border: "1px solid #2a2a4e",
-              color: "#555", padding: "5px 12px", borderRadius: 6,
+              background: "transparent", border: "1px solid var(--border)",
+              color: "var(--text-muted)", padding: "5px 12px", borderRadius: 6,
               fontSize: 11, fontWeight: 600, cursor: "pointer",
               transition: "all 0.15s",
             }}
             onMouseEnter={e => { e.target.style.color = "var(--red)"; e.target.style.borderColor = "var(--red)"; }}
-            onMouseLeave={e => { e.target.style.color = "#555"; e.target.style.borderColor = "#2a2a4e"; }}
+            onMouseLeave={e => { e.target.style.color = "var(--text-muted)"; e.target.style.borderColor = "var(--border)"; }}
           >
             Sign Out
           </button>

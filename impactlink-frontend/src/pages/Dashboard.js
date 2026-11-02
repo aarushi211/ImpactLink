@@ -263,7 +263,7 @@ export default function Dashboard() {
                   No grant matches yet
                 </p>
                 <p style={{ color: "#555", fontSize: 13, margin: "0 0 16px" }}>
-                  Upload your proposal to get AI-matched grants
+                  Upload a proposal to see relevant grant opportunities
                 </p>
                 <button onClick={() => navigate("/upload")}
                   style={{ background: "var(--accent)", border: "none",
@@ -278,10 +278,10 @@ export default function Dashboard() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr",
               gap: 12, marginTop: 20 }}>
               {[
-                { icon: "✦", label: "Build a Proposal",    sub: "Start from scratch with AI guidance",    path: "/build"   },
-                { icon: "✍", label: "Draft Assistant",     sub: "AI agents write for a specific funder",  path: "/draft"   },
+                { icon: "✦", label: "Build a Proposal",    sub: "Start with a guided application outline", path: "/build"   },
+                { icon: "✍", label: "Draft Assistant",     sub: "Prepare sections for a specific funder", path: "/draft"   },
                 { icon: "💰", label: "Budget Builder",      sub: "Generate a localized line-item budget",  path: "/budget"  },
-                { icon: "⬆", label: "Upload Proposal",     sub: "Re-run AI matching with new docs",       path: "/upload"  },
+                { icon: "⬆", label: "Upload Proposal",     sub: "Find relevant grants for your project",  path: "/upload"  },
               ].map(a => (
                 <div key={a.label} onClick={() => navigate(a.path)}
                   style={{ background: "var(--bg-card)", border: "1px solid var(--border)",
