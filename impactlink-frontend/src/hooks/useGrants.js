@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { removeDemoGrants } from "../services/grants";
 
 export default function useGrants() {
   const [grants,      setGrants]   = useState([]);
@@ -7,24 +8,37 @@ export default function useGrants() {
   const [loading,     setLoading]  = useState(true);
 
   useEffect(() => {
-    const storedMatches  = sessionStorage.getItem("matches");
-    const storedProposal = sessionStorage.getItem("proposal");
+    let matches = [];
+    let storedProposal = null;
 
-    if (storedMatches) {
-      try {
-        setGrants(JSON.parse(storedMatches));
-        setProposal(storedProposal ? JSON.parse(storedProposal) : null);
-        setHasReal(true);
-      } catch (_) {}
-      setLoading(false);
-    } else {
-      import("../services/mockData").then(m => {
-        setGrants(m.mockGrants);
-        setProposal(m.mockProfile);
-        setHasReal(false);
-        setLoading(false);
-      });
+    try {
+      matches = JSON.parse(sessionStorage.getItem("matches") || "[]");
+      if (!Array.isArray(matches)) {
+        throw new TypeError("Stored grant matches must be an array.");
+      }
+    } catch (error) {
+      console.error("Could not load stored grant matches.", error);
+      sessionStorage.removeItem("matches");
+      matches = [];
     }
+
+    const realMatches = removeDemoGrants(matches);
+    if (realMatches.length !== matches.length) {
+      sessionStorage.setItem("matches", JSON.stringify(realMatches));
+    }
+
+    try {
+      const proposal = sessionStorage.getItem("proposal");
+      storedProposal = proposal ? JSON.parse(proposal) : null;
+    } catch (error) {
+      console.error("Could not load the stored proposal.", error);
+      sessionStorage.removeItem("proposal");
+    }
+
+    setGrants(realMatches);
+    setProposal(storedProposal);
+    setHasReal(realMatches.length > 0);
+    setLoading(false);
   }, []);
 
   return { grants, proposal, hasRealData, loading };

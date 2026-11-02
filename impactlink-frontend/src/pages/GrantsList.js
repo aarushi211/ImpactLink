@@ -4,6 +4,7 @@ import useGrants from "../hooks/useGrants";
 import useWorkStore from "../hooks/useWorkStore";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { removeDemoGrants } from "../services/grants";
 
 function ViewToggle({ view, onChange }) {
   const btn = (id, icon, label) => (
@@ -32,7 +33,7 @@ function ViewToggle({ view, onChange }) {
 }
 
 export default function GrantsList() {
-  const { grants, proposal, hasRealData } = useGrants();
+  const { grants, proposal, hasRealData, loading: grantsLoading } = useGrants();
   const { profile } = useAuth();
   const { proposals: savedProposals } = useWorkStore();
 
@@ -76,7 +77,9 @@ export default function GrantsList() {
     // If the saved item has stored matches, load them from session grants pool
     if (item.matches_id?.length > 0) {
       // Filter available grants to just the matching IDs, in order
-      const storedMatches = JSON.parse(sessionStorage.getItem("matches") || "[]");
+      const storedMatches = removeDemoGrants(
+        JSON.parse(sessionStorage.getItem("matches") || "[]")
+      );
       const ids = item.matches_id.map(String);
       const matched = storedMatches.filter(g => ids.includes(String(g.grant_id)));
       // Sort by original match order
@@ -93,10 +96,12 @@ export default function GrantsList() {
       setRematchLoading(true);
       try {
         const res = await api.post("/api/match", { proposal: item.proposal_context, top_k: 10 });
-        const newMatches = res.data.matches || [];
+        const newMatches = removeDemoGrants(res.data.matches || []);
         setRematchGrants(newMatches);
         // Merge into session for subsequent navigation
-        const existing = JSON.parse(sessionStorage.getItem("matches") || "[]");
+        const existing = removeDemoGrants(
+          JSON.parse(sessionStorage.getItem("matches") || "[]")
+        );
         const existingIds = new Set(existing.map(g => String(g.grant_id)));
         const merged = [...existing, ...newMatches.filter(g => !existingIds.has(String(g.grant_id)))];
         sessionStorage.setItem("matches", JSON.stringify(merged));
@@ -132,7 +137,7 @@ export default function GrantsList() {
   const [aiResults, setAiResults] = useState(function() {
     try {
       var saved = sessionStorage.getItem("grants_aiResults");
-      return saved ? JSON.parse(saved) : null;
+      return saved ? removeDemoGrants(JSON.parse(saved)) : null;
     } catch(e) { return null; }
   });
   const [aiLoading, setAiLoading] = useState(false);
@@ -201,12 +206,14 @@ export default function GrantsList() {
     setAiResults(null);
     api.post("/api/grants/search", { query: aiQuery, top_k: 10 })
       .then(function(res) {
-        var results = res.data.grants || [];
+        var results = removeDemoGrants(res.data.grants || []);
         setAiResults(results);
         try {
           sessionStorage.setItem("grants_aiResults", JSON.stringify(results));
           // Merge into the main matches pool so GrantDetail can look them up by ID
-          var existing = JSON.parse(sessionStorage.getItem("matches") || "[]");
+          var existing = removeDemoGrants(
+            JSON.parse(sessionStorage.getItem("matches") || "[]")
+          );
           var existingIds = new Set(existing.map(function(g) { return String(g.grant_id); }));
           var merged = existing.concat(results.filter(function(g) { return !existingIds.has(String(g.grant_id)); }));
           sessionStorage.setItem("matches", JSON.stringify(merged));
@@ -231,7 +238,7 @@ export default function GrantsList() {
           title={isGrants ? "Matched Grants" : "NGO Collaborators"}
           subtitle={
             isGrants
-              ? (filteredGrants.length + " grants ranked by AI match score" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : hasRealData ? " for your proposal" : " (demo data)"))
+              ? (filteredGrants.length + " grants ranked by AI match score" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : hasRealData ? " for your proposal" : ""))
               : collabFetched
                 ? (filteredCollabs.length + " NGOs with aligned mission" + (profile ? " — excluding your org" : ""))
                 : "Mission-aligned NGOs for joint applications & partnerships"
@@ -490,9 +497,13 @@ export default function GrantsList() {
             {/* Regular filter results */}
             {searchMode === "filter" && (
               <>
-                {filteredGrants.length > 0
+                {grantsLoading
+                  ? <EmptyState icon="◎" title="Loading grant matches" subtitle="Checking your saved live grant matches" />
+                  : filteredGrants.length > 0
                   ? filteredGrants.map(function(grant) { return <GrantCard key={grant.grant_id} grant={grant} />; })
-                  : <EmptyState icon="◎" title="No grants match your filters" subtitle="Try adjusting your search or fit level filter" />
+                  : activeGrants.length === 0
+                    ? <EmptyState icon="◎" title="No live grant matches yet" subtitle="Upload a proposal to find matching grants, or use AI Search to search the live grants database by topic." />
+                    : <EmptyState icon="◎" title="No grants match your filters" subtitle="Try adjusting your search or fit level filter" />
                 }
               </>
             )}
