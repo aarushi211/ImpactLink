@@ -59,7 +59,7 @@ from flows.improve_flow import build_improve_graph
 from flows.scratch_flow import build_scratch_graph
 from utils.diff import normalize_section_headings
 from utils.session_execution import session_execution, is_session_running, resume_session_command
-from services.application import normalize_spec, validate_application, validate_review_input, merge_checklist
+from services.application import normalize_spec, validate_application, validate_review_input, merge_checklist, ensure_ai_drafting_allowed
 
 log = logging.getLogger(__name__)
 
@@ -219,6 +219,7 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
         raise ValueError("profile is required for the improve flow")
     if not grant:
         raise ValueError("grant is required")
+    ensure_ai_drafting_allowed(grant)
 
     session_id = str(uuid.uuid4())
 
@@ -319,6 +320,8 @@ def _advance_session(
 
     _check_ownership(state_values, user_id)
 
+    if state_values.get("gate") not in {"draft_review", "final_save", "complete"}:
+        ensure_ai_drafting_allowed(state_values.get("grant", {}))
     validate_review_input(state_values, user_input)
     merge_checklist(state_values.get("grant", {}), user_input)
 
@@ -380,6 +383,8 @@ def _stream_advance_session(
         raise ValueError(f"Session not found: {session_id}")
 
     _check_ownership(state_values, user_id)
+    if state_values.get("gate") not in {"draft_review", "final_save", "complete"}:
+        ensure_ai_drafting_allowed(state_values.get("grant", {}))
     validate_review_input(state_values, user_input)
     merge_checklist(state_values.get("grant", {}), user_input)
     if state_values.get("gate") == "gap_review" and "user_additions" in user_input:

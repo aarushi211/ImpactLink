@@ -9,7 +9,7 @@ import useProposalSession from "../hooks/useProposalSession";
 import api from "../services/api";
 import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
-import { applicationCheck, attachmentStatuses, starterSections } from "../utils/application";
+import { applicationCheck, applicationChecklistInput, aiPolicyCheck, starterSections } from "../utils/application";
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -891,7 +891,7 @@ export default function Draft() {
   };
 
   const handleDraft = async () => {
-    if (!resolvedProposal || !selectedGrant) return;
+    if (!resolvedProposal || !selectedGrant || !aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed) return;
     setCompareDiffSnapshot({ sessionId: null, diffs: {} });
     setEditedContent({});
     setActiveTab(null);
@@ -976,7 +976,8 @@ export default function Draft() {
             const finalSections = Object.fromEntries(sectionOrder.map(key => [key, { content: payload.sections?.[key] ?? editedContent[key] ?? sections[key]?.content ?? "" }]));
             if (!applicationCheck(applicationSpec, finalSections).can_finalize_text) return;
           }
-          payload = { ...payload, ...(applicationSpec ? { attachment_statuses: attachmentStatuses(applicationSpec) } : {}) };
+          if (session.gate === "final_save" && aiPolicyCheck(applicationSpec).disclosure_pending) return;
+          payload = { ...payload, ...applicationChecklistInput(applicationSpec) };
           const shouldStreamDraft = Array.isArray(payload.sections_to_rewrite)
             && Object.prototype.hasOwnProperty.call(payload, "user_additions");
           let result;
@@ -1357,7 +1358,7 @@ export default function Draft() {
           )}
           <button
             onClick={handleDraft}
-            disabled={!selectedGrant || !resolvedProposal || loading}
+            disabled={!selectedGrant || !resolvedProposal || loading || !aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed}
             style={{
               background: selectedGrant && resolvedProposal && !loading ? "var(--accent)" : "#1a1a2e",
               border: "none",
@@ -1375,7 +1376,7 @@ export default function Draft() {
       {/* ── Body ────────────────────────────────────────── */}
       <div style={{ padding: "0 20px" }}>
         <AiPrivacyNotice />
-        <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={loading || session.gate !== "none"} existingSections={Object.entries({ ...originalSections, ...sections }).map(([key, section]) => ({ key, title: section?.title || key.replace(/_/g, " ") }))} />
+        <ApplicationRequirementsEditor value={applicationSpec || selectedGrant?.application_spec} onChange={setApplicationSpec} disabled={loading || session.gate !== "none"} existingSections={Object.entries({ ...originalSections, ...sections }).map(([key, section]) => ({ key, title: section?.title || key.replace(/_/g, " ") }))} />
         {hasSections && <ApplicationReview spec={applicationSpec} sections={Object.fromEntries(sectionOrder.map(key => [key, { ...sections[key], content: editedContent[key] ?? sections[key]?.content ?? "" }]))} onChange={setApplicationSpec} disabled={loading} onSave={() => handleSave()} />}
       </div>
       <div style={{ display: "flex", flex: 1 }}>

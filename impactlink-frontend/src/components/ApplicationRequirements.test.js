@@ -35,3 +35,24 @@ test("checklist readiness is self-reported and does not count documents for anot
   expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ attachments: [expect.objectContaining({ id: "loi", status: "ready" }), expect.objectContaining({ id: "financial", status: "not_started" })] }));
   expect(screen.getByText(/Submission readiness is not verified/)).toBeInTheDocument();
 });
+
+test("records AI policy conditions and source without assuming permission", () => {
+  render(<Editor />);
+  expect(screen.getByText(/Funder AI policy unknown/)).toBeInTheDocument();
+  fireEvent.click(screen.getByText("Application structure and requirements"));
+  fireEvent.change(screen.getByLabelText("Funder AI-use policy"), { target: { value: "prohibited" } });
+  fireEvent.change(screen.getByLabelText("AI policy source"), { target: { value: "Funder RFP page 8" } });
+  fireEvent.change(screen.getByLabelText("AI policy conditions"), { target: { value: "No generative AI in applications" } });
+  const spec = JSON.parse(screen.getByTestId("spec").textContent);
+  expect(spec.ai_policy).toEqual({ status: "prohibited", source_reference: "Funder RFP page 8", notes: "No generative AI in applications", disclosure_ready: false });
+  expect(screen.getByText(/AI drafting and revision are disabled/)).toBeInTheDocument();
+});
+
+test("disclosure is a self-reported checklist item and does not insert invented disclosure text", () => {
+  const spec = { ...emptyApplicationSpec(), ai_policy: { status: "disclosure_required", source_reference: "RFP", notes: "Use portal disclosure field", disclosure_ready: false } };
+  const onChange = jest.fn();
+  render(<ApplicationReview spec={spec} sections={{ summary: "Original proposal text" }} onChange={onChange} />);
+  expect(screen.getByText(/does not submit it for you/)).toBeInTheDocument();
+  fireEvent.click(screen.getByLabelText("Required AI disclosure is ready"));
+  expect(onChange).toHaveBeenCalledWith({ ...spec, ai_policy: { ...spec.ai_policy, disclosure_ready: true } });
+});

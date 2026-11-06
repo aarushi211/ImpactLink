@@ -1,23 +1,47 @@
-import { emptyApplicationSpec, applicationCheck, lengthCheck, sectionRequirements } from "../utils/application";
+import { emptyApplicationSpec, applicationCheck, lengthCheck, sectionRequirements, aiPolicyCheck } from "../utils/application";
 
 let sequence = 0;
 const identifier = prefix => `${prefix}_${Date.now()}_${++sequence}`;
 const inputStyle = { width: "100%", boxSizing: "border-box", padding: 8, background: "#161625", color: "#ddd", border: "1px solid var(--border)", borderRadius: 5 };
 const panel = { border: "1px solid var(--border)", borderRadius: 9, padding: 14, margin: "12px 0", fontSize: 12, color: "#bbb", background: "var(--bg-card)" };
 
+export function FunderAiPolicyNotice({ spec }) {
+  const policy = aiPolicyCheck(spec);
+  const messages = {
+    unknown: "Funder AI policy unknown. Check the current application instructions or ask the funder before using AI-assisted text. This app has not verified permission.",
+    permitted: "AI use recorded as permitted. Follow any conditions below and verify the current funder instructions before submission.",
+    disclosure_required: "This funder requires disclosure of AI assistance. Complete the disclosure in the funder's required format and location; this app does not submit it for you.",
+    prohibited: "Recorded funder policy prohibits AI use. AI drafting and revision are disabled. Saved text remains available for manual editing; confirm whether existing AI-assisted content can be used.",
+  };
+  return <div role="status" style={{ ...panel, borderColor: policy.status === "prohibited" ? "#b45309" : "var(--border)" }}>
+    <strong>Funder AI-use policy</strong>
+    <p>{messages[policy.status] || messages.unknown}</p>
+    {policy.source_reference && <p>Policy source (user-recorded): {policy.source_reference}</p>}
+    {policy.notes && <p style={{ whiteSpace: "pre-wrap" }}>{policy.notes}</p>}
+    {policy.status === "disclosure_required" && <p>{policy.disclosure_ready ? "Disclosure marked ready by you; compliance is not independently verified." : "Disclosure still needs review before completing this session. You can save a draft in the meantime."}</p>}
+  </div>;
+}
+
 export function ApplicationRequirementsEditor({ value, onChange, disabled, existingSections = [] }) {
-  const spec = value || emptyApplicationSpec();
+  const spec = { ...emptyApplicationSpec(), ...value };
+  const policy = aiPolicyCheck(spec);
+  const updatePolicy = updates => update("ai_policy", { status: policy.status, source_reference: policy.source_reference, notes: policy.notes, disclosure_ready: policy.disclosure_ready, ...updates });
   const update = (field, next) => onChange({ ...spec, [field]: next });
   const sectionUpdate = (key, field, next) => update("sections", spec.sections.map(item => item.key === key ? { ...item, [field]: next } : item));
   const addSection = (title = "", instructions = "") => update("sections", [...spec.sections, { key: identifier("question"), title, instructions, max_words: null, max_characters: null, required: true }]);
   const addAttachment = title => update("attachments", [...spec.attachments, { id: identifier("attachment"), title, stage: spec.stage, required: true, status: "not_started", notes: "" }]);
-  return <details style={panel}>
+  return <><FunderAiPolicyNotice spec={spec} /><details style={panel}>
     <summary style={{ cursor: "pointer", color: "#ddd", fontWeight: 700 }}>Application structure and requirements</summary>
     <fieldset disabled={disabled} style={{ border: 0, padding: 0 }}>
       <p>Record the funder's exact questions, limits and documents. With no custom questions, the writer uses a general starter for the selected stage. Adding questions replaces that starter structure.</p>
       <label>Application stage<select aria-label="Application stage" style={inputStyle} value={spec.stage} onChange={event => onChange({ ...spec, stage: event.target.value, sections: [] })}><option value="full_proposal">Full proposal</option><option value="loi">Letter of inquiry (LOI)</option><option value="reporting">Post-award report</option></select></label>
       <label>Funder source / instructions reference<input aria-label="Funder requirements source" style={inputStyle} placeholder="RFP URL, form name or document page" value={spec.source_reference} onChange={event => update("source_reference", event.target.value)} /></label>
       <label>Application process notes<textarea aria-label="Application process notes" style={inputStyle} value={spec.process_notes} onChange={event => update("process_notes", event.target.value)} placeholder="LOI first, invitation, portal, reporting schedule or other confirmed steps" /></label>
+      <h4>Funder rules on AI use</h4>
+      <p>Record the actual policy for this application stage. Redaction does not make prohibited AI use permissible. If the policy has narrower conditions, record them below and confirm that your intended use is allowed.</p>
+      <label>AI-use policy<select aria-label="Funder AI-use policy" style={inputStyle} value={policy.status} onChange={event => updatePolicy({ status: event.target.value, disclosure_ready: false })}><option value="unknown">Unknown / not checked</option><option value="permitted">AI use permitted (check conditions)</option><option value="disclosure_required">AI use permitted with disclosure</option><option value="prohibited">AI use prohibited</option></select></label>
+      <label>AI policy source<input aria-label="AI policy source" maxLength={2000} style={inputStyle} value={policy.source_reference} onChange={event => updatePolicy({ source_reference: event.target.value })} placeholder="Policy URL, document page or funder correspondence" /></label>
+      <label>AI policy conditions / disclosure instructions<textarea aria-label="AI policy conditions" maxLength={6000} style={inputStyle} value={policy.notes} onChange={event => updatePolicy({ notes: event.target.value })} placeholder="Permitted uses, disclosure wording and where it must be supplied" /></label>
       <h4 style={{ marginBottom: 6 }}>Questions in funder order</h4>
       {spec.sections.map((item, index) => <div key={item.key} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginBottom: 12 }}>
         <label>Question title<input aria-label={`Question title ${index + 1}`} style={inputStyle} value={item.title} onChange={event => sectionUpdate(item.key, "title", event.target.value)} /></label>
@@ -51,7 +75,7 @@ export function ApplicationRequirementsEditor({ value, onChange, disabled, exist
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{["IRS determination letter", "Board list", "Audited financials", "Letters of support", "UEI / SAM registration", "Other required document"].map(title => <button key={title} onClick={() => addAttachment(title)}>Add {title}</button>)}</div>
     </fieldset>
     {disabled && <p>Structure is locked for this session. Start a new session to change questions or limits.</p>}
-  </details>;
+  </details></>;
 }
 
 export function ApplicationReview({ spec, sections, onChange, onSave, disabled }) {
@@ -61,6 +85,8 @@ export function ApplicationReview({ spec, sections, onChange, onSave, disabled }
     <strong>Application review · {spec.stage.replace(/_/g, " ")}</strong>
     <p>Requirements recorded from: {spec.source_reference || "source not supplied"}. Submission readiness is not verified.</p>
     {spec.process_notes && <p>{spec.process_notes}</p>}
+    <FunderAiPolicyNotice spec={spec} />
+    {aiPolicyCheck(spec).status === "disclosure_required" && <label style={{ display: "block", marginBottom: 12 }}><input type="checkbox" aria-label="Required AI disclosure is ready" disabled={disabled} checked={Boolean(spec.ai_policy?.disclosure_ready)} onChange={event => onChange({ ...spec, ai_policy: { ...spec.ai_policy, disclosure_ready: event.target.checked } })} />I have prepared the required AI disclosure using the funder's instructions (self-reported).</label>}
     {!check.can_finalize_text && <p role="alert" style={{ color: "#f87171" }}>Fix missing or over-limit answers before confirming: {[...check.missing, ...check.over].map(key => sectionRequirements(spec, key).title || key.replace(/_/g, " ")).join(", ")}</p>}
     {Object.entries(sections).map(([key, section]) => {
       const req = sectionRequirements(spec, key);

@@ -27,12 +27,20 @@ class ApplicationAttachment(RequirementModel):
     notes: str = Field(default="", max_length=2000)
 
 
+class FunderAiPolicy(RequirementModel):
+    status: Literal["unknown", "permitted", "disclosure_required", "prohibited"] = "unknown"
+    source_reference: str = Field(default="", max_length=2000)
+    notes: str = Field(default="", max_length=6000)
+    disclosure_ready: bool = Field(default=False, strict=True)
+
+
 class ApplicationSpec(RequirementModel):
     stage: Literal["loi", "full_proposal", "reporting"] = "full_proposal"
     source_reference: str = Field(default="", max_length=2000)
     process_notes: str = Field(default="", max_length=6000)
     sections: list[ApplicationSection] = Field(default_factory=list, max_length=25)
     attachments: list[ApplicationAttachment] = Field(default_factory=list, max_length=40)
+    ai_policy: FunderAiPolicy = Field(default_factory=FunderAiPolicy)
 
     @model_validator(mode="after")
     def unique_keys(self):
@@ -50,6 +58,19 @@ def spec_for(grant):
 
 def normalize_spec(raw):
     return ApplicationSpec.model_validate(raw).model_dump(mode="json")
+
+
+def ai_policy_check(grant):
+    spec = spec_for(grant)
+    policy = spec.ai_policy if spec else FunderAiPolicy()
+    return {**policy.model_dump(), "ai_drafting_allowed": policy.status != "prohibited",
+            "disclosure_pending": policy.status == "disclosure_required" and not policy.disclosure_ready,
+            "verification": "user_recorded" if policy.status != "unknown" else "not_verified"}
+
+
+def ensure_ai_drafting_allowed(grant):
+    if not ai_policy_check(grant)["ai_drafting_allowed"]:
+        raise ValueError("Funder AI policy: AI drafting and revision are disabled because the recorded policy prohibits AI use. You can still view and edit saved text manually.")
 
 
 def section_definitions(grant):
@@ -124,6 +145,7 @@ def validate_application(sections, grant):
     pending = [item.id for item in (spec.attachments if spec else []) if item.stage == spec.stage and item.required and item.status != "ready"]
     return {"can_finalize_text": not missing and not over, "missing_sections": missing, "over_limit_sections": over,
             "pending_attachments": pending, "submission_readiness": "not_verified",
+            "ai_policy": ai_policy_check(grant),
             "sections": {key: item["limits"] for key, item in checks.items()}}
 
 
@@ -138,20 +160,27 @@ def validate_review_input(state, user_input):
     for key, text in edits.items():
         if key in sections:
             sections[key]["content"] = text
-    report = validate_application(sections, state.get("grant", {}))
+    report = validate_application(sections, merge_checklist(state.get("grant", {}), user_input))
     if not report["can_finalize_text"]:
         raise ValueError("Application requirements: fix missing or over-limit answers before confirming. Sections: " + ", ".join(report["missing_sections"] + report["over_limit_sections"]))
+    if state.get("gate") == "final_save" and report["ai_policy"]["disclosure_pending"]:
+        raise ValueError("Funder AI policy: complete the funder's required AI disclosure and mark it ready before completing this session. Drafts can still be saved for review.")
 
 
 def merge_checklist(grant, user_input):
     statuses = user_input.get("attachment_statuses")
-    if statuses is None:
+    disclosure = user_input.get("ai_disclosure_ready")
+    if statuses is None and disclosure is None:
         return grant
     spec = spec_for(grant)
-    if not spec or not isinstance(statuses, dict) or set(statuses) - {item.id for item in spec.attachments}:
+    if not spec or (statuses is not None and (not isinstance(statuses, dict) or set(statuses) - {item.id for item in spec.attachments})):
         raise ValueError("Application requirements: invalid attachment checklist")
+    if disclosure is not None:
+        if not isinstance(disclosure, bool):
+            raise ValueError("Funder AI policy: disclosure readiness must be true or false")
+        spec.ai_policy.disclosure_ready = disclosure
     for item in spec.attachments:
-        if item.id in statuses:
+        if statuses is not None and item.id in statuses:
             if statuses[item.id] not in {"not_started", "in_progress", "ready", "not_applicable"}:
                 raise ValueError("Application requirements: invalid attachment status")
             item.status = statuses[item.id]

@@ -175,12 +175,13 @@ export const getSessionStatus = async (sessionId) => {
 };
 
 /** Revise a single section with user feedback (SectionRewriteAgent). */
-export const reviseSection = async (currentDraft, feedback, sectionTitle = "Proposal Section", requirements) => {
+export const reviseSection = async (currentDraft, feedback, sectionTitle = "Proposal Section", requirements, applicationSpec) => {
   const res = await api.post("/api/build/revise", {
     current_draft: currentDraft,
     feedback,
     section_title: sectionTitle,
     ...(requirements ? { section_requirements: requirements } : {}),
+    ...(applicationSpec ? { application_spec: applicationSpec } : {}),
   });
   return res.data;
 };

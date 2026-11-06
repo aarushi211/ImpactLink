@@ -77,3 +77,32 @@ test("funder limits survive saving and block confirmation of an over-limit answe
   expect(screen.getByRole("alert")).toHaveTextContent("over-limit");
   expect(mockSaveBuild).toHaveBeenCalledWith(expect.objectContaining({ application_spec: spec, proposal_context: expect.objectContaining({ application_spec: spec }) }));
 });
+
+test("required disclosure survives saving and must be marked ready before completion", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  const spec = { stage: "full_proposal", sections: [], attachments: [], ai_policy: { status: "disclosure_required", source_reference: "Funder RFP page 8", notes: "Disclose in portal", disclosure_ready: false } };
+  mockSession.data = { ...mockSession.data, application_spec: spec };
+  const { rerender } = render(<BuildProposal />);
+  await act(async () => {});
+  mockSession.gate = "final_save";
+  rerender(<BuildProposal />);
+  const complete = screen.getByRole("button", { name: /Complete Session/ });
+  expect(complete).toBeDisabled();
+  expect(mockSaveBuild).toHaveBeenCalledWith(expect.objectContaining({ application_spec: spec }));
+  await act(async () => { fireEvent.click(screen.getByLabelText("Required AI disclosure is ready")); });
+  expect(complete).toBeEnabled();
+  await act(async () => { fireEvent.click(complete); });
+  expect(mockSession.advance).toHaveBeenCalledWith({ attachment_statuses: {}, ai_disclosure_ready: true });
+  expect(mockUpdateBuild).toHaveBeenCalledWith("build-1", expect.any(Object), null, expect.objectContaining({ application_spec: { ...spec, ai_policy: { ...spec.ai_policy, disclosure_ready: true } } }));
+});
+
+test("a restored prohibited policy disables AI revision while keeping manual editing available", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  mockSession.data = { ...mockSession.data, application_spec: { stage: "full_proposal", sections: [], attachments: [], ai_policy: { status: "prohibited", source_reference: "RFP" } } };
+  render(<BuildProposal />);
+  await act(async () => {});
+  expect(screen.getByRole("button", { name: "Revise" })).toBeDisabled();
+  expect(screen.getByTitle("Edit directly")).toBeEnabled();
+  await act(async () => { fireEvent.click(screen.getByTitle("Edit directly")); });
+  expect(screen.getByDisplayValue("The completed proposal text.")).toBeInTheDocument();
+});

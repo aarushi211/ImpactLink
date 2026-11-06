@@ -1,4 +1,10 @@
-export const emptyApplicationSpec = (stage = "full_proposal") => ({ stage, source_reference: "", process_notes: "", sections: [], attachments: [] });
+export const emptyAiPolicy = () => ({ status: "unknown", source_reference: "", notes: "", disclosure_ready: false });
+export const emptyApplicationSpec = (stage = "full_proposal") => ({ stage, source_reference: "", process_notes: "", sections: [], attachments: [], ai_policy: emptyAiPolicy() });
+export function aiPolicyCheck(spec) {
+  const policy = { ...emptyAiPolicy(), ...spec?.ai_policy };
+  return { ...policy, ai_drafting_allowed: policy.status !== "prohibited", disclosure_pending: policy.status === "disclosure_required" && !policy.disclosure_ready };
+}
+export const applicationChecklistInput = spec => spec ? { attachment_statuses: attachmentStatuses(spec), ai_disclosure_ready: Boolean(spec.ai_policy?.disclosure_ready) } : {};
 export const starterSections = {
   full_proposal: ["executive_summary", "problem_statement", "goals_and_objectives", "proposed_solution", "target_beneficiaries", "organizational_capacity", "evaluation_plan", "budget_narrative", "sustainability", "equity_statement"],
   loi: ["loi_summary", "loi_capacity", "loi_outcomes"],

@@ -11,7 +11,7 @@ import { proposalContext, stageProposalMatch } from "../services/proposals";
 import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
 import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
-import { applicationCheck, lengthCheck, sectionRequirements, attachmentStatuses } from "../utils/application";
+import { applicationCheck, lengthCheck, sectionRequirements, applicationChecklistInput, aiPolicyCheck } from "../utils/application";
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -249,7 +249,7 @@ function TypingDots() {
 }
 
 // Draft section card — shows section content with approve/revise controls
-function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, icon, requirements }) {
+function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, icon, requirements, applicationSpec }) {
   const [showRevise,  setShowRevise]  = useState(false);
   const [feedback,    setFeedback]    = useState("");
   const [revising,    setRevising]    = useState(false);
@@ -263,10 +263,10 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
   }
 
   const handleRevise = async () => {
-    if (!feedback.trim()) return;
+    if (!feedback.trim() || !aiPolicyCheck(applicationSpec).ai_drafting_allowed) return;
     setRevising(true);
     try {
-      const data = await reviseSection(content, feedback, title, requirements?.key ? requirements : undefined);
+      const data = await reviseSection(content, feedback, title, requirements?.key ? requirements : undefined, applicationSpec);
       onRevise(data.content);
       setEditContent(data.content);
       setFeedback("");
@@ -334,6 +334,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
             </button>
             <button
               onClick={() => { setShowRevise(v => !v); setEditMode(false); }}
+              disabled={!aiPolicyCheck(applicationSpec).ai_drafting_allowed}
               style={{ background: "#1a1a28", border: "1px solid #2a2a3e",
                 color: "#888", padding: "5px 12px", borderRadius: 7,
                 fontSize: 11, fontWeight: 600, cursor: "pointer" }}
@@ -501,7 +502,7 @@ export default function BuildProposal() {
       application_spec: applicationSpec || session.data.application_spec || previous.application_spec || null,
       status: Object.values(source || {}).every(section => section.approved) ? "approved" : "draft",
     };
-    if (!applicationCheck(payload.application_spec, source).can_finalize_text) payload.status = "draft";
+    if (!applicationCheck(payload.application_spec, source).can_finalize_text || aiPolicyCheck(payload.application_spec).disclosure_pending) payload.status = "draft";
     payload.proposal_context = proposalContext({ ...payload, proposal_context: previous.proposal_context }, profile || {});
     return payload;
   }, [proposalName, selectedGrant, profile, answers, session.sessionId, session.data.application_spec, applicationSpec, builds]);
@@ -642,6 +643,7 @@ export default function BuildProposal() {
   // ── Start / advance the build flow ──────────────────────────
 
   const handleStart = async () => {
+    if (!aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed) return;
     const welcomeMsg = {
       role: "ai", type: "intro",
       text: `Welcome${profile ? `, ${profile.org_name}` : ""}! I'm going to guide you through building a complete grant proposal from scratch. I'll ask you a few questions, then draft each section as a professional proposal for you to review and approve.\n\nLet's begin.`,
@@ -726,7 +728,7 @@ export default function BuildProposal() {
       payload[k] = sections[k]?.content ?? "";
     });
     try {
-      await session.advance({ sections: payload, attachment_statuses: applicationSpec ? attachmentStatuses(applicationSpec) : undefined });
+      await session.advance({ sections: payload, ...applicationChecklistInput(applicationSpec) });
     } catch (e) {
       console.error("Confirm draft error:", e);
     }
@@ -734,7 +736,9 @@ export default function BuildProposal() {
 
   const handleCompleteSession = async () => {
     try {
-      await session.advance({ attachment_statuses: applicationSpec ? attachmentStatuses(applicationSpec) : undefined });
+      if (aiPolicyCheck(applicationSpec).disclosure_pending) return;
+      await persistBuild(sections);
+      await session.advance(applicationChecklistInput(applicationSpec));
       setDone(true);
     } catch (e) {
       console.error("Complete session error:", e);
@@ -824,7 +828,7 @@ export default function BuildProposal() {
   const approvedCount  = Object.values(sections).filter(s => s.approved).length;
   const totalSections  = secOrder.length;
   const applicationReport = applicationCheck(applicationSpec, sections);
-  const allApproved    = totalSections > 0 && approvedCount === totalSections && applicationReport.can_finalize_text;
+  const allApproved    = totalSections > 0 && approvedCount === totalSections && applicationReport.can_finalize_text && !aiPolicyCheck(applicationSpec).disclosure_pending;
   const hasStarted     = messages.length > 0;
   const loading        = session.loading || Boolean(session.data.running);
   const showOrchestration = hasStarted && session.gate !== "none";
@@ -947,7 +951,7 @@ export default function BuildProposal() {
           }}>
 
             <AiPrivacyNotice />
-            <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={hasStarted} />
+            <ApplicationRequirementsEditor value={applicationSpec || selectedGrant?.application_spec} onChange={setApplicationSpec} disabled={hasStarted} />
             {totalSections > 0 && <ApplicationReview spec={applicationSpec} sections={sections} onChange={setApplicationSpec} disabled={session.loading} onSave={() => persistBuild(sections).catch(error => setBuildSaveError(error.message))} />}
 
             {/* Empty / start state */}
@@ -1020,6 +1024,7 @@ export default function BuildProposal() {
 
                   <button
                     onClick={handleStart}
+                    disabled={!aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed}
                     style={{
                       background:"var(--accent)", border:"none", color:"#fff",
                       padding:"13px 32px", borderRadius:10,
@@ -1238,7 +1243,7 @@ export default function BuildProposal() {
                   </p>
                   <button
                     onClick={handleCompleteSession}
-                    disabled={session.loading || !applicationReport.can_finalize_text}
+                    disabled={session.loading || !applicationReport.can_finalize_text || aiPolicyCheck(applicationSpec).disclosure_pending}
                     style={{
                       background: "#166534", border: "none", color: "#fff",
                       padding: "8px 16px", borderRadius: 8, fontSize: 12,
@@ -1264,6 +1269,7 @@ export default function BuildProposal() {
                       approved={sec.approved}
                       icon={STEP_ICONS[idx] || "✦"}
                       requirements={sectionRequirements(applicationSpec, key)}
+                      applicationSpec={applicationSpec || selectedGrant?.application_spec}
                       onApprove={() => handleApprove(key)}
                       onRevise={(newContent) => handleRevise(key, newContent)}
                     />

@@ -40,7 +40,7 @@ from services.vector_store import find_similar_grants, topic_search_grants, get_
 from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
 from services.budget.costing import CostPlan
-from services.application import ApplicationSection, constraint_prompt, length_check
+from services.application import ApplicationSection, ApplicationSpec, constraint_prompt, length_check, ensure_ai_drafting_allowed
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
@@ -145,6 +145,7 @@ class ReviseRequest(BaseModel):
     feedback:      str
     section_title: str = "Proposal Section"
     section_requirements: Optional[ApplicationSection] = None
+    application_spec: Optional[ApplicationSpec] = None
 
 
 class RedactionPreviewRequest(BaseModel):
@@ -446,6 +447,10 @@ async def build_revise(req: ReviseRequest, uid: str = Depends(verify_ai_user, sc
 
     del uid  # auth required; section content is user-supplied
     try:
+        ensure_ai_drafting_allowed({"application_spec": req.application_spec.model_dump()} if req.application_spec else {})
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    try:
         content = await asyncio.to_thread(
             retry_rewrite,
             req.section_title,
@@ -475,7 +480,7 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
     except ValueError as e:
         if "Unauthorized" in str(e):
             raise HTTPException(403, str(e))
-        if "User instructions" in str(e) or "Application requirements" in str(e):
+        if "User instructions" in str(e) or "Application requirements" in str(e) or "Funder AI policy" in str(e):
             raise HTTPException(422, str(e))
         raise HTTPException(404, str(e))
     except Exception as e:
