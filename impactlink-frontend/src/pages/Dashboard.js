@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../services/api";
 
 import { useNavigate } from "react-router-dom";
 import { Nav, StatCard, GrantCard, SectionHeader } from "../components";
 import { useAuth } from "../context/AuthContext";
 import useGrants from "../hooks/useGrants";
 import useWorkStore from "../hooks/useWorkStore";
+import { stageProposalMatch, workItemPath } from "../services/proposals";
 
 const TYPE_META = {
   draft:   { icon: "✍", label: "Draft",          color: "var(--accent)" },
@@ -35,14 +37,21 @@ function WorkItem({ item, active, onSelect, onOpen, onDelete }) {
 
   return (
     <div
-      onClick={onSelect}
+      onClick={onOpen}
+      role="link"
+      tabIndex={0}
+      onKeyDown={event => {
+        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault(); onOpen();
+        }
+      }}
       style={{
         background: active ? `${meta.color}11` : "var(--bg-card)",
         border: `1px solid ${borderColor}`,
         borderRadius: 10, padding: "11px 14px",
         display: "flex", alignItems: "center", gap: 10,
         transition: "all 0.15s",
-        cursor: isBudget ? "default" : "pointer",
+        cursor: "pointer",
       }}
       onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor = meta.color; }}
       onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor = "var(--border)"; }}
@@ -72,7 +81,8 @@ function WorkItem({ item, active, onSelect, onOpen, onDelete }) {
         </p>
       </div>
 
-      {/* Edit button */}
+      {!isBudget && <button onClick={event => { event.stopPropagation(); onSelect(); }} style={{ background: "none", border: "1px solid var(--border)", color: "var(--accent)", borderRadius: 5, padding: "4px 8px", cursor: "pointer" }}>Find grants</button>}
+      {/* Open button */}
       <button
         onClick={e => { e.stopPropagation(); onOpen(); }}
         title="Open / Edit"
@@ -85,7 +95,7 @@ function WorkItem({ item, active, onSelect, onOpen, onDelete }) {
         onMouseEnter={e => { e.target.style.borderColor = meta.color; e.target.style.color = meta.color; }}
         onMouseLeave={e => { e.target.style.borderColor = "#2a2a3e"; e.target.style.color = "#555"; }}
       >
-        Edit
+        Open
       </button>
 
       {/* Delete button */}
@@ -119,20 +129,34 @@ export default function Dashboard() {
 
   const p = profile || {};
   const firstName = (p.org_name || "there").split(" ")[0];
-  const recentItems = allItems.slice(0, 8);
+  const [showAll, setShowAll] = useState(false);
+  const recentItems = showAll ? allItems : allItems.slice(0, 8);
 
   // Active proposal selected in Saved Work — drives grant panel
   const [activeProposalId, setActiveProposalId] = useState(null);
+  const [grantDetails, setGrantDetails] = useState([]);
   const activeProposal = allItems.find(i => i.id === activeProposalId) || null;
+  const savedGrantIds = [...new Set(allItems.flatMap(item => [...(item.matches_id || []), ...(item.grant_id ? [item.grant_id] : [])]).map(String))].sort().join("|");
+  useEffect(() => {
+    if (!savedGrantIds) return;
+    let active = true;
+    Promise.allSettled(savedGrantIds.split("|").map(id => api.get(`/api/grants/${encodeURIComponent(id)}`))).then(results => {
+      const details = results.filter(result => result.status === "fulfilled" && result.value?.data).map(result => result.value.data);
+      if (active && details.length) setGrantDetails(details);
+    });
+    return () => { active = false; };
+  }, [savedGrantIds]);
 
   // Grants to show: if a proposal is selected and has matches_id, filter + reorder
   // Otherwise fall back to the full grants list from sessionStorage
+  const savedGrants = allItems.slice().reverse().flatMap(item => item.matched_grants || []);
+  const grantPool = [...new Map([...grantDetails, ...savedGrants, ...grants].map(grant => [String(grant.grant_id), grant])).values()];
   const visibleGrants = (() => {
-    if (!activeProposal || !activeProposal.matches_id?.length) return grants;
+    if (!activeProposal || !activeProposal.matches_id?.length) return grantPool;
     // Reorder grants to match the saved matches_id order, then append any extras
     const ids = activeProposal.matches_id.map(String);
-    const inSet = grants.filter(g => ids.includes(String(g.grant_id)));
-    const rest  = grants.filter(g => !ids.includes(String(g.grant_id)));
+    const inSet = grantPool.filter(g => ids.includes(String(g.grant_id)));
+    const rest  = grantPool.filter(g => !ids.includes(String(g.grant_id)));
     // Sort inSet by original matches_id order
     inSet.sort((a, b) => ids.indexOf(String(a.grant_id)) - ids.indexOf(String(b.grant_id)));
     return [...inSet, ...rest];
@@ -146,32 +170,16 @@ export default function Dashboard() {
   // Clicking a proposal card selects it (updates grant panel) without navigating
   // The "Edit" button on the card navigates to the editor
   const selectProposal = (item) => {
-    const type = item._type || item.type;
-    if (type === "budget") return; // budgets don't have grant matches
-    setActiveProposalId(prev => prev === item.id ? null : item.id); // toggle
-    // Also set sessionStorage so Draft/Budget pages pick it up
-    sessionStorage.setItem("upload_draft_id", item.id);
-    if (item.proposal_context) {
-      sessionStorage.setItem("proposal", JSON.stringify(item.proposal_context));
-    }
+    setActiveProposalId(item.id);
+    navigate(stageProposalMatch(item, profile || {}));
   };
 
-  // Edit button — navigate to the right editor
   const openItem = (item) => {
-    const type = item._type || item.type;
-    if (type === "build") {
+    if (item._type !== "budget") {
       sessionStorage.setItem("upload_draft_id", item.id);
-      navigate(`/build?load=${item.id}`);
-    } else if (type === "draft") {
-      sessionStorage.setItem("upload_draft_id", item.id);
-      if (item.section_order?.length > 0) {
-        navigate(`/draft?load=${item.id}${item.grant_id ? `&grant=${item.grant_id}` : ""}`);
-      } else {
-        navigate(`/draft${item.grant_id ? `?grant=${item.grant_id}` : ""}`);
-      }
-    } else if (type === "budget") {
-      navigate(`/budget?load=${item.id}`);
+      if (item.proposal_context) sessionStorage.setItem("proposal", JSON.stringify(item.proposal_context));
     }
+    navigate(workItemPath(item));
   };
 
 
@@ -237,7 +245,8 @@ export default function Dashboard() {
                   sessionStorage.removeItem("grants_aiResults");
                   sessionStorage.removeItem("grants_aiQuery");
                   sessionStorage.setItem("grants_searchMode", "filter");
-                  navigate("/grants");
+                  const item = activeProposal || allItems.find(record => record._type !== "budget" && (record.proposal_context || Object.keys(record.sections || {}).length));
+                  navigate(item ? stageProposalMatch(item, profile || {}) : "/grants");
                 }}
                 style={{ background: "transparent", border: "1px solid var(--border)",
                   color: "var(--accent)", padding: "8px 18px", borderRadius: 8,
@@ -412,10 +421,9 @@ export default function Dashboard() {
                     />
                   ))}
                   {allItems.length > 8 && (
-                    <p style={{ color: "#444", fontSize: 11, textAlign: "center",
-                      margin: "4px 0 0" }}>
-                      +{allItems.length - 8} more items
-                    </p>
+                    <button onClick={() => setShowAll(value => !value)} style={{ background: "none", color: "var(--accent)", border: "none", cursor: "pointer", padding: 8 }}>
+                      {showAll ? "Show recent items" : "View all saved work"}
+                    </button>
                   )}
                 </div>
               )}

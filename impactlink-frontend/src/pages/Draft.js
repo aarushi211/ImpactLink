@@ -1,3 +1,4 @@
+import { proposalContext, stageProposalMatch } from "../services/proposals";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Nav } from "../components";
@@ -622,7 +623,8 @@ export default function Draft() {
   const sectionOrderKey = sectionOrder.join("|");
   const sectionCount = sectionOrder.length;
   const done = session.gate === "complete" || session.gate === "draft_review" || session.gate === "final_save";
-  const autoSaveDone = session.gate === "complete"; // only auto-save when truly done
+  const autoSaveDone = session.gate === "draft_review" || session.gate === "complete";
+  const autoSavedStage = useRef(null);
   const error        = session.error;
   const activeSection = session.gate === "none" ? null : (session.data.active_section || null);
   const [savedDraftId, setSavedDraftId] = useState(null);
@@ -647,7 +649,9 @@ export default function Draft() {
   const sectionRefs = useRef({});
   const scrollContainerRef = useRef(null);
   const restoredSessionRef = useRef(false);
-  const selectedGrant    = grants.find(g => String(g.grant_id) === String(selectedGrantId));
+  const loadedDraft = loadId ? drafts.find(item => item.id === loadId) : null;
+  const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId))
+    || (loadedDraft?.grant_id ? loadedDraft.grant || { grant_id: loadedDraft.grant_id, title: loadedDraft.grant_title || loadedDraft.title, agency: loadedDraft.agency || "" } : null);
   // Active saved proposal (uploaded or built) — provides proposal_context for drafting
   const activeProposal   = proposals.find(p => p.id === selectedProposalId);
   // Resolved proposal: prefer saved proposal_context, fall back to sessionStorage proposal
@@ -747,7 +751,7 @@ export default function Draft() {
       };
       delete restoredSections.uploaded_content;
     }
-    const proposalSections = saved.proposal_context?.sections || {};
+    const proposalSections = saved.original_sections || saved.proposal_context?.sections || {};
     const sourceSections = Object.keys(proposalSections).length
       ? proposalSections
       : saved.proposal_context?.raw_text
@@ -834,13 +838,14 @@ export default function Draft() {
     return () => observer.disconnect();
   }, [sectionOrderKey, sectionCount, session.gate]);
 
-  // Auto-save draft when AI fully completes (not at intermediate draft_review gate)
+  // Save the generated revision when it becomes available for review.
   useEffect(() => {
-    if (autoSaveDone && sectionOrder.length > 0) {
-      if (profile) handleSave();
-    }
+    const stage = `${session.sessionId}:${session.gate}`;
+    if (loadId || !autoSaveDone || !session.sessionId || !sectionOrder.length || !profile || !selectedGrant || autoSavedStage.current === stage) return;
+    autoSavedStage.current = stage;
+    handleSave();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoSaveDone]);
+  }, [autoSaveDone, loadId, sectionOrderKey, profile, selectedGrant, session.sessionId, session.gate]);
 
   // Sync session data to local states for editor
   useEffect(() => {
@@ -1044,7 +1049,8 @@ export default function Draft() {
       });
       let persistedDraftId = savedDraftId;
       if (savedDraftId) {
-        await updateDraft(savedDraftId, secToSave);
+        const updated = await updateDraft(savedDraftId, secToSave, null, { original_sections: originalSections, section_order: sectionOrder, proposal_context: proposalContext({ title: selectedGrant.title, proposal_context: resolvedProposal || {}, sections: secToSave }, profile) });
+        if (!updated) throw new Error("Could not save revision");
       } else {
         const matchIds = (activeProposal?.matches_id || []);
         const saved = await saveDraft({
@@ -1052,11 +1058,15 @@ export default function Draft() {
           grant_title:      selectedGrant.title,
           grant_id:         String(selectedGrant.grant_id),
           agency:           selectedGrant.agency || "",
-          proposal_context: resolvedProposal || {},
+          proposal_context: proposalContext({ title: selectedGrant.title, proposal_context: resolvedProposal || {}, sections: secToSave }, profile),
+          matched_grants: grants.filter(grant => (activeProposal?.matches_id || []).map(String).includes(String(grant.grant_id))),
+          grant: selectedGrant,
           matches_id:       matchIds,
           sections:         secToSave,
+          original_sections: originalSections,
           section_order:    sectionOrder,
         });
+        if (!saved) throw new Error("Could not save revision");
         if (saved) {
           persistedDraftId = saved.id;
           setSavedDraftId(saved.id);
@@ -1078,9 +1088,24 @@ export default function Draft() {
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus(null), 2500);
+      return persistedDraftId;
     } catch (e) {
       setSaveStatus("error");
     }
+  };
+
+  const handleFindGrants = async () => {
+    const id = await handleSave();
+    if (!id) return;
+    const item = {
+      id, _type: "draft", title: selectedGrant?.title || "Revised Proposal",
+      proposal_context: resolvedProposal || {},
+      sections: Object.fromEntries(sectionOrder.map(key => [key, {
+        title: sections[key]?.title || key,
+        content: editedContent[key] ?? sections[key]?.content ?? "",
+      }])),
+    };
+    navigate(stageProposalMatch(item, profile || {}));
   };
 
   const handleDownloadPDF = async () => {
@@ -1273,6 +1298,7 @@ export default function Draft() {
               {totalWords.toLocaleString()} words
             </span>
           )}
+          {hasSections && <button onClick={handleFindGrants} disabled={loading} style={{ background: "var(--accent)", color: "#fff", border: "none", padding: "6px 13px", borderRadius: 7, cursor: "pointer" }}>Find grants</button>}
           {savedDraftId && !done && (
             <span style={{ color: "#444", fontSize: 11, fontWeight: 600,
               background: "#1a1a28", border: "1px solid #2a2a3e",

@@ -143,7 +143,19 @@ impactlink-backend/
 
 ## API reference
 
-All routes except `/` require `Authorization: Bearer <Firebase JWT>`.
+### Saved work and matching
+
+Generated builds and revised proposals are saved when they reach draft review.
+Find Grants passes the latest section text to `/api/match` automatically, then
+saves the resulting grant snapshots with the proposal. Dashboard rows open the
+specific saved build, revision, or budget using `?load=<id>`; a proposal's Find
+Grants action opens `/grants?proposal=<id>` and runs a fresh match. Budget
+refinements update the existing saved budget rather than creating another one.
+
+Updates use `PATCH /api/work/{type}/{id}`. Grant details can be loaded directly
+with `GET /api/grants/{grant_id}`, independently of browser matching caches.
+
+Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
 
 ### Session (drafting)
 

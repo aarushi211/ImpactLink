@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { proposalContext } from "../services/proposals";
 import { Nav, GrantCard, SectionHeader, EmptyState, CollabCard } from "../components";
 import useGrants from "../hooks/useGrants";
 import useWorkStore from "../hooks/useWorkStore";
@@ -36,7 +38,12 @@ function ViewToggle({ view, onChange }) {
 export default function GrantsList() {
   const { grants, proposal, hasRealData, loading: grantsLoading } = useGrants();
   const { profile } = useAuth();
-  const { proposals: savedProposals, refresh: refreshWorkStore } = useWorkStore();
+  const { proposals: savedProposals, loading: workLoading, refresh: refreshWorkStore } = useWorkStore();
+  const [searchParams] = useSearchParams();
+  const requestedProposalId = searchParams.get("proposal");
+  const autoMatchStarted = useRef(null);
+  const matchRequest = useRef(0);
+  const lastMatchItem = useRef(null);
   const { upload, loading: uploadLoading, error: uploadError } = useUpload();
   const uploadInputRef = useRef(null);
 
@@ -58,63 +65,40 @@ export default function GrantsList() {
 
   // Saved drafts and builds can both be matched against current grant data.
   const matchableProposals = savedProposals.filter(
-    p => p.proposal_context
+    p => p.proposal_context || Object.keys(p.sections || {}).length > 0
   );
 
   const selectedSavedProposal = matchableProposals.find(p => p.id === selectedProposalId) || null;
 
   const handleSelectSavedProposal = async (item) => {
-    if (selectedProposalId === item.id) {
-      // Deselect
-      setSelectedProposalId(null);
-      setRematchGrants(null);
-      setRematchError(null);
-      setUploadedProposalName("");
-      return;
-    }
-
-    setSelectedProposalId(item.id);
-    setUploadedProposalName("");
+    lastMatchItem.current = item;
+    const request = ++matchRequest.current;
+    const context = proposalContext(item, profile || {});
+    setSelectedProposalId(item.id || null);
+    setUploadedProposalName(item.title || context.project_title);
     setRematchError(null);
-
-    // If the saved item has stored matches, load them from session grants pool
-    if (item.matches_id?.length > 0) {
-      // Filter available grants to just the matching IDs, in order
-      const storedMatches = removeDemoGrants(
-        JSON.parse(sessionStorage.getItem("matches") || "[]")
-      );
-      const ids = item.matches_id.map(String);
-      const matched = storedMatches.filter(g => ids.includes(String(g.grant_id)));
-      // Sort by original match order
-      matched.sort((a, b) => ids.indexOf(String(a.grant_id)) - ids.indexOf(String(b.grant_id)));
-
-      if (matched.length === ids.length) {
-        setRematchGrants(matched);
-        return;
+    setRematchGrants([]);
+    setRematchLoading(true);
+    setSearchMode("filter");
+    sessionStorage.setItem("grants_searchMode", "filter");
+    try {
+      const res = await api.post("/api/match", { proposal: context, top_k: 10 });
+      if (request !== matchRequest.current) return;
+      const matches = removeDemoGrants(res.data.matches || []);
+      setRematchGrants(matches);
+      sessionStorage.setItem("matches", JSON.stringify(matches));
+      sessionStorage.setItem("proposal", JSON.stringify(context));
+      if (item.id) {
+        const type = item._type === "build" ? "builds" : "drafts";
+        await api.patch(`/api/work/${type}/${encodeURIComponent(item.id)}`, {
+          proposal_context: context,
+          matches_id: matches.map(grant => String(grant.grant_id)), matched_grants: matches,
+        }).catch(error => console.error("Could not save grant matches", error));
       }
-    }
-
-    // Otherwise: live re-match against the backend using the stored proposal context
-    if (item.proposal_context) {
-      setRematchLoading(true);
-      try {
-        const res = await api.post("/api/match", { proposal: item.proposal_context, top_k: 10 });
-        const newMatches = removeDemoGrants(res.data.matches || []);
-        setRematchGrants(newMatches);
-        // Merge into session for subsequent navigation
-        const existing = removeDemoGrants(
-          JSON.parse(sessionStorage.getItem("matches") || "[]")
-        );
-        const existingIds = new Set(existing.map(g => String(g.grant_id)));
-        const merged = [...existing, ...newMatches.filter(g => !existingIds.has(String(g.grant_id)))];
-        sessionStorage.setItem("matches", JSON.stringify(merged));
-        sessionStorage.setItem("proposal", JSON.stringify(item.proposal_context));
-      } catch (e) {
-        setRematchError("Could not load matches — " + (e?.response?.data?.detail || "try again."));
-        setRematchGrants(null);
-      } finally {
-        setRematchLoading(false);
-      }
+    } catch (error) {
+      if (request === matchRequest.current) setRematchError("Could not match this proposal. Please try again.");
+    } finally {
+      if (request === matchRequest.current) setRematchLoading(false);
     }
   };
 
@@ -123,6 +107,8 @@ export default function GrantsList() {
     if (item) {
       handleSelectSavedProposal(item);
     } else {
+      matchRequest.current += 1;
+      setRematchLoading(false);
       setSelectedProposalId(null);
       setRematchGrants(null);
       setRematchError(null);
@@ -170,6 +156,29 @@ export default function GrantsList() {
     var saved = sessionStorage.getItem("grants_searchMode");
     return saved || "filter";
   });
+
+  useEffect(() => {
+    const key = requestedProposalId || "pending";
+    if (autoMatchStarted.current === key) return;
+    let pending = null;
+    try { pending = JSON.parse(sessionStorage.getItem("grant_match_request") || "null"); }
+    catch (_) { sessionStorage.removeItem("grant_match_request"); }
+    const saved = requestedProposalId ? savedProposals.find(item => String(item.id) === requestedProposalId) : null;
+    const item = pending && (!requestedProposalId || String(pending.id) === requestedProposalId) ? pending : saved;
+    if (!item) {
+      if (requestedProposalId && !workLoading) {
+        autoMatchStarted.current = key;
+        setRematchGrants([]);
+        setRematchError("The selected proposal could not be loaded.");
+      }
+      return;
+    }
+    autoMatchStarted.current = key;
+    sessionStorage.removeItem("grant_match_request");
+    handleSelectSavedProposal(item);
+    // The ref ensures one automatic request per selected proposal, including StrictMode.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedProposalId, savedProposals, workLoading]);
 
   // Reset to filter mode whenever a real proposal match arrives
   // (e.g. navigating from Dashboard "View All" with a selected proposal)

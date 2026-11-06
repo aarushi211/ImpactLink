@@ -33,7 +33,7 @@ from typing import Optional
 import asyncio
 
 from services.parser import parse_proposal
-from services.vector_store import find_similar_grants, topic_search_grants
+from services.vector_store import find_similar_grants, topic_search_grants, get_grant_by_id
 from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
 from services.budget_chatbot import refine_budget
@@ -349,6 +349,14 @@ def get_user_work(work_type: str, uid: str = Depends(verify_token)):
     if work_type not in ("drafts", "builds", "budgets", "summary"):
         raise HTTPException(400, "Invalid work type")
     return {work_type: list_work(uid, work_type)}
+
+
+@app.get("/api/grants/{grant_id}")
+def grant_details(grant_id: str):
+    grant = get_grant_by_id(grant_id)
+    if not grant:
+        raise HTTPException(404, "Grant not found")
+    return grant
 
 @app.post("/api/work/{work_type}")
 def create_user_work(work_type: str, req: dict, uid: str = Depends(verify_token)):

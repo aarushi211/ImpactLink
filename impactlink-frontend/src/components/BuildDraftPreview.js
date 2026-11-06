@@ -22,16 +22,18 @@ const labels = { writing: "Writing...", reviewing: "Reviewing...", revising: "Re
 
 export default function BuildDraftPreview({ sections, interrupted = false }) {
   return (
-    <section aria-label="Live proposal draft" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "20px 28px", borderTop: "1px solid var(--border)", background: "#0f0f18" }}>
-      <h3 style={{ margin: "0 0 8px" }}>Live draft</h3>
+    <section aria-label="Live proposal draft" style={{ marginTop: 20 }}>
       <p style={{ color: "#aaa", fontSize: 12 }}>
         {interrupted ? "Connection interrupted. This preview may be incomplete; check the saved session status." : "Your sections appear as they are written. Editing and approval open after the final review."}
       </p>
       {Object.entries(sections).map(([key, section]) => (
-        <article key={key} aria-label={section.title} style={{ marginTop: 14, padding: 16, border: "1px solid var(--border)", borderRadius: 10 }}>
-          <h4 style={{ margin: "0 0 6px" }}>{section.title}</h4>
+        <article key={key} aria-label={section.title} style={{ display: "flex", gap: 10, margin: "24px 0" }}>
+          <div aria-hidden="true" style={{ width: 30, height: 30, flexShrink: 0, borderRadius: "50%", background: "var(--accent-dim)", display: "grid", placeItems: "center" }}>✦</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+          <h4 style={{ margin: "4px 0 6px" }}>{section.title}</h4>
           <span style={{ color: "var(--accent)", fontSize: 12 }}>{labels[section.phase] || "Working..."}</span>
           <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.8, fontFamily: "Georgia, serif", color: "#bbb" }}>{section.content || "Waiting for the first words..."}</p>
+          </div>
         </article>
       ))}
     </section>

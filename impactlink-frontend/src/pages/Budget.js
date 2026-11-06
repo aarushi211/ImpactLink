@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import useBudget from "../hooks/useBudget";
-import { useAuth } from "../context/AuthContext";
 import useWorkStore from "../hooks/useWorkStore";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -175,10 +174,13 @@ export default function Budget() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const grantParam = searchParams.get("grant");
-  const { profile } = useAuth();
   const { grants, proposal } = useGrants();
   const { budget, loading, error, generate, refine, reset } = useBudget();
-  const { saveBudget, budgets, proposals } = useWorkStore();
+  const { saveBudget, updateBudget, budgets, proposals } = useWorkStore();
+  const savedBudgetId = useRef(null);
+  const restoredBudgetId = useRef(null);
+  const pendingBudgetSave = useRef(Promise.resolve());
+  const [saveError, setSaveError] = useState(null);
   const [preloadedBudget, setPreloadedBudget] = useState(null);
 
   // saved proposal selector
@@ -187,6 +189,7 @@ export default function Budget() {
   );
   const activeProposal    = proposals.find(p => p.id === selectedProposalId);
   const resolvedProposal  = activeProposal?.proposal_context
+    || preloadedBudget?.proposal_context
     || proposal   // from useGrants (sessionStorage)
     || null;
 
@@ -206,11 +209,16 @@ export default function Budget() {
 
   // When user picks a saved proposal, auto-load its linked budget if one exists
   useEffect(() => {
-    if (!activeProposal?.budget_id) return;
+    if (searchParams.get("load") || budget || !activeProposal?.budget_id) return;
     const linked = budgets.find(b => b.id === activeProposal.budget_id);
-    if (linked) setPreloadedBudget(linked);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProposalId]);
+    if (linked && savedBudgetId.current !== linked.id) {
+      savedBudgetId.current = linked.id;
+      setPreloadedBudget(linked);
+      setMaxBudget(String(linked.max_budget || linked.total_requested || ""));
+      setChatReady(true);
+      setMessages([{ role: "assistant", content: "Restored this proposal's saved budget. You can request adjustments below." }]);
+    }
+  }, [activeProposal?.budget_id, budgets, searchParams, budget]);
 
   // Sync selectedGrantId with grantParam if it changes
   useEffect(() => {
@@ -222,14 +230,17 @@ export default function Budget() {
   // Load saved budget if ?load=<id>
   const loadBudgetId = searchParams.get("load");
   useEffect(() => {
-    if (!loadBudgetId || !budgets.length) return;
+    if (!loadBudgetId || !budgets.length || restoredBudgetId.current === loadBudgetId) return;
     const saved = budgets.find(b => b.id === loadBudgetId);
     if (!saved) return;
-    // Restore budget state directly
+    restoredBudgetId.current = saved.id;
+    savedBudgetId.current = saved.id;
+    setSelectedProposalId(saved.proposal_id || "");
+    setSelectedGrantId(saved.grant_id || "");
+    setMaxBudget(String(saved.max_budget || saved.total_requested || ""));
+    setChatReady(true);
+    setMessages([{ role: "assistant", content: "Restored your saved budget. You can review it or request adjustments below." }]);
     reset();
-    // We'll inject via the budget hook's internal setter — 
-    // since useBudget doesn't expose one, set via generate with a stub
-    // Instead: store in local state as a "preloaded" budget
     setPreloadedBudget(saved);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadBudgetId, budgets]);
@@ -240,6 +251,7 @@ export default function Budget() {
   // pre-fill max_budget from selected grant ceiling (or floor as fallback)
   useEffect(() => {
     // Only pre-fill if we have a grant selected AND it's in our grants list
+    if (loadBudgetId) return;
     const grant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
     
     if (grant) {
@@ -263,7 +275,7 @@ export default function Budget() {
         setMaxBudget(String(amount));
       }
     }
-  }, [selectedGrantId, grants]);
+  }, [selectedGrantId, grants, loadBudgetId]);
 
   // scroll chat to bottom on new messages
   useEffect(() => {
@@ -273,42 +285,47 @@ export default function Budget() {
   // ── handlers ───────────────────────────────────────────
 
   const handleGenerate = async () => {
-    if (!proposal || !maxBudget) return;
+    if (!resolvedProposal || !maxBudget) return;
+    await pendingBudgetSave.current.catch(() => {});
+    savedBudgetId.current = null;
+    setPreloadedBudget(null);
     reset();
     setMessages([]);
     setChatReady(false);
     await generate(resolvedProposal, Number(maxBudget));
   };
 
-  // Auto-save budget when first generated, and open chat
+  // Persist each generated or refined budget, retaining the same saved ID.
   useEffect(() => {
-    if (displayBudget && messages.length === 0) {
-      // Save to work store
-      if (profile) {
-        saveBudget({
-          title:                selectedGrant?.title || activeProposal?.title || "Budget",
-          grant_title:          selectedGrant?.title || "",
-          grant_id:             selectedGrant ? String(selectedGrant.grant_id) : "",
-          max_budget:           Number(maxBudget) || 0,
-          proposal_id:          activeProposal?.id || null,
-          items:                displayBudget.items,
-          total_requested:      displayBudget.total_requested,
-          locality_explanation: displayBudget.locality_explanation,
-        });
-      }
+    if (!budget) return;
+    const payload = {
+      title: selectedGrant?.title || preloadedBudget?.title || activeProposal?.title || "Budget",
+      grant_title: selectedGrant?.title || preloadedBudget?.grant_title || "", grant_id: selectedGrantId || "",
+      max_budget: Number(maxBudget) || 0, proposal_id: activeProposal?.id || null,
+      proposal_type: activeProposal?._type || preloadedBudget?.proposal_type || null,
+      proposal_context: resolvedProposal,
+      items: budget.items, total_requested: budget.total_requested,
+      locality_explanation: budget.locality_explanation,
+    };
+    pendingBudgetSave.current = pendingBudgetSave.current.catch(() => {}).then(async () => {
+      const saved = savedBudgetId.current
+        ? await updateBudget(savedBudgetId.current, payload)
+        : await saveBudget(payload);
+      if (!saved) throw new Error("Could not save the budget. Please try again.");
+      savedBudgetId.current = saved.id;
+      setSaveError(null);
+    }).catch(error => setSaveError(error.message));
+    if (!chatReady) {
       setChatReady(true);
-      setMessages([{
-        role: "assistant",
-        content: `I've generated a ${displayBudget.items.length}-line budget totalling ${fmt(displayBudget.total_requested)} based on your project location. ${displayBudget.locality_explanation} Ask me to adjust any category — I'll rebalance automatically.`,
-      }]);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setMessages([{ role: "assistant", content: `Your ${budget.items.length}-line budget totals ${fmt(budget.total_requested)}. ${budget.locality_explanation || ""} Ask me to adjust any category.` }]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Save only when the generated budget changes, not on work-store refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [budget]);
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || !budget || loading) return;
+    if (!text || !displayBudget || loading) return;
     setInput("");
 
     const userMsg = { role: "user", content: text };
@@ -349,6 +366,7 @@ export default function Budget() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
       <Nav />
+      {saveError && <p role="alert" style={{ color: "#ef4444", margin: 16 }}>{saveError}</p>}
 
       {/* ── App Bar ─────────────────────────── */}
       <div style={{

@@ -13,6 +13,10 @@ export default function GrantCard({ grant, compact = false }) {
   return (
     <div
       onClick={() => navigate(`/grants/${grant.grant_id}`)}
+      role="link" tabIndex={0}
+      onKeyDown={event => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate(`/grants/${grant.grant_id}`); }
+      }}
       style={{
         background: "var(--bg-card)", border: "1px solid var(--border)",
         borderRadius: 14, padding: compact ? "16px 20px" : "20px 24px",
@@ -65,7 +69,7 @@ export default function GrantCard({ grant, compact = false }) {
 
       {/* Right — score + arrow */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0 }}>
-        <div style={{ textAlign: "center" }}>
+        {Number.isFinite(grant.similarity_score) && <div style={{ textAlign: "center" }}>
           <div style={{
             width: compact ? 48 : 56, height: compact ? 48 : 56,
             borderRadius: "50%",
@@ -78,7 +82,7 @@ export default function GrantCard({ grant, compact = false }) {
             </span>
           </div>
           <span style={{ fontSize: 10, color: "#444", display: "block", marginTop: 3 }}>match</span>
-        </div>
+        </div>}
         <span style={{ color: "var(--accent)", fontSize: 18 }}>→</span>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import os
 import uuid
 import json
+from datetime import datetime, timezone
 from psycopg_pool import ConnectionPool
 from psycopg.rows import dict_row
 
@@ -38,7 +39,7 @@ def list_work(user_id: str, work_type: str):
     with pool.connection() as conn:
         with conn.cursor(row_factory=dict_row) as cur:
             cur.execute(
-                "SELECT id, data FROM user_work WHERE user_id = %s AND work_type = %s ORDER BY updated_at DESC", 
+                "SELECT id, data, updated_at FROM user_work WHERE user_id = %s AND work_type = %s ORDER BY updated_at DESC",
                 (user_id, work_type)
             )
             rows = cur.fetchall()
@@ -46,12 +47,14 @@ def list_work(user_id: str, work_type: str):
             for r in rows:
                 item = r["data"]
                 item["id"] = r["id"]
+                item["updated_at"] = r["updated_at"].isoformat()
                 results.append(item)
             return results
 
 def save_work(user_id: str, work_type: str, data: dict):
     work_id = data.get("id") or str(uuid.uuid4())
     data["id"] = work_id
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
     with pool.connection() as conn:
         with conn.cursor() as cur:
             cur.execute("""
@@ -69,6 +72,8 @@ def update_work(user_id: str, work_id: str, updates: dict):
                 raise ValueError("Not found")
             data = row["data"]
             data.update(updates)
+            data["id"] = work_id
+            data["updated_at"] = datetime.now(timezone.utc).isoformat()
             cur.execute("UPDATE user_work SET data = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s", (json.dumps(data), work_id))
             return data
 

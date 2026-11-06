@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect, useReducer } from "react";
+import { useState, useRef, useEffect, useReducer, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import { useAuth } from "../context/AuthContext";
-import api, { reviseSection } from "../services/api";
+import { reviseSection } from "../services/api";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
+import { createProposalPdf } from "../utils/proposalPdf";
+import { proposalContext, stageProposalMatch } from "../services/proposals";
 import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
 
 // ── helpers ───────────────────────────────────────────────────
@@ -283,17 +285,14 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
 
   return (
     <div style={{
-      background: approved ? "#0d2e1a" : "var(--bg-card)",
-      border: `1px solid ${approved ? "#166534" : editMode ? "var(--accent)" : "var(--border)"}`,
-      borderRadius: 12, overflow: "hidden",
-      transition: "all 0.25s",
+      display: "flex", gap: 10, margin: "12px 0",
     }}>
+      <div aria-hidden="true" style={{ width: 30, height: 30, flexShrink: 0, borderRadius: "50%", background: "var(--accent-dim)", display: "grid", placeItems: "center" }}>✦</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
       {/* header */}
       <div style={{
-        padding: "12px 18px", display: "flex",
+        padding: "4px 0 10px", display: "flex", flexWrap: "wrap", gap: 10,
         alignItems: "center", justifyContent: "space-between",
-        borderBottom: `1px solid ${approved ? "#166534" : "var(--border)"}`,
-        background: approved ? "#0a2318" : "#111120",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 16 }}>{icon}</span>
@@ -413,7 +412,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
       )}
 
       {/* content — editable textarea or read-only prose */}
-      <div style={{ padding: "16px 18px" }}>
+      <div style={{ padding: "4px 0 20px" }}>
         {editMode ? (
           <textarea
             value={editContent}
@@ -436,6 +435,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
           </p>
         )}
       </div>
+      </div>
     </div>
   );
 }
@@ -447,8 +447,14 @@ export default function BuildProposal() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuth();
   const { grants }  = useGrants();
-  const { saveBuild, builds } = useWorkStore();
+  const { saveBuild, updateBuild, builds, loading: workLoading } = useWorkStore();
   const [savedBuildId, setSavedBuildId] = useState(null);
+  const savedBuildIdRef = useRef(null);
+  const pendingBuildSave = useRef(null);
+  const autoSavedSession = useRef(null);
+  const restoredBuild = useRef(null);
+  const [buildSaveError, setBuildSaveError] = useState(null);
+  const [findingGrants, setFindingGrants] = useState(false);
 
   // The conversation — array of { role: "ai"|"user", type, ...data }
   const [messages,  setMessages]  = useState([]);
@@ -467,10 +473,68 @@ export default function BuildProposal() {
   const [proposalName,   setProposalName]   = useState("");
 
   const chatEndRef = useRef(null);
+  const followChatRef = useRef(true);
   const inputRef   = useRef(null);
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
 
   const session = useProposalSession(searchParams.get("session"));
+
+  const buildSnapshot = useCallback(source => {
+    const previous = builds.find(item => item.id === savedBuildIdRef.current) || {};
+    const cleanSections = Object.fromEntries(Object.entries(source || {}).map(([key, section]) => [key, {
+      title: section.title || key, content: section.content || "",
+    }]));
+    const payload = {
+      title: proposalName.trim() || previous.title || selectedGrant?.title || profile?.org_name || "Built Proposal",
+      org_name: profile?.org_name || previous.org_name || "", grant_title: selectedGrant?.title || previous.grant_title || "",
+      grant_id: selectedGrant?.grant_id ? String(selectedGrant.grant_id) : previous.grant_id || "",
+      sections: cleanSections, section_order: Object.keys(cleanSections), answers: answers.length ? answers : previous.answers || [],
+      session_id: session.sessionId || previous.session_id,
+      status: Object.values(source || {}).every(section => section.approved) ? "approved" : "draft",
+    };
+    payload.proposal_context = proposalContext({ ...payload, proposal_context: previous.proposal_context }, profile || {});
+    return payload;
+  }, [proposalName, selectedGrant, profile, answers, session.sessionId, builds]);
+
+  const persistBuild = useCallback(async source => {
+    if (pendingBuildSave.current) await pendingBuildSave.current;
+    const payload = buildSnapshot(source);
+    const id = savedBuildIdRef.current;
+    const operation = id ? updateBuild(id, payload.sections, null, payload) : saveBuild(payload);
+    const pending = operation.then(saved => {
+      if (!saved) throw new Error("Could not save this proposal. Please try again.");
+      savedBuildIdRef.current = saved.id;
+      setSavedBuildId(saved.id);
+      return saved;
+    });
+    pendingBuildSave.current = pending;
+    try { return await pending; }
+    finally { if (pendingBuildSave.current === pending) pendingBuildSave.current = null; }
+  }, [buildSnapshot, updateBuild, saveBuild]);
+
+  useEffect(() => {
+    if (workLoading || searchParams.get("load") || session.gate !== "draft_review" || !session.sessionId || !Object.keys(session.data.sections || {}).length || autoSavedSession.current === session.sessionId) return;
+    autoSavedSession.current = session.sessionId;
+    const existing = builds.find(item => item.session_id === session.sessionId);
+    if (existing) {
+      savedBuildIdRef.current = existing.id;
+      setSavedBuildId(existing.id);
+    }
+    persistBuild(session.data.sections).catch(error => {
+      setBuildSaveError(error.message);
+    });
+  }, [workLoading, builds, session.gate, session.sessionId, session.data.sections, searchParams, persistBuild]);
+
+  const handleFindGrants = async () => {
+    if (findingGrants) return;
+    setFindingGrants(true);
+    setBuildSaveError(null);
+    try {
+      const saved = await persistBuild(sections);
+      navigate(stageProposalMatch({ ...saved, _type: "build" }, profile || {}));
+    } catch (error) { setBuildSaveError(error.message); }
+    finally { setFindingGrants(false); }
+  };
 
   // Keep the checkpoint ID in the URL so a refresh can recover a long draft.
   useEffect(() => {
@@ -484,8 +548,10 @@ export default function BuildProposal() {
 
   // Scroll to bottom on new messages
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, session.loading]);
+    if (followChatRef.current) {
+      chatEndRef.current?.scrollIntoView({ behavior: session.loading ? "auto" : "smooth" });
+    }
+  }, [messages, session.loading, liveSections, sections]);
 
   // Sync session data to local UI state for backwards compatibility with existing render logic
   useEffect(() => {
@@ -628,50 +694,11 @@ export default function BuildProposal() {
     const allNowApproved = secOrder.length > 0 &&
       secOrder.every(k => updatedSections[k]?.approved);
 
-    if (allNowApproved && profile) {
-      // Save final approved build
-      const selectedG = grants.find(g => String(g.grant_id) === String(selectedGrantId));
-      const cleanSections = {};
-      secOrder.forEach(k => {
-        cleanSections[k] = {
-          title:   updatedSections[k].title,
-          content: updatedSections[k].content,
-        };
-      });
-
+    if (allNowApproved) {
       try {
-        if (savedBuildId) {
-          // Update existing saved build with final approved content
-          await api.patch("/api/work/builds", {
-            build_id: savedBuildId,
-            sections: cleanSections,
-          }).catch(() => {}); // non-fatal if patch endpoint not wired
-        }
-        await saveBuild({
-          title:         proposalName.trim() || selectedG?.title || profile?.org_name || "Built Proposal",
-          org_name:      profile?.org_name || "",
-          grant_title:   selectedG?.title || "",
-          sections:      cleanSections,
-          section_order: secOrder,
-          answers,
-        });
-      } catch (e) {
-        console.error("Final save error:", e);
-      }
-
-      // Store proposal context in sessionStorage so grants page can use it
-      const proposalCtx = {
-        organization_name: profile.org_name,
-        mission:           profile.mission,
-        cause_area:        profile.cause_area,
-        sdgs:              profile.sdgs,
-        key_activities:    profile.key_activities,
-        geographic_focus:  profile.geographic_focus,
-        project_title:     selectedG?.title || "",
-      };
-      sessionStorage.setItem("proposal", JSON.stringify(proposalCtx));
-      
-      // Removed automatic redirection so user can download PDF
+        const saved = await persistBuild(updatedSections);
+        sessionStorage.setItem("proposal", JSON.stringify(saved.proposal_context));
+      } catch (error) { setBuildSaveError(error.message); }
     }
   };
 
@@ -711,76 +738,13 @@ export default function BuildProposal() {
     try {
       await loadJsPDF();
       const { jsPDF } = window.jspdf;
-      const doc   = new jsPDF({ unit: "pt", format: "letter" });
-      const mL    = 72, mR = 72;
-      const pW    = doc.internal.pageSize.getWidth();
-      const pH    = doc.internal.pageSize.getHeight();
-      const cW    = pW - mL - mR;
-      let y = 80;
-
-      const checkY = (n = 20) => { if (y + n > pH - 60) { doc.addPage(); y = 72; } };
-
-      // Header bar
-      doc.setFillColor(18, 18, 32);
-      doc.rect(0, 0, pW, 56, "F");
-      doc.setTextColor(124, 111, 239); doc.setFontSize(10); doc.setFont("helvetica","bold");
-      doc.text("IMPACTLINK  —  GRANT PROPOSAL", mL, 34);
-      doc.setTextColor(100,100,120);
-      doc.text(new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}), pW-mR, 34, {align:"right"});
-      y = 100;
-
-      // Title block
-      doc.setTextColor(20,20,35); doc.setFontSize(22); doc.setFont("helvetica","bold");
-      const titleText = selectedGrant?.title || "Grant Proposal";
-      const titleLines = doc.splitTextToSize(titleText, cW);
-      doc.text(titleLines, mL, y);
-      y += titleLines.length * 28 + 8;
-
-      doc.setFontSize(11); doc.setFont("helvetica","normal"); doc.setTextColor(100,100,120);
-      doc.text(`${selectedGrant?.agency || ""}  ·  ${proposalName.trim() || profile?.org_name || "Your Organization"}`, mL, y);
-      y += 12;
-      doc.setDrawColor(200,200,220); doc.setLineWidth(0.5); doc.line(mL, y, pW-mR, y);
-      y += 28;
-
-      // Sections
-      const ICONS_TEXT = ["01","02","03","04","05","06","07"];
-      secOrder.forEach((key, idx) => {
-        const sec = sections[key];
-        if (!sec) return;
-        checkY(60);
-
-        doc.setFillColor(240,240,255);
-        doc.roundedRect(mL, y-12, cW, 22, 4, 4, "F");
-        doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(100,90,200);
-        doc.text(`${ICONS_TEXT[idx] || "—"}  ${sec.title.toUpperCase()}`, mL+10, y+3);
-        y += 28;
-
-        doc.setFontSize(10.5); doc.setFont("helvetica","normal"); doc.setTextColor(40,40,60);
-        const clean = (sec.content || "").replace(/\*\*(.*?)\*\*/g,"$1");
-        const paras = clean.split(/\n{2,}/);
-        for (const para of paras) {
-          if (!para.trim()) continue;
-          const lines = doc.splitTextToSize(para.trim(), cW);
-          checkY(lines.length * 14 + 8);
-          doc.text(lines, mL, y);
-          y += lines.length * 14 + 10;
-        }
-        y += 16;
-        checkY(10);
-        doc.setDrawColor(230,230,245); doc.setLineWidth(0.3);
-        doc.line(mL, y, pW-mR, y);
-        y += 20;
+      const doc = createProposalPdf(jsPDF, {
+        title: proposalName.trim() || selectedGrant?.title || "Grant Proposal",
+        agency: selectedGrant?.agency || "",
+        organization: profile?.org_name || "Your Organization",
+        sections,
+        sectionOrder: secOrder,
       });
-
-      // Page footers
-      const total = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= total; i++) {
-        doc.setPage(i);
-        doc.setFillColor(18,18,32); doc.rect(0, pH-36, pW, 36, "F");
-        doc.setFontSize(8); doc.setTextColor(80,80,100); doc.setFont("helvetica","normal");
-        doc.text("Prepared with ImpactLink — Build Proposal", mL, pH-16);
-        doc.text(`Page ${i} of ${total}`, pW-mR, pH-16, {align:"right"});
-      }
 
       const slug = (proposalName.trim() || profile?.org_name || "proposal").replace(/\s+/g,"_").toLowerCase();
       doc.save(`${slug}_built_proposal.pdf`);
@@ -791,14 +755,18 @@ export default function BuildProposal() {
   const loadId = searchParams.get("load");
   useEffect(() => {
     // Try ?load=id from work store first
-    if (loadId && builds.length > 0) {
+    if (loadId && builds.length > 0 && restoredBuild.current !== loadId) {
       const saved = builds.find(b => b.id === loadId);
       if (saved) {
+        restoredBuild.current = loadId;
+        savedBuildIdRef.current = saved.id;
+        setProposalName(saved.title || "");
+        if (saved.grant_id) setSelectedGrant(saved.grant_id);
         const savedSecs  = saved.sections      || {};
         const savedOrder = saved.section_order || Object.keys(savedSecs);
         const restored   = {};
         savedOrder.forEach(k => {
-          if (savedSecs[k]) restored[k] = { ...savedSecs[k], approved: false };
+          if (savedSecs[k]) restored[k] = { ...savedSecs[k], approved: saved.status === "approved" || Boolean(savedSecs[k].approved) };
         });
         setSections(restored);
         setSecOrder(savedOrder);
@@ -953,9 +921,12 @@ export default function BuildProposal() {
           overflow: "hidden",
         }}>
 
-          {/* Chat messages */}
-          <div style={{
-            flex: totalSections > 0 ? "0 1 42%" : 1,
+          {/* Chat messages and proposal replies share one scroll area. */}
+          <div data-testid="build-conversation" onScroll={event => {
+            const node = event.currentTarget;
+            followChatRef.current = node.scrollHeight - node.scrollTop - node.clientHeight < 100;
+          }} style={{
+            flex: 1,
             overflowY: "auto",
             padding: "24px 28px 16px",
             minHeight: 0,
@@ -1093,7 +1064,7 @@ export default function BuildProposal() {
                           </span>
                           <p style={{ margin:0, color:"var(--green)",
                             fontSize:12, fontWeight:600 }}>
-                            {msg.title} drafted — see the panel on the right to review
+                            {msg.title} drafted — ready to review in this conversation
                           </p>
                         </div>
                       ) : (
@@ -1179,53 +1150,22 @@ export default function BuildProposal() {
               );
             })}
 
-            {/* Loading dots */}
-            {loading && (
-              <div style={{ display:"flex", gap:10, marginBottom:18,
-                alignItems:"flex-start" }}>
-                <div style={{
-                  width:30, height:30, borderRadius:"50%", flexShrink:0,
-                  background:"var(--accent-dim)",
-                  display:"flex", alignItems:"center", justifyContent:"center",
-                  fontSize:13, fontWeight:800, color:"#fff",
-                }}>✦</div>
-                <div style={{
-                  background:"var(--bg-card)", border:"1px solid var(--border)",
-                  borderRadius:"4px 14px 14px 14px", padding:"12px 16px",
-                }}>
-                  <TypingDots />
-                  {session.progress && <p role="status" style={{ margin: "8px 0 0", fontSize: 12 }}>{session.progress}</p>}
-                </div>
-              </div>
-            )}
-
-            {session.error && (
-              <div role="alert" style={{ padding: 16, marginBottom: 16, border: "1px solid #ef4444", borderRadius: 10 }}>
-                <p style={{ margin: "0 0 10px" }}>{session.error}</p>
-                <button type="button" disabled={session.loading} onClick={session.refresh}>
-                  Check saved session status
-                </button>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
           {/* Proposal sections (main area) */}
           {Object.keys(liveSections).length > 0 && !["draft_review", "final_save", "complete"].includes(session.gate) && (
             <BuildDraftPreview sections={liveSections} interrupted={Boolean(session.error)} />
           )}
           {totalSections > 0 && (
             <div style={{
-              flex: 1, overflowY: "auto", minHeight: 0,
-              padding: "20px 28px 24px",
-              borderTop: "1px solid var(--border)",
-              background: "#0f0f18",
+              marginTop: 24,
             }}>
               <div style={{ display:"flex", alignItems:"center",
                 justifyContent:"space-between", marginBottom:16 }}>
                 <p style={{ margin:0, fontWeight:700, color:"#fff", fontSize:14 }}>
-                  Your Proposal Sections
+                  {savedBuildId ? "Your Saved Proposal" : "Your Proposal Sections"}
                 </p>
+                <button onClick={handleFindGrants} disabled={findingGrants} style={{ background: "var(--accent)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer" }}>
+                  {findingGrants ? "Preparing proposal..." : "Find grants"}
+                </button>
                 <p style={{ margin:0, color: allApproved ? "var(--green)" : "#555",
                   fontSize:12, fontWeight:600 }}>
                   {approvedCount}/{totalSections} approved
@@ -1329,7 +1269,7 @@ export default function BuildProposal() {
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: 12 }}>
-                    <button onClick={() => navigate("/grants")} style={{
+                    <button onClick={handleFindGrants} disabled={findingGrants} style={{
                       background: "none",
                       border:"1px solid #2d5a3d", color:"var(--green)",
                       padding:"11px 22px", borderRadius:9,
@@ -1350,6 +1290,39 @@ export default function BuildProposal() {
               )}
             </div>
           )}
+
+
+            {/* Loading dots */}
+            {loading && (
+              <div style={{ display:"flex", gap:10, marginBottom:18,
+                alignItems:"flex-start" }}>
+                <div style={{
+                  width:30, height:30, borderRadius:"50%", flexShrink:0,
+                  background:"var(--accent-dim)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:13, fontWeight:800, color:"#fff",
+                }}>✦</div>
+                <div style={{
+                  background:"var(--bg-card)", border:"1px solid var(--border)",
+                  borderRadius:"4px 14px 14px 14px", padding:"12px 16px",
+                }}>
+                  <TypingDots />
+                  {session.progress && <p role="status" style={{ margin: "8px 0 0", fontSize: 12 }}>{session.progress}</p>}
+                </div>
+              </div>
+            )}
+
+            {buildSaveError && <p role="alert" style={{ color: "#ef4444" }}>{buildSaveError}</p>}
+            {session.error && (
+              <div role="alert" style={{ padding: 16, marginBottom: 16, border: "1px solid #ef4444", borderRadius: 10 }}>
+                <p style={{ margin: "0 0 10px" }}>{session.error}</p>
+                <button type="button" disabled={session.loading} onClick={session.refresh}>
+                  Check saved session status
+                </button>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
 
           {/* Input bar */}
           {hasStarted && !done && (

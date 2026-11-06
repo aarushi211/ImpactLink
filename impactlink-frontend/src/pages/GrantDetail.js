@@ -1,4 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../services/api";
 import { Nav, FitBadge, ScoreRing } from "../components";
 import useGrants from "../hooks/useGrants";
 
@@ -6,9 +8,22 @@ export default function GrantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { grants, loading } = useGrants();
-  const grant = grants.find(g => String(g.grant_id) === String(id));
+  const [fetchedGrant, setFetchedGrant] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const cachedGrant = grants.find(g => String(g.grant_id) === String(id));
+  const grant = cachedGrant || fetchedGrant;
+  useEffect(() => {
+    if (loading || cachedGrant) return;
+    let active = true;
+    setFetching(true);
+    setFetchedGrant(null);
+    api.get(`/api/grants/${encodeURIComponent(id)}`).then(response => {
+      if (active) setFetchedGrant(response.data);
+    }).catch(() => {}).finally(() => { if (active) setFetching(false); });
+    return () => { active = false; };
+  }, [id, loading, cachedGrant]);
 
-  if (loading) return (
+  if (loading || fetching) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <Nav />
       <p style={{ color: "var(--text-muted)" }}>Loading...</p>
@@ -45,7 +60,7 @@ export default function GrantDetail() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, marginBottom: 32 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <FitBadge level={grant.fit_level} />
+              {grant.fit_level && <FitBadge level={grant.fit_level} />}
               {grant.close_date
                 ? <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 600 }}>⏰ Due {grant.close_date}</span>
                 : <span style={{ fontSize: 12, color: "#444" }}>Rolling deadline</span>
@@ -59,7 +74,7 @@ export default function GrantDetail() {
             </p>
           </div>
           <div style={{ flexShrink: 0 }}>
-            <ScoreRing score={grant.similarity_score} size={80} />
+            {Number.isFinite(grant.similarity_score) && <ScoreRing score={grant.similarity_score} size={80} />}
           </div>
         </div>
 
@@ -80,7 +95,7 @@ export default function GrantDetail() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                 <h3 style={{ fontWeight: 700, color: "var(--accent)", fontSize: 15, margin: 0 }}>How this aligns with your profile</h3>
               </div>
-              <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.7, margin: "0 0 14px" }}>{grant.match_explanation}</p>
+              <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.7, margin: "0 0 14px" }}>{grant.match_explanation || "Match a proposal to see how this grant aligns with your project."}</p>
               <div style={{ background: "#1a1a30", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10 }}>
                 <span style={{ flexShrink: 0 }}>💡</span>
                 <p style={{ color: "#888", fontSize: 13, lineHeight: 1.6, margin: 0 }}>

@@ -77,6 +77,29 @@ def _get_model() -> SentenceTransformer:
     return _embedding_model
 
 
+def get_grant_by_id(grant_id: str):
+    """Read grant details independently of a browser's cached matching results."""
+    with _get_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""
+                SELECT grant_id, title, agency, award_floor, award_ceiling,
+                       application_url, portal_url, close_date, focus_areas,
+                       description, eligibility, contact_email, contact_name,
+                       funding_method, estimated_total
+                FROM grants WHERE grant_id = %s
+            """, (grant_id,))
+            row = cur.fetchone()
+    if not row:
+        return None
+    result = dict(row)
+    if isinstance(result.get("eligibility"), str):
+        try:
+            result["eligibility"] = json.loads(result["eligibility"])
+        except (ValueError, TypeError):
+            result["eligibility"] = [result["eligibility"]]
+    return result
+
+
 def _get_llm():
     return get_chat_model()
 

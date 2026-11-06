@@ -53,6 +53,7 @@ export default function useUpload() {
             agency:           "",
             proposal_context: data.proposal,
             matches_id:       matchIds,
+            matched_grants:   matchList,
             sections:         {},
             section_order:    [],
           });

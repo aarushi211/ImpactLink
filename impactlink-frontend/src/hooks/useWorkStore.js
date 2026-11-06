@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
+import { proposalContext } from "../services/proposals";
 
 /**
  * useWorkStore — fetches and manages saved drafts, builds, budgets.
@@ -17,7 +18,7 @@ export default function useWorkStore() {
   const [builds,  setBuilds]  = useState([]);
   const [budgets, setBudgets] = useState([]);
   const [summary, setSummary] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -60,10 +61,11 @@ export default function useWorkStore() {
     }
   }, []);
 
-  const updateDraft = useCallback(async (draftId, sections, budgetId = null) => {
+  const updateDraft = useCallback(async (draftId, sections, budgetId = null, metadata = {}) => {
     try {
-      const { data } = await api.patch("/api/work/drafts", {
-        draft_id: draftId, sections,
+      const item = drafts.find(d => d.id === draftId) || {};
+      const { data } = await api.patch(`/api/work/drafts/${draftId}`, {
+        ...metadata, sections, proposal_context: proposalContext({ ...item, ...metadata, sections }),
         ...(budgetId ? { budget_id: budgetId } : {}),
       });
       setDrafts(prev => prev.map(d => d.id === draftId ? data : d));
@@ -72,7 +74,7 @@ export default function useWorkStore() {
       console.error("updateDraft error:", e);
       return null;
     }
-  }, []);
+  }, [drafts]);
 
   const deleteDraft = useCallback(async (draftId) => {
     await api.delete(`/api/work/drafts/${draftId}`);
@@ -92,10 +94,11 @@ export default function useWorkStore() {
     }
   }, []);
 
-  const updateBuild = useCallback(async (buildId, sections, budgetId = null) => {
+  const updateBuild = useCallback(async (buildId, sections, budgetId = null, metadata = {}) => {
     try {
-      const { data } = await api.patch("/api/work/builds", {
-        build_id: buildId, sections,
+      const item = builds.find(b => b.id === buildId) || {};
+      const { data } = await api.patch(`/api/work/builds/${buildId}`, {
+        ...metadata, sections, proposal_context: proposalContext({ ...item, ...metadata, sections }),
         ...(budgetId ? { budget_id: budgetId } : {}),
       });
       setBuilds(prev => prev.map(b => b.id === buildId ? data : b));
@@ -104,7 +107,7 @@ export default function useWorkStore() {
       console.error("updateBuild error:", e);
       return null;
     }
-  }, []);
+  }, [builds]);
 
   const deleteBuild = useCallback(async (buildId) => {
     await api.delete(`/api/work/builds/${buildId}`);
@@ -119,6 +122,9 @@ export default function useWorkStore() {
       setBudgets(prev => [data, ...prev].slice(0, 20));
       // Back-link: update parent proposal's budget_id in local state
       if (data.proposal_id) {
+        const parentType = data.proposal_type === "build" ? "builds" : "drafts";
+        await api.patch(`/api/work/${parentType}/${data.proposal_id}`, { budget_id: data.id })
+          .catch(error => console.error("Could not link the saved budget to its proposal", error));
         setDrafts(prev => prev.map(d =>
           d.id === data.proposal_id ? { ...d, budget_id: data.id } : d));
         setBuilds(prev => prev.map(b =>
@@ -127,6 +133,17 @@ export default function useWorkStore() {
       return data;
     } catch (e) {
       console.error("saveBudget error:", e);
+      return null;
+    }
+  }, []);
+
+  const updateBudget = useCallback(async (id, payload) => {
+    try {
+      const { data } = await api.patch(`/api/work/budgets/${id}`, payload);
+      setBudgets(previous => previous.map(item => item.id === id ? data : item));
+      return data;
+    } catch (error) {
+      console.error("updateBudget error:", error);
       return null;
     }
   }, []);
@@ -140,6 +157,6 @@ export default function useWorkStore() {
     drafts, builds, budgets, proposals, summary, loading, refresh,
     saveDraft, updateDraft, deleteDraft,
     saveBuild, updateBuild, deleteBuild,
-    saveBudget, deleteBudget,
+    saveBudget, updateBudget, deleteBudget,
   };
 }
