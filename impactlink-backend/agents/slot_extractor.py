@@ -214,7 +214,7 @@ def extract_slots(
         return {k: str(v) for k, v in extracted.items()
                 if k in unfilled and v and str(v).strip()}
     except (json.JSONDecodeError, ValueError) as e:
-        log.warning("slot_extractor: parse failed — %s\nRaw: %s", e, raw)
+        log.warning("slot_extractor: parse failed (%s)", type(e).__name__)
         return {}
 
 

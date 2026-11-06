@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt --extra
 RUN python -c "from sentence_transformers import SentenceTransformer; \
     SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/app/.cache')"
 # Copy the backend source code into the container
+RUN python -c "import spacy; spacy.load('en_core_web_sm', exclude=['tagger', 'parser', 'attribute_ruler', 'lemmatizer'])"
 COPY . .
 
 # Expose the port FastAPI will run on

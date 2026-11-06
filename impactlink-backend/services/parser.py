@@ -11,6 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_experimental.text_splitter import SemanticChunker
 from sentence_transformers import SentenceTransformer
 from utils.llm import get_chat_model
+from utils.privacy import redact_text
 
 log = logging.getLogger(__name__)
 
@@ -136,12 +137,15 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
         if not full_text.strip():
             raise ValueError("The uploaded document contains no extractable text.")
 
+        # Originals stay in the user's saved proposal; only the outbound copy is redacted.
+        redacted = redact_text(full_text)
+        ai_text = redacted.text
         # 2. Choose context: semantic chunks for long docs, raw text for short ones
         LONG_DOC_THRESHOLD = 15000  # ~10 dense pages
-        if len(full_text) > LONG_DOC_THRESHOLD:
-            context = select_chunks(full_text)
+        if len(ai_text) > LONG_DOC_THRESHOLD:
+            context = select_chunks(ai_text)
         else:
-            context = full_text
+            context = ai_text
 
         log.info("Extracting proposal features using OpenAI (%d chars)", len(context))
 
@@ -152,6 +156,7 @@ def parse_proposal(file_bytes: bytes, filename: str) -> dict:
 
         output = result.model_dump()
         output["raw_text"] = full_text
+        output["ai_privacy"] = {"redaction_counts": redacted.counts, "method": "patterns_local_names_and_custom_terms", "original_retained": True}
         return output
 
     except Exception as e:

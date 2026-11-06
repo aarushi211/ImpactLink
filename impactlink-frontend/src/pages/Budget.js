@@ -5,6 +5,7 @@ import useGrants from "../hooks/useGrants";
 import useBudget from "../hooks/useBudget";
 import useWorkStore from "../hooks/useWorkStore";
 import BudgetInputs, { emptyCostInputs } from "../components/BudgetInputs";
+import AiPrivacyNotice from "../components/AiPrivacyNotice";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -507,6 +508,7 @@ export default function Budget() {
             </div>
 
             <BudgetInputs value={costInputs} onChange={setCostInputs} disabled={!!loading} />
+            <AiPrivacyNotice />
 
             {/* Proposal context chips */}
             {resolvedProposal && (

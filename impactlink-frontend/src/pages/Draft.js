@@ -8,6 +8,7 @@ import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
 import api from "../services/api";
 import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
+import AiPrivacyNotice from "../components/AiPrivacyNotice";
 import { applicationCheck, attachmentStatuses, starterSections } from "../utils/application";
 
 // Loads jsPDF from CDN once via a script tag
@@ -1373,6 +1374,7 @@ export default function Draft() {
 
       {/* ── Body ────────────────────────────────────────── */}
       <div style={{ padding: "0 20px" }}>
+        <AiPrivacyNotice />
         <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={loading || session.gate !== "none"} existingSections={Object.entries({ ...originalSections, ...sections }).map(([key, section]) => ({ key, title: section?.title || key.replace(/_/g, " ") }))} />
         {hasSections && <ApplicationReview spec={applicationSpec} sections={Object.fromEntries(sectionOrder.map(key => [key, { ...sections[key], content: editedContent[key] ?? sections[key]?.content ?? "" }]))} onChange={setApplicationSpec} disabled={loading} onSave={() => handleSave()} />}
       </div>

@@ -10,6 +10,7 @@ import { createProposalPdf } from "../utils/proposalPdf";
 import { proposalContext, stageProposalMatch } from "../services/proposals";
 import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
 import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
+import AiPrivacyNotice from "../components/AiPrivacyNotice";
 import { applicationCheck, lengthCheck, sectionRequirements, attachmentStatuses } from "../utils/application";
 
 // ── helpers ───────────────────────────────────────────────────
@@ -945,6 +946,7 @@ export default function BuildProposal() {
             minHeight: 0,
           }}>
 
+            <AiPrivacyNotice />
             <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={hasStarted} />
             {totalSections > 0 && <ApplicationReview spec={applicationSpec} sections={sections} onChange={setApplicationSpec} disabled={session.loading} onSave={() => persistBuild(sections).catch(error => setBuildSaveError(error.message))} />}
 

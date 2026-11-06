@@ -111,7 +111,7 @@ class CoherenceAgent:
         try:
             return _parse_report(response.content)
         except (json.JSONDecodeError, ValueError) as e:
-            log.warning("CoherenceAgent: parse failed — %s", e)
+            log.warning("CoherenceAgent: parse failed (%s)", type(e).__name__)
             return CoherenceReport(coherent=True, issues=[])
 
     @staticmethod

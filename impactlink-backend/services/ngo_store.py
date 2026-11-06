@@ -9,6 +9,7 @@
 from firebase_admin import firestore
 from datetime import datetime
 from services.eligibility import STATES, TYPES
+from utils.privacy import validate_protected_terms
 
 def _get_db():
     """Helper function to return the Firestore client lazily."""
@@ -38,6 +39,7 @@ def register(uid: str, email: str, org_name: str) -> dict:
         "geographic_focus": [],
         "applicant_type":   "",
         "project_states":   [],
+        "privacy_redaction_terms": [],
         "collab_open":      True,
         "collab_interests": [],
         "total_applied":    0,
@@ -71,6 +73,8 @@ def update_profile(ngo_id: str, updates: dict) -> dict:
         raise ValueError("Profile not found.")
 
     safe_updates = {k: v for k, v in updates.items() if k not in PROTECTED}
+    if "privacy_redaction_terms" in safe_updates:
+        safe_updates["privacy_redaction_terms"] = list(validate_protected_terms(safe_updates["privacy_redaction_terms"]))
     if "applicant_type" in safe_updates and (not isinstance(safe_updates["applicant_type"], str) or safe_updates["applicant_type"] not in {"", *TYPES.values()}):
         raise ValueError("Choose a supported applicant type or leave it unspecified.")
     if "project_states" in safe_updates:
@@ -86,4 +90,5 @@ def update_profile(ngo_id: str, updates: dict) -> dict:
 def list_collab_profiles() -> list:
     db = _get_db() # Get the DB here
     docs = db.collection("ngo_profiles").where("collab_open", "==", True).stream()
-    return [doc.to_dict() for doc in docs]
+    # Private redaction terms must never be published in collaborator directories.
+    return [{key: value for key, value in doc.to_dict().items() if key != "privacy_redaction_terms"} for doc in docs]

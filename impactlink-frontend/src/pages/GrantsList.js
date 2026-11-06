@@ -7,6 +7,7 @@ import useWorkStore from "../hooks/useWorkStore";
 import useUpload from "../hooks/useUpload";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import AiPrivacyNotice from "../components/AiPrivacyNotice";
 import { removeDemoGrants } from "../services/grants";
 
 function ViewToggle({ view, onChange }) {
@@ -58,7 +59,7 @@ export default function GrantsList() {
   const autoMatchStarted = useRef(null);
   const matchRequest = useRef(0);
   const lastMatchItem = useRef(null);
-  const { upload, loading: uploadLoading, error: uploadError } = useUpload();
+  const { upload, loading: uploadLoading, error: uploadError, redactionCounts } = useUpload();
   const uploadInputRef = useRef(null);
 
   const [view,          setView]          = useState("grants");
@@ -333,6 +334,7 @@ export default function GrantsList() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Nav />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px" }}>
+        <AiPrivacyNotice counts={redactionCounts} />
         {isGrants && <section aria-label="Eligibility filters" style={{ padding: 16, marginBottom: 20, border: "1px solid var(--border)", borderRadius: 10 }}>
           <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>Eligibility filters</h3>
           <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Closed opportunities and confirmed eligibility conflicts are excluded before ranking. Missing or ambiguous requirements remain visible as unverified. These are basic checks, not a funder eligibility decision.</p>

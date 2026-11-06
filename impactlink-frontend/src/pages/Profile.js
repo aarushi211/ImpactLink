@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import { useAuth } from "../context/AuthContext.js";
+import AiPrivacyNotice from "../components/AiPrivacyNotice";
 
 const SDG_OPTIONS = [
   "SDG 1: No Poverty", "SDG 2: Zero Hunger", "SDG 3: Good Health",
@@ -68,6 +69,7 @@ export default function Profile() {
   const [geoFocus,   setGeoFocus]   = useState((profile?.geographic_focus || [])[0] || "");
   const [applicantType, setApplicantType] = useState(profile?.applicant_type || "");
   const [projectStates, setProjectStates] = useState((profile?.project_states || []).join(", "));
+  const [privateTerms, setPrivateTerms] = useState((profile?.privacy_redaction_terms || []).join("\n"));
   const [selSDGs,    setSelSDGs]    = useState(profile?.sdgs || []);
   const [collabOpen, setCollabOpen] = useState(profile?.collab_open ?? true);
   const [collabInts, setCollabInts] = useState((profile?.collab_interests || []).join(", "));
@@ -91,6 +93,7 @@ export default function Profile() {
         geographic_focus: geoFocus ? [geoFocus] : [],
         applicant_type: applicantType,
         project_states: projectStates.split(/[,;|]/).map(value => value.trim()).filter(Boolean),
+        privacy_redaction_terms: privateTerms.split("\n").map(value => value.trim()).filter(Boolean),
         sdgs:             selSDGs,
         collab_open:      collabOpen,
         collab_interests: collabInts.split(",").map(s => s.trim()).filter(Boolean),
@@ -131,6 +134,11 @@ export default function Profile() {
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 40px 80px",
         width: "100%" }}>
+        <Section title="Extra AI redaction">
+          <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Add one full name, address or identifying phrase per line (2–200 characters; up to 100 terms). Matching ignores case and flexible spacing; include alternate spellings. These private terms are hidden from collaborator listings. Save changes to apply them across AI features; preview can test your unsaved list.</p>
+          <textarea aria-label="Names and phrases to mask" value={privateTerms} maxLength={20100} onChange={event => setPrivateTerms(event.target.value)} style={{ ...inputStyle, minHeight: 95 }} />
+          <AiPrivacyNotice preview protectedTerms={privateTerms.split("\n").map(value => value.trim()).filter(Boolean)} />
+        </Section>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",

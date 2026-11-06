@@ -124,7 +124,7 @@ def analyze_gaps(
         _validate_analysis(result)
         return _normalize_section_keys(result, existing_sections)
     except (json.JSONDecodeError, ValueError) as e:
-        log.warning("gap_analysis: JSON parse failed — %s\nRaw: %s", e, raw)
+        log.warning("gap_analysis: JSON parse failed (%s)", type(e).__name__)
         return _empty_analysis()
 
 

@@ -56,7 +56,7 @@ def extract_funder_vocab(grant: dict) -> list[str]:
             raise ValueError(f"Expected list, got {type(vocab)}")
         return [v for v in vocab if isinstance(v, str) and v.strip()]
     except (json.JSONDecodeError, ValueError) as e:
-        log.warning("vocab_extractor: JSON parse failed — %s\nRaw output: %s", e, raw)
+        log.warning("vocab_extractor: JSON parse failed (%s)", type(e).__name__)
         return []
 
 

@@ -8,6 +8,9 @@ load_dotenv()  # Must happen before os.getenv calls below
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+from utils.privacy import configure_privacy, redact_text, privacy_scope, validate_protected_terms
+from utils.name_detection import ensure_name_detection, PrivacyDetectionUnavailable
+configure_privacy()
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
 
@@ -143,6 +146,11 @@ class ReviseRequest(BaseModel):
     section_title: str = "Proposal Section"
     section_requirements: Optional[ApplicationSection] = None
 
+
+class RedactionPreviewRequest(BaseModel):
+    text: str = Field(max_length=50000)
+    custom_terms: Optional[list[str]] = Field(default=None, max_length=100)
+
 class BuildRequest(BaseModel):
     answers: list
     profile: dict
@@ -198,9 +206,37 @@ class SaveBudgetRequest(BaseModel):
 
 # ── Core routes ────────────────────────────────────────────────
 
+async def verify_ai_user(uid: str = Depends(verify_token)):
+    """Keep the authenticated account's current privacy policy alive through streams."""
+    try:
+        profile = await asyncio.to_thread(get_profile, uid)
+        terms = validate_protected_terms(profile.get("privacy_redaction_terms", []))
+        await asyncio.to_thread(ensure_name_detection)
+    except ValueError:
+        raise HTTPException(503, "Could not load valid privacy settings. AI processing was stopped; check your profile.")
+    except PrivacyDetectionUnavailable as exc:
+        raise HTTPException(503, str(exc))
+    except Exception:
+        raise HTTPException(503, "Could not load privacy settings. AI processing was stopped; please retry.")
+    with privacy_scope(terms):
+        yield uid
+
+
 @app.get("/")
 def root():
     return {"status": "ImpactLink AI backend running"}
+
+
+@app.post("/api/privacy/preview")
+def preview_ai_redaction(req: RedactionPreviewRequest, uid: str = Depends(verify_ai_user, scope="request")):
+    del uid
+    try:
+        result = redact_text(req.text, custom_terms=req.custom_terms)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except PrivacyDetectionUnavailable as exc:
+        raise HTTPException(503, str(exc))
+    return {"text": result.text, "counts": result.counts, "method": "patterns_local_names_and_custom_terms"}
 
 
 # ── Metrics routes ─────────────────────────────────────────────
@@ -249,7 +285,7 @@ def export_summary_csv():
     )
 
 @app.post("/api/upload")
-async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token)):
+async def upload(file: UploadFile = File(...), uid: str = Depends(verify_ai_user, scope="request")):
     if not file.filename.lower().endswith((".pdf", ".docx")):
         raise HTTPException(400, "Only PDF or DOCX files are supported.")
     file_bytes = await file.read()
@@ -263,7 +299,7 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
     except Exception as e:
         log.warning("Storage upload failed: %s", e)
 
-    proposal = parse_proposal(file_bytes, file.filename)
+    proposal = await asyncio.to_thread(parse_proposal, file_bytes, file.filename)
     if "error" in proposal:
         log.error("Proposal parsing failed: %s", proposal.get("details", "Unknown parsing error"))
         raise HTTPException(
@@ -282,7 +318,7 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
     return {"proposal": proposal, "matches": matches}
 
 @app.post("/api/match")
-def match(req: ProposalRequest):
+def match(req: ProposalRequest, uid: str = Depends(verify_ai_user, scope="request")):
     return {
         "matches": find_similar_grants(
             req.proposal, req.top_k, include_grant_id=req.grant_id,
@@ -301,7 +337,7 @@ async def budget_generate(req: BudgetGenerateRequest):
     return result
 
 @app.post("/api/budget/refine")
-async def budget_refine(req: BudgetRefineRequest):
+async def budget_refine(req: BudgetRefineRequest, uid: str = Depends(verify_ai_user, scope="request")):
     result = await asyncio.to_thread(refine_budget, req.current_budget, req.user_request)
     if "error" in result:
         raise HTTPException(500, result.get("details", "Budget refinement failed"))
@@ -336,7 +372,7 @@ def ngos_collab():
     return {"ngos": list_collab_profiles()}
 
 @app.post("/api/collab/match")
-async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_token)):
+async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_ai_user, scope="request")):
     all_ngos = list_collab_profiles()
     
     try:
@@ -358,7 +394,7 @@ async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_token)
 # ── Agentic Topic Search ───────────────────────────────────────────────────
 
 @app.post("/api/grants/search")
-async def grants_topic_search(req: TopicSearchRequest):
+async def grants_topic_search(req: TopicSearchRequest, uid: str = Depends(verify_ai_user, scope="request")):
     results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k, req.eligibility_context)
     return {"grants": results, "query": req.query}
 
@@ -404,7 +440,7 @@ def remove_user_work(work_type: str, work_id: str, uid: str = Depends(verify_tok
 # ── Section revise (human-in-the-loop edit assist) ─────────────────────────
 
 @app.post("/api/build/revise")
-async def build_revise(req: ReviseRequest, uid: str = Depends(verify_token)):
+async def build_revise(req: ReviseRequest, uid: str = Depends(verify_ai_user, scope="request")):
     """Apply user feedback to a single section via SectionRewriteAgent."""
     from agents.rewriter_agent import retry_rewrite
 
@@ -426,14 +462,14 @@ async def build_revise(req: ReviseRequest, uid: str = Depends(verify_token)):
 # ── Unified Session Routes ─────────────────────────────────────────────────
 
 @app.post("/api/session")
-async def session_create(body: dict, uid: str = Depends(verify_token)):
+async def session_create(body: dict, uid: str = Depends(verify_ai_user, scope="request")):
     try:
-        return create_session(body, user_id=uid)
+        return await asyncio.to_thread(create_session, body, user_id=uid)
     except ValueError as e:
         raise HTTPException(400, str(e))
 
 @app.post("/api/session/{session_id}/advance")
-async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(verify_token)):
+async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(verify_ai_user, scope="request")):
     try:
         return await asyncio.to_thread(advance_session, session_id, body, user_id=uid)
     except ValueError as e:
@@ -451,7 +487,7 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
 async def session_advance_stream(
     session_id: str,
     body: dict = {},
-    uid: str = Depends(verify_token),
+    uid: str = Depends(verify_ai_user, scope="request"),
 ):
     def events():
         try:

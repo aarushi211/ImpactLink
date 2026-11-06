@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import Budget from "./Budget";
+jest.mock("../services/api", () => ({ __esModule: true, default: { post: jest.fn() } }));
 
 const mockSaved = { id: "bu1", title: "Restoration budget", max_budget: 10000, total_requested: 9000, locality_explanation: "Local restoration costs", items: [{ category: "Training", amount: 9000, description: "Volunteer training" }] };
 const mockBudget = { budget: null, loading: null, error: null, generate: jest.fn(), refine: jest.fn(), reset: jest.fn() };

@@ -293,5 +293,5 @@ class PlanningAgent:
             plan.cross_section_dependencies = [item for item in plan.cross_section_dependencies if item.if_section in expected and item.affects in expected]
             return plan
         except (json.JSONDecodeError, ValueError) as e:
-            log.warning("PlanningAgent: parse failed — %s", e)
+            log.warning("PlanningAgent: parse failed (%s)", type(e).__name__)
             return _default_plan(funder_vocab, sections)

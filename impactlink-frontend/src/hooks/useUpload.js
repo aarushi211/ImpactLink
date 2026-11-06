@@ -12,6 +12,7 @@ export default function useUpload() {
   const [savedId,    setSavedId]    = useState(null); // work-store draft id
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
+  const [redactionCounts, setRedactionCounts] = useState(null);
 
   const upload = async (file) => {
     setLoading(true);
@@ -19,6 +20,7 @@ export default function useUpload() {
     setProposal(null);
     setMatches([]);
     setSavedId(null);
+    setRedactionCounts(null);
 
     try {
       const data = await uploadProposal(file);
@@ -29,6 +31,7 @@ export default function useUpload() {
       }
 
       setProposal(data.proposal);
+      setRedactionCounts(data.proposal.ai_privacy?.redaction_counts || null);
       const matchList = data.matches || [];
       setMatches(matchList);
 
@@ -75,6 +78,7 @@ export default function useUpload() {
   };
 
   const reset = () => {
+    setRedactionCounts(null);
     setProposal(null);
     setMatches([]);
     setSavedId(null);
@@ -84,5 +88,5 @@ export default function useUpload() {
     sessionStorage.removeItem("upload_draft_id");
   };
 
-  return { upload, proposal, matches, savedId, loading, error, reset };
+  return { upload, proposal, matches, savedId, loading, error, redactionCounts, reset };
 }

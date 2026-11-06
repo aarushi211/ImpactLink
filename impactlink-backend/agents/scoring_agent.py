@@ -198,7 +198,7 @@ def score_section_decision(
 
         return decision.model_dump()
     except (json.JSONDecodeError, ValueError, TypeError) as e:
-        log.warning("scoring_agent: decision parse failed — %s", e)
+        log.warning("scoring_agent: decision parse failed (%s)", type(e).__name__)
         score_match = re.search(r'"score":\s*(\d+)', response.content)
         fallback_score = int(score_match.group(1)) if score_match else 50
         return _fallback_decision(
