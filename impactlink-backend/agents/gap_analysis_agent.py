@@ -4,6 +4,7 @@ agents/gap_analysis_agent.py
 
 import json
 import logging
+from services.application import spec_for
 from utils.llm import get_chat_model
 from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
@@ -77,6 +78,13 @@ GRANT AGENCY: {grant_agency}
 GRANT DESCRIPTION:
 {grant_description}
 
+RECORDED APPLICATION REQUIREMENTS (questions, limits, stage, attachments and policy):
+{application_requirements}
+Assess written answers against these questions/instructions as well as the grant text.
+Attachment readiness is a checklist concern, not evidence that an attachment file exists.
+AI policy/disclosure and process prerequisites are workflow checks, not missing narrative
+unless the funder explicitly requires that text in an application answer.
+
 FUNDER VOCABULARY (phrases the funder uses that reviewers look for):
 {funder_vocab}
 
@@ -107,7 +115,8 @@ def analyze_gaps(
     response = chain.invoke({
         "grant_title":       grant.get("title", ""),
         "grant_agency":      grant.get("agency", ""),
-        "grant_description": grant.get("description", "")[:2000],
+        "grant_description": grant.get("description", ""),
+        "application_requirements": spec_for(grant).model_dump_json() if spec_for(grant) else "No additional requirements recorded.",
         "funder_vocab":      vocab_str,
         "existing_sections": sections_str,
     })

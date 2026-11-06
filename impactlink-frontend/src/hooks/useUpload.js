@@ -39,6 +39,7 @@ export default function useUpload() {
       sessionStorage.setItem("proposal", JSON.stringify(data.proposal));
       sessionStorage.setItem("matches",  JSON.stringify(matchList));
 
+      let persistedId = null;
       // Persist to backend if user is logged in
       if (auth.currentUser) {
         const matchIds = matchList.map(m => String(m.grant_id));
@@ -61,6 +62,7 @@ export default function useUpload() {
             section_order:    [],
           });
           const saved = res.data;
+          persistedId = saved.id;
           setSavedId(saved.id);
           sessionStorage.setItem("upload_draft_id", saved.id);
         } catch (saveErr) {
@@ -68,7 +70,7 @@ export default function useUpload() {
         }
       }
 
-      return true;
+      return { proposal: data.proposal, savedId: persistedId };
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Is the backend running?");
       return false;

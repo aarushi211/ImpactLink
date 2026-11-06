@@ -508,7 +508,6 @@ export default function Budget() {
             </div>
 
             <BudgetInputs value={costInputs} onChange={setCostInputs} disabled={!!loading} />
-            <AiPrivacyNotice />
 
             {/* Proposal context chips */}
             {resolvedProposal && (
@@ -831,6 +830,7 @@ export default function Budget() {
           </div>
         </div>
       </div>
+      <div style={{ padding: "0 40px 16px", flexShrink: 0 }}><AiPrivacyNotice /></div>
     </div>
   );
 }

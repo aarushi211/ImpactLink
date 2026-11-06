@@ -1,0 +1,29 @@
+.draft-workspace { min-height: 100vh; background: var(--bg); color: #bbb; }
+.draft-setup { max-width: 1050px; margin: 0 auto; padding: 36px 28px 20px; }
+.draft-setup h1, .draft-writing h1 { color: #eee; font-size: 26px; margin: 4px 0 10px; letter-spacing: -.02em; }
+.draft-setup header > p, .draft-card p { color: #999; line-height: 1.7; font-size: 13px; }
+.draft-eyebrow { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.draft-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin: 18px 0; }
+.draft-card h2 { font-size: 16px; margin: 0 0 10px; color: #ddd; }
+.draft-selection { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.draft-card blockquote { border-left: 2px solid var(--accent); margin: 14px 0; padding: 4px 16px; font-size: 12px; }
+.draft-start { display: flex; justify-content: flex-end; padding: 14px 0; }
+.draft-start button { padding: 12px 30px; font-size: 14px; }
+.draft-writing { max-width: 1240px; padding: 30px 24px 16px; margin: 0 auto; }
+.draft-writing-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
+.draft-actions, .draft-format { display: flex; gap: 8px; flex-wrap: wrap; }
+.draft-writing button { border: 1px solid var(--border); border-radius: 8px; background: #1a1a28; color: #bbb; padding: 8px 12px; font-size: 12px; cursor: pointer; }
+.draft-writing button[aria-pressed="true"], .draft-writing .draft-primary { background: var(--accent); color: white; }
+.draft-writing button:disabled { opacity: .4; cursor: not-allowed; }
+.draft-progress { display: flex; gap: 12px; align-items: center; color: #aaa; margin: 20px auto; max-width: 820px; font-size: 13px; }
+.draft-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: draft-spin 1s linear infinite; }
+@keyframes draft-spin { to { transform: rotate(360deg); } }
+.draft-paper { box-sizing: border-box; color: #252535; background: #fff; border-radius: 10px; padding: 32px 40px; margin: 18px auto; max-width: 860px; width: 100%; font: 14px/1.8 Georgia, serif; box-shadow: 0 8px 30px #0002; }
+.draft-paper h2 { font-size: 20px; line-height: 1.4; margin: 0 0 20px; }
+.draft-paper h3 { font-size: 16px; margin-top: 24px; }
+.draft-paper > textarea { width: 100%; min-height: 350px; box-sizing: border-box; resize: vertical; border: 0; outline: none; color: #252535; background: transparent; font: inherit; }
+.draft-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.draft-comparison .draft-paper { margin: 0; padding: 24px; }
+.draft-format { max-width: 860px; margin: 12px auto; }
+.draft-save-status { color: #999; text-align: right; font-size: 12px; }
+@media (max-width: 760px) { .draft-selection, .draft-comparison { grid-template-columns: 1fr; } .draft-setup, .draft-writing { padding: 20px 16px; } .draft-paper { padding: 24px; } }

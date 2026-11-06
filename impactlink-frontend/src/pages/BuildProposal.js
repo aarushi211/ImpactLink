@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useReducer, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import { useAuth } from "../context/AuthContext";
-import { reviseSection } from "../services/api";
+import api, { reviseSection, checkProposalConsistency, saveSessionChecklist } from "../services/api";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
 import { createProposalPdf } from "../utils/proposalPdf";
@@ -11,7 +11,9 @@ import { proposalContext, stageProposalMatch } from "../services/proposals";
 import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
 import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
-import { applicationCheck, lengthCheck, sectionRequirements, applicationChecklistInput, aiPolicyCheck } from "../utils/application";
+import "./Draft.css";
+import ConsistencyReview from "../components/ConsistencyReview";
+import { applicationCheck, lengthCheck, sectionRequirements, applicationChecklistInput, aiPolicyCheck, emptyApplicationSpec } from "../utils/application";
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -216,7 +218,7 @@ function AgentOrchestrationPanel({ gate, loading, agentTrace, draftingPlan, comp
 
         {isDrafting && (
           <p style={{ margin: "10px 0 0", fontSize: 10, color: "#555", lineHeight: 1.5 }}>
-            Drafting 10 sections with PlanningAgent → SectionSubgraph (score/route/retry) → CoherenceAgent.
+            Drafting your proposal with PlanningAgent → SectionSubgraph (score/route/retry) → CoherenceAgent.
             This usually takes 30–90 seconds.
           </p>
         )}
@@ -449,6 +451,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
 
 export default function BuildProposal() {
   const navigate       = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuth();
   const { grants }  = useGrants();
@@ -471,24 +474,72 @@ export default function BuildProposal() {
   const [answers,   setAnswers]   = useState([]);
   // Drafted sections: { section_key: { title, content, approved } }
   const [sections,  setSections]  = useState({});
+  const [coherenceReview, setCoherenceReview] = useState(null);
+  const [checkingConsistency, setCheckingConsistency] = useState(false);
+  const sectionsRef = useRef(sections);
+  sectionsRef.current = sections;
   const [liveSections, updateLiveSections] = useReducer(buildPreviewReducer, {});
   const [secOrder,  setSecOrder]  = useState([]);
 
-  const [selectedGrantId, setSelectedGrant] = useState("");
+  const [selectedGrantId, setSelectedGrant] = useState(searchParams.get("grant") || "");
   const [applicationSpec, setApplicationSpec] = useState(null);
   const [proposalName,   setProposalName]   = useState("");
+  const [grantDetails, setGrantDetails] = useState(null);
+  const [prefilling, setPrefilling] = useState(false);
+  const [prefill, setPrefill] = useState(null);
+  const [prefillError, setPrefillError] = useState("");
+  const [starting, setStarting] = useState(false);
+  const prefillRequest = useRef(0);
+  const workspace = location.pathname.endsWith("/write") || Boolean(searchParams.get("session") || searchParams.get("load"));
 
   const chatEndRef = useRef(null);
   const followChatRef = useRef(true);
   const inputRef   = useRef(null);
-  const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
-
   const session = useProposalSession(searchParams.get("session"));
+  const selectedGrant = (String(grantDetails?.grant_id) === String(selectedGrantId) ? grantDetails : null)
+    || grants.find(g => String(g.grant_id) === String(selectedGrantId)) || (workspace ? session.data.grant : null);
+
+  useEffect(() => {
+    if (workspace || !selectedGrantId || session.loading) return undefined;
+    const request = ++prefillRequest.current;
+    let active = true;
+    setPrefilling(true); setPrefill(null); setPrefillError(""); setApplicationSpec(emptyApplicationSpec());
+    (async () => {
+      try {
+        const response = await api.get(`/api/grants/${encodeURIComponent(selectedGrantId)}`);
+        const grant = response.data.grant || response.data;
+        if (!active || request !== prefillRequest.current) return;
+        setGrantDetails(grant);
+        const result = grant.application_spec ? { application_spec: grant.application_spec, evidence: [], warnings: ["Review the requirements already recorded for this grant."] }
+          : (await api.post(`/api/grants/${encodeURIComponent(selectedGrantId)}/application-requirements`)).data;
+        if (!active || request !== prefillRequest.current) return;
+        setApplicationSpec({ ...emptyApplicationSpec(), ...result.application_spec });
+        setPrefill(result);
+      } catch (_) {
+        if (active && request === prefillRequest.current) setPrefillError("Could not prefill this grant's requirements. You can enter them manually below.");
+      } finally { if (active && request === prefillRequest.current) setPrefilling(false); }
+    })();
+    return () => { active = false; };
+    // Only selecting a grant starts prefill; editing the form does not refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedGrantId, workspace]);
+
+  useEffect(() => {
+    if (session.data.grant?.build_context?.proposal_name) setProposalName(previous => previous || session.data.grant.build_context.proposal_name);
+  }, [session.data.grant]);
   useEffect(() => {
     if (session.data.application_spec) setApplicationSpec(session.data.application_spec);
   }, [session.data.application_spec]);
+  useEffect(() => {
+    if (session.data.coherence_review !== undefined) setCoherenceReview(previous => {
+      const incoming = session.data.coherence_review;
+      // A manual recheck can be newer than the graph's original drafting check.
+      if (incoming?.status === "stale" && previous?.content_fingerprint && previous.content_fingerprint !== incoming.content_fingerprint && ["passed", "issues_found"].includes(previous.status)) return previous;
+      return incoming;
+    });
+  }, [session.data.coherence_review]);
 
-  const buildSnapshot = useCallback(source => {
+  const buildSnapshot = useCallback((source, reviewOverride = coherenceReview || session.data.coherence_review || null) => {
     const previous = builds.find(item => item.id === savedBuildIdRef.current) || {};
     const cleanSections = Object.fromEntries(Object.entries(source || {}).map(([key, section]) => [key, {
       title: section.title || key, content: section.content || "",
@@ -500,16 +551,17 @@ export default function BuildProposal() {
       sections: cleanSections, section_order: Object.keys(cleanSections), answers: answers.length ? answers : previous.answers || [],
       session_id: session.sessionId || previous.session_id,
       application_spec: applicationSpec || session.data.application_spec || previous.application_spec || null,
+      coherence_review: reviewOverride,
       status: Object.values(source || {}).every(section => section.approved) ? "approved" : "draft",
     };
     if (!applicationCheck(payload.application_spec, source).can_finalize_text || aiPolicyCheck(payload.application_spec).disclosure_pending) payload.status = "draft";
     payload.proposal_context = proposalContext({ ...payload, proposal_context: previous.proposal_context }, profile || {});
     return payload;
-  }, [proposalName, selectedGrant, profile, answers, session.sessionId, session.data.application_spec, applicationSpec, builds]);
+  }, [proposalName, selectedGrant, profile, answers, session.sessionId, session.data.application_spec, session.data.coherence_review, applicationSpec, coherenceReview, builds]);
 
-  const persistBuild = useCallback(async source => {
+  const persistBuild = useCallback(async (source, reviewOverride) => {
     if (pendingBuildSave.current) await pendingBuildSave.current;
-    const payload = buildSnapshot(source);
+    const payload = buildSnapshot(source, reviewOverride);
     const id = savedBuildIdRef.current;
     const operation = id ? updateBuild(id, payload.sections, null, payload) : saveBuild(payload);
     const pending = operation.then(saved => {
@@ -522,6 +574,34 @@ export default function BuildProposal() {
     try { return await pending; }
     finally { if (pendingBuildSave.current === pending) pendingBuildSave.current = null; }
   }, [buildSnapshot, updateBuild, saveBuild]);
+
+  const saveApplicationChecklist = async nextSpec => {
+    const savedBuild = builds.find(item => item.id === savedBuildIdRef.current);
+    const id = session.sessionId || savedBuild?.session_id;
+    if (id) await saveSessionChecklist(id, nextSpec);
+    return persistBuild(sections);
+  };
+
+  const handleCheckConsistency = async () => {
+    if (checkingConsistency || !aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed) return;
+    setCheckingConsistency(true);
+    const source = sectionsRef.current;
+    const contentKey = value => JSON.stringify(Object.entries(value).map(([key, item]) => [key, item.content || ""]).sort(([left], [right]) => left.localeCompare(right)));
+    try {
+      const review = await checkProposalConsistency(source, applicationSpec || selectedGrant?.application_spec);
+      const current = sectionsRef.current;
+      const next = contentKey(current) === contentKey(source) ? review : { ...review, status: "stale", reason: "Text changed while the check was running. Check the updated proposal again." };
+      setCoherenceReview(next);
+      try { await persistBuild(current, next); }
+      catch (error) { setBuildSaveError(error.message || "Could not save consistency results. Please retry saving."); }
+    } catch (error) {
+      const next = { status: "unavailable", issues: [], reason: "The consistency check could not be completed. No pass was issued; review manually or retry." };
+      setCoherenceReview(next);
+      setBuildSaveError(typeof error.response?.data?.detail === "string" ? error.response.data.detail : error.message || "Could not check consistency.");
+      try { await persistBuild(sectionsRef.current, next); }
+      catch (saveError) { setBuildSaveError(saveError.message || "Could not save consistency results."); }
+    } finally { setCheckingConsistency(false); }
+  };
 
   useEffect(() => {
     if (workLoading || searchParams.get("load") || session.gate !== "draft_review" || !session.sessionId || !Object.keys(session.data.sections || {}).length || autoSavedSession.current === session.sessionId) return;
@@ -549,13 +629,13 @@ export default function BuildProposal() {
 
   // Keep the checkpoint ID in the URL so a refresh can recover a long draft.
   useEffect(() => {
-    if (!session.sessionId || searchParams.get("session") === session.sessionId) return;
+    if (!workspace || !session.sessionId || searchParams.get("session") === session.sessionId) return;
     setSearchParams(previous => {
       const next = new URLSearchParams(previous);
       next.set("session", session.sessionId);
       return next;
     }, { replace: true });
-  }, [session.sessionId, searchParams, setSearchParams]);
+  }, [workspace, session.sessionId, searchParams, setSearchParams]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -643,19 +723,25 @@ export default function BuildProposal() {
   // ── Start / advance the build flow ──────────────────────────
 
   const handleStart = async () => {
-    if (!aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed) return;
-    const welcomeMsg = {
-      role: "ai", type: "intro",
-      text: `Welcome${profile ? `, ${profile.org_name}` : ""}! I'm going to guide you through building a complete grant proposal from scratch. I'll ask you a few questions, then draft each section as a professional proposal for you to review and approve.\n\nLet's begin.`,
-    };
-    setMessages([welcomeMsg]);
-    
+    if (starting || prefilling || session.loading || session.data.running || !aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed) return;
+    setStarting(true);
     try {
-        await session.start("scratch", { ...(selectedGrant || { title: "New Project" }), ...(applicationSpec ? { application_spec: applicationSpec } : {}) }, profile || { org_name: "Your Organization" });
+      if (pendingBuildSave.current) await pendingBuildSave.current.catch(() => {});
+      savedBuildIdRef.current = null; autoSavedSession.current = null; restoredBuild.current = null;
+      setSavedBuildId(null); setDone(false); setAnswers([]); setSections({}); setSecOrder([]); setCoherenceReview(null); setBuildSaveError(null);
+      updateLiveSections({ type: "reset" });
+      session.reset();
+      setMessages([{ role: "ai", type: "intro", text: "Let's build your proposal. I'll ask for the information we need, then draft the sections for your review." }]);
+      navigate("/build/write");
+      await session.start("scratch", {
+        ...(selectedGrant || { title: "New Project" }),
+        application_spec: applicationSpec || emptyApplicationSpec(),
+        build_context: { proposal_name: proposalName.trim() },
+      }, profile || { org_name: "Your Organization" });
     } catch (err) {
-        console.error("Start error:", err);
-        setMessages([]);
-    }
+      console.error("Start error:", err);
+      setMessages([]);
+    } finally { setStarting(false); }
   };
 
   const handleSend = async () => {
@@ -716,6 +802,7 @@ export default function BuildProposal() {
   };
 
   const handleRevise = (sectionKey, newContent) => {
+    if (sections[sectionKey]?.content !== newContent) setCoherenceReview(previous => previous ? { ...previous, status: "stale", reason: "Text changed after the consistency check. Check the updated proposal again or review it manually." } : null);
     setSections(prev => ({
       ...prev,
       [sectionKey]: { ...prev[sectionKey], content: newContent, approved: false },
@@ -777,6 +864,7 @@ export default function BuildProposal() {
         savedBuildIdRef.current = saved.id;
         setProposalName(saved.title || "");
         setApplicationSpec(saved.application_spec || saved.proposal_context?.application_spec || null);
+        setCoherenceReview(saved.coherence_review || null);
         if (saved.grant_id) setSelectedGrant(saved.grant_id);
         const savedSecs  = saved.sections      || {};
         const savedOrder = saved.section_order || Object.keys(savedSecs);
@@ -801,7 +889,7 @@ export default function BuildProposal() {
     const raw = sessionStorage.getItem("saved_build");
     if (raw) {
       try {
-        const { sections: savedSecs, section_order: savedOrder, answers: savedAnswers, application_spec: savedSpec } = JSON.parse(raw);
+        const { sections: savedSecs, section_order: savedOrder, answers: savedAnswers, application_spec: savedSpec, coherence_review: savedReview } = JSON.parse(raw);
         if (savedSecs && savedOrder) {
           const restored = {};
           savedOrder.forEach(k => {
@@ -811,6 +899,7 @@ export default function BuildProposal() {
           setSecOrder(savedOrder);
           setAnswers(savedAnswers || []);
           if (savedSpec) setApplicationSpec(savedSpec);
+          setCoherenceReview(savedReview || null);
           setDone(true);
           setMessages([{
             role: "ai", type: "complete",
@@ -839,6 +928,36 @@ export default function BuildProposal() {
   const HEADER_HEIGHT = 112; // Nav (64px) + app bar (48px)
 
   // ── render ────────────────────────────────────────────────
+
+  if (!workspace) return <div className="draft-workspace"><Nav />
+    <main className="draft-setup il-form">
+      <header><p className="draft-eyebrow">BUILD PROPOSAL</p><h1>Set up your new proposal</h1><p>Choose the application structure first. Then the assistant will ask questions and draft your proposal in the conversation.</p></header>
+      <section className="draft-card draft-selection" aria-label="Proposal setup">
+        <label>Proposal name<input aria-label="Proposal name" value={proposalName} onChange={event => setProposalName(event.target.value)} maxLength={400} placeholder={`${profile?.org_name || "Your organization"} - Grant Proposal`} /></label>
+        <label>Target grant (optional)<select aria-label="Target grant" value={selectedGrantId} disabled={starting || session.loading} onChange={event => {
+          prefillRequest.current += 1;
+          setSelectedGrant(event.target.value); setGrantDetails(null); setApplicationSpec(null); setPrefill(null); setPrefillError(""); setPrefilling(false);
+        }}>
+          <option value="">No target grant - general proposal</option>
+          {grants.map(grant => <option key={grant.grant_id} value={grant.grant_id}>{grant.title}</option>)}
+          {selectedGrantId && !grants.some(grant => String(grant.grant_id) === String(selectedGrantId)) && <option value={selectedGrantId}>{selectedGrant?.title || "Selected grant"}</option>}
+        </select></label>
+      </section>
+      <section className="draft-card" aria-label="Automatic grant prefill"><h2>{prefilling ? "Reading the selected grant..." : "Application information"}</h2>
+        <p>{selectedGrantId ? "We prefill only instructions present in the stored grant text. Review the excerpts and add any missing portal questions, limits, attachments or policies below." : "Choose a grant to prefill its available instructions, or leave it blank and use a general starter."}</p>
+        {prefilling && <button type="button" onClick={() => { prefillRequest.current += 1; setPrefilling(false); }}>Enter requirements manually</button>}
+        {prefill && <p role="status">Prefilled {prefill.application_spec?.sections?.length || 0} questions and {prefill.application_spec?.attachments?.length || 0} attachment entries. Missing information remains for you to confirm.</p>}
+        {(prefill?.evidence || []).map((item, index) => <blockquote key={index}><strong>{item.field}</strong><p>{item.quote}</p></blockquote>)}
+        {(prefill?.warnings || []).map((warning, index) => <p key={index}>{warning}</p>)}
+        {prefillError && <p role="alert">{prefillError}</p>}
+      </section>
+      <ApplicationRequirementsEditor grant={selectedGrant} value={applicationSpec || emptyApplicationSpec()} onChange={setApplicationSpec} disabled={prefilling || starting || session.loading} collapsible={false} showPrefill={false} />
+      <section className="draft-card"><h2>What happens next</h2><p>The assistant asks about your project or the funder's questions. You review your answers before drafting starts. The right-hand steps panel stays visible while the proposal is being written.</p></section>
+      <div className="draft-start"><button type="button" className="il-primary" onClick={handleStart} disabled={prefilling || starting || session.loading || Boolean(session.data.running) || !aiPolicyCheck(applicationSpec).ai_drafting_allowed}>{starting ? "Starting..." : "Start building"}</button></div>
+      {session.error && <p role="alert">{session.error}</p>}
+      <AiPrivacyNotice />
+    </main>
+  </div>;
 
   return (
     <div style={{ height: "100vh", background: "var(--bg)",
@@ -889,26 +1008,7 @@ export default function BuildProposal() {
         </div>
 
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-          {/* Grant selector */}
-          <select
-            value={selectedGrantId}
-            onChange={e => setSelectedGrant(e.target.value)}
-            disabled={hasStarted}
-            style={{
-              background:"#111120", border:"1px solid #1e1e30",
-              color: selectedGrantId ? "#ddd" : "#444",
-              padding:"5px 10px", borderRadius:7,
-              fontSize:11, cursor:"pointer", outline:"none",
-              opacity: hasStarted ? 0.5 : 1,
-            }}
-          >
-            <option value="">No target grant</option>
-            {grants.map(g => (
-              <option key={g.grant_id} value={g.grant_id}>
-                {g.title.length > 40 ? g.title.slice(0,40)+"…" : g.title}
-              </option>
-            ))}
-          </select>
+          <span style={{ color: "#999", fontSize: 12 }}>{selectedGrant?.title || "General proposal"}</span>
 
           {(allApproved || (done && totalSections > 0)) && (
             <button onClick={handlePDF} disabled={pdfLoading || !applicationReport.can_finalize_text} style={{
@@ -950,111 +1050,10 @@ export default function BuildProposal() {
             minHeight: 0,
           }}>
 
-            <AiPrivacyNotice />
-            <ApplicationRequirementsEditor value={applicationSpec || selectedGrant?.application_spec} onChange={setApplicationSpec} disabled={hasStarted} />
-            {totalSections > 0 && <ApplicationReview spec={applicationSpec} sections={sections} onChange={setApplicationSpec} disabled={session.loading} onSave={() => persistBuild(sections).catch(error => setBuildSaveError(error.message))} />}
+            {totalSections > 0 && <ApplicationReview spec={applicationSpec} sections={sections} onChange={setApplicationSpec} disabled={session.loading} onSave={saveApplicationChecklist} />}
+            {totalSections > 0 && <ConsistencyReview review={coherenceReview} onCheck={handleCheckConsistency} checking={checkingConsistency} disabled={session.loading || !aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed} />}
 
-            {/* Empty / start state */}
-            {!hasStarted && (
-              <div style={{ maxWidth: 540, margin: "0 auto", paddingTop: 40 }}>
-                {/* Hero */}
-                <div style={{
-                  background: "var(--bg-card)", border: "1px solid var(--border)",
-                  borderRadius: 16, padding: "32px 32px 28px", marginBottom: 20,
-                  textAlign: "center",
-                }}>
-                  <div style={{
-                    width: 64, height: 64, borderRadius: 16, margin: "0 auto 16px",
-                    background: "var(--accent-dim)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 28,
-                  }}>✍</div>
-                  <h2 style={{ margin:"0 0 10px", fontWeight:800, color:"#fff",
-                    fontSize:22, letterSpacing:"-0.02em" }}>
-                    Build a Proposal
-                  </h2>
-                  <p style={{ margin:"0 0 20px", color:"#555", fontSize:14,
-                    lineHeight:1.7, maxWidth:380, marginLeft:"auto", marginRight:"auto" }}>
-                    I'll guide you through 7 questions and draft each section of your
-                    grant proposal in real time. No blank page required.
-                  </p>
-
-                  {/* Step preview */}
-                  <div style={{ display:"flex", justifyContent:"center",
-                    gap:6, flexWrap:"wrap", marginBottom: 24 }}>
-                    {["Project Vision","Activities","Beneficiaries","Org Capacity",
-                      "Goals & KPIs","Budget","Sustainability"].map((s, i) => (
-                      <span key={s} style={{
-                        background:"#111120", border:"1px solid #1e1e30",
-                        borderRadius:20, padding:"5px 11px",
-                        color:"#444", fontSize:11,
-                        display:"flex", alignItems:"center", gap:5,
-                      }}>
-                        <span style={{ fontSize:12 }}>{STEP_ICONS[i]}</span> {s}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Proposal name input */}
-                  <div style={{ marginBottom: 14, textAlign: "left" }}>
-                    <label style={{ color: "#555", fontSize: 11, fontWeight: 700,
-                      textTransform: "uppercase", letterSpacing: "0.06em",
-                      display: "block", marginBottom: 6 }}>
-                      Proposal Name <span style={{ color: "#333355", fontWeight: 400 }}>(optional)</span>
-                    </label>
-                    <input
-                      value={proposalName}
-                      onChange={e => setProposalName(e.target.value)}
-                      placeholder={`${profile?.org_name || "Your Org"} — ${new Date().getFullYear()} Grant Proposal`}
-                      style={{
-                        width: "100%", background: "#111120",
-                        border: "1px solid #2a2a4e",
-                        borderRadius: 9, padding: "10px 14px",
-                        color: "#e0e0f0", fontSize: 13,
-                        outline: "none", boxSizing: "border-box",
-                        transition: "border-color 0.15s",
-                      }}
-                      onFocus={e => e.target.style.borderColor = "var(--accent)"}
-                      onBlur={e => e.target.style.borderColor = "#2a2a4e"}
-                    />
-                    <p style={{ color: "#333355", fontSize: 10, margin: "4px 0 0" }}>
-                      This name will appear in your Dashboard and on the PDF cover.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleStart}
-                    disabled={!aiPolicyCheck(applicationSpec || selectedGrant?.application_spec).ai_drafting_allowed}
-                    style={{
-                      background:"var(--accent)", border:"none", color:"#fff",
-                      padding:"13px 32px", borderRadius:10,
-                      fontSize:15, fontWeight:700, cursor:"pointer",
-                      width:"100%",
-                    }}
-                  >
-                    Start Building →
-                  </button>
-                </div>
-
-                {!profile && (
-                  <div style={{
-                    background:"#0d1a2e", border:"1px solid #1e3a5f",
-                    borderRadius:10, padding:"12px 16px",
-                    display:"flex", alignItems:"center", gap:10,
-                  }}>
-                    <span style={{ color:"#7cb9f5", fontSize:14 }}>💡</span>
-                    <p style={{ margin:0, color:"#7cb9f5", fontSize:12, lineHeight:1.6 }}>
-                      <span
-                        onClick={() => navigate("/login")}
-                        style={{ fontWeight:700, cursor:"pointer",
-                          textDecoration:"underline" }}
-                      >Sign in</span>
-                      {" "}to save your org profile — it makes proposals much more specific.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+            {!hasStarted && !loading && !starting && !session.sessionId && !searchParams.get("session") && !searchParams.get("load") && <section className="draft-card"><p>No active build is selected.</p><button type="button" onClick={() => navigate("/build")}>Back to setup</button></section>}
 
             {/* Messages */}
             {messages.map((msg, i) => {
@@ -1341,7 +1340,7 @@ export default function BuildProposal() {
             {session.error && (
               <div role="alert" style={{ padding: 16, marginBottom: 16, border: "1px solid #ef4444", borderRadius: 10 }}>
                 <p style={{ margin: "0 0 10px" }}>{session.error}</p>
-                <button type="button" disabled={session.loading} onClick={session.refresh}>
+                <button type="button" disabled={session.loading} onClick={session.sessionId ? session.refresh : () => navigate("/build")}>
                   Check saved session status
                 </button>
               </div>
@@ -1401,8 +1400,9 @@ export default function BuildProposal() {
       </div>
 
       {/* ── Fixed right strip: stays visible while chat scrolls ── */}
+      <div style={{ padding: "0 28px", flexShrink: 0, maxHeight: "35vh", overflowY: "auto", marginRight: showRightPanel ? ORCHESTRATION_PANEL_WIDTH : 0 }}><AiPrivacyNotice /></div>
       {showRightPanel && (
-        <div style={{
+        <aside aria-label="Proposal building steps" style={{
           position: "fixed",
           right: 0,
           top: HEADER_HEIGHT,
@@ -1421,7 +1421,7 @@ export default function BuildProposal() {
             agentTrace={agentTrace}
             draftingPlan={draftingPlan}
           />
-        </div>
+        </aside>
       )}
     </div>
   );

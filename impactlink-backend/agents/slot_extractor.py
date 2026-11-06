@@ -23,6 +23,7 @@ from utils.metrics import timed
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from state.proposal_state import Slot
+from services.application import spec_for, section_definitions
 
 load_dotenv()
 log = logging.getLogger(__name__)
@@ -136,13 +137,26 @@ Extract now:"""),
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def initial_slots(profile: Optional[dict] = None) -> dict[str, Slot]:
+def initial_slots(profile: Optional[dict] = None, grant: Optional[dict] = None) -> dict[str, Slot]:
     """
     Return a fresh slots dict keyed by slot key.
     Pre-fills slots if data exists in the provided profile.
     """
     profile = profile or {}
     slots = {s["key"]: dict(s) for s in SLOT_DEFINITIONS}
+    spec = spec_for(grant)
+    if spec and (spec.sections or spec.stage != "full_proposal"):
+        slots = {key: slots[key] for key in ("org_name", "mission")}
+        for section in section_definitions(grant):
+            limits = []
+            if section.get("max_words"):
+                limits.append(f"{section['max_words']} words")
+            if section.get("max_characters"):
+                limits.append(f"{section['max_characters']} characters")
+            question = f"{section['title']}: {section.get('instructions', '')}"
+            if limits:
+                question += " The final application answer must fit " + " and ".join(limits) + ". Give the facts you want included."
+            slots["application_" + section["key"]] = {"question": question, "filled": False, "value": None, "ask_count": 0}
 
     # Pre-fill from profile if available
     # Profile keys are usually 'org_name' and 'mission' (from auth.py)
@@ -164,11 +178,9 @@ def next_question(slots: dict[str, Slot]) -> tuple[str, str] | None:
 
     Respects the order defined in SLOT_DEFINITIONS.
     """
-    for slot_def in SLOT_DEFINITIONS:
-        key = slot_def["key"]
-        slot = slots.get(key, {})
+    for key, slot in slots.items():
         if not slot.get("filled"):
-            return key, slot.get("question", slot_def["question"])
+            return key, slot.get("question", key)
     return None
 
 
@@ -264,6 +276,7 @@ def slots_to_profile(slots: dict[str, Slot]) -> dict:
     Used after slot_confirm gate to build the proposal input.
     """
     return {
+        "application_answers": {key.removeprefix("application_"): {"question": slot.get("question", ""), "answer": slot.get("value") or ""} for key, slot in slots.items() if key.startswith("application_")},
         "organization_name":  _val(slots, "org_name"),
         "mission":            _val(slots, "mission"),
         "problem_statement":  _val(slots, "problem"),

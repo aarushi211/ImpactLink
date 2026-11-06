@@ -1,5 +1,6 @@
 import axios from "axios";
 import { auth } from "../firebase";
+import { applicationChecklistInput } from "../utils/application";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000",
@@ -174,7 +175,20 @@ export const getSessionStatus = async (sessionId) => {
   return res.data;
 };
 
+export const saveSessionChecklist = async (sessionId, spec) => {
+  const res = await api.patch(`/api/session/${encodeURIComponent(sessionId)}/checklist`, applicationChecklistInput(spec));
+  return res.data;
+};
+
 /** Revise a single section with user feedback (SectionRewriteAgent). */
+export const checkProposalConsistency = async (sections, applicationSpec) => {
+  const res = await api.post("/api/build/check-consistency", {
+    sections: Object.fromEntries(Object.entries(sections).map(([key, section]) => [key, { title: section.title || key, content: section.content || "" }])),
+    ...(applicationSpec ? { application_spec: applicationSpec } : {}),
+  });
+  return res.data;
+};
+
 export const reviseSection = async (currentDraft, feedback, sectionTitle = "Proposal Section", requirements, applicationSpec) => {
   const res = await api.post("/api/build/revise", {
     current_draft: currentDraft,

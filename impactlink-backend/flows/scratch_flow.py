@@ -30,7 +30,7 @@ from agents.planning_agent import (
 )
 from agents.prompts import SECTIONS
 from services.application import section_definitions, spec_for, annotate_sections, constraint_prompt, section_for, merge_checklist
-from agents.coherence_agent import CoherenceAgent
+from agents.coherence_agent import CoherenceAgent, CoherenceReport, review_metadata, current_review, _sections_digest
 from agents.rewriter_agent import targeted_retry_rewrite
 from flows.section_subgraph import run_section_subgraph
 from utils.metrics import metrics_collector
@@ -59,7 +59,7 @@ def node_init_slots(state: ProposalState) -> dict:
     log.info("[%s] node: init_slots", state["session_id"])
     with metrics_collector.timer("node", "init_slots", session_id=state["session_id"]):
         vocab = extract_funder_vocab(state["grant"])
-        slots = initial_slots(state.get("profile"))
+        slots = initial_slots(state.get("profile"), state.get("grant"))
     return {"funder_vocab": vocab, "slots": slots, "gate": "slot_filling"}
 
 
@@ -269,10 +269,10 @@ def node_coherence_check(state: ProposalState) -> dict:
     with metrics_collector.timer("node", "coherence_check", session_id=sid):
         report = CoherenceAgent.check(sections, state["grant"])
 
-        if report.coherent or not report.issues:
-            trace = append_agent_trace(trace, "CoherenceAgent", "coherent — no fixes needed")
-            log.info("[%s] [CoherenceAgent] proposal coherent", sid)
-            return {"agent_trace": trace, "gate": "draft_review"}
+        if report.coherent or report.status != "completed":
+            review = review_metadata(report, sections)
+            trace = append_agent_trace(trace, "CoherenceAgent", review["status"])
+            return {"coherence_review": review, "agent_trace": trace, "gate": "draft_review"}
 
         trace = append_agent_trace(
             trace,
@@ -282,33 +282,40 @@ def node_coherence_check(state: ProposalState) -> dict:
 
         fixes = CoherenceAgent.top_fixes(report)
         updated = dict(sections)
-        vocab = state["funder_vocab"]
+        vocab = state.get("funder_vocab", [])
+        attempts = 0
+        failed = False
 
         for issue in fixes:
             key = issue.section
             if key not in updated:
                 continue
             sec = updated[key]
-            log.info(
-                "[%s] [CoherenceAgent] fixing '%s': %s",
-                sid, key, issue.issue[:80],
-            )
-            new_content = targeted_retry_rewrite(
-                sec.get("title", key),
-                sec.get("content", ""),
-                [issue.model_dump()],
-                f"Coherence issue: {issue.issue}\n" + constraint_prompt(section_for(state["grant"], key)),
-                vocab,
-            )
-            updated[key] = {**sec, "content": new_content}
-            trace = append_agent_trace(
-                trace,
-                "CoherenceAgent",
-                f"fixed {key}: {issue.issue[:60]}",
-            )
+            attempts += 1
+            try:
+                new_content = targeted_retry_rewrite(
+                    sec.get("title", key), sec.get("content", ""), [issue.model_dump()],
+                    f"Coherence issue: {issue.issue}\nDo not invent facts to resolve contradictions. Preserve unresolved facts for human review.\n"
+                    + constraint_prompt(section_for(state["grant"], key)) + "\nFull proposal context:\n" + _sections_digest(updated), vocab,
+                )
+                if not isinstance(new_content, str) or not new_content.strip():
+                    raise ValueError("Empty consistency rewrite")
+                updated[key] = {**sec, "content": new_content, "flagged": True, "coherence_modified": True}
+                trace = append_agent_trace(trace, "CoherenceAgent", f"attempted consistency edit to {key}; requires review")
+            except Exception as exc:
+                failed = True
+                log.warning("[%s] consistency edit failed (%s)", sid, type(exc).__name__)
+
+        _progress_writer()({"type": "progress", "message": "Rechecking the full proposal after consistency edits..."})
+        final_report = CoherenceAgent.check(updated, state["grant"])
+        if failed:
+            final_report = CoherenceReport(coherent=False, status="incomplete", issues=final_report.issues, reason="A consistency edit failed. The original text for that edit was retained; review the proposal manually.")
+        review = review_metadata(final_report, updated, fixes_attempted=attempts)
+        trace = append_agent_trace(trace, "CoherenceAgent", f"final review: {review['status']}")
 
     return {
         "sections": annotate_sections(updated, state["grant"], order=True),
+        "coherence_review": review,
         "agent_trace": trace,
         "gate": "draft_review",
     }
@@ -319,6 +326,7 @@ def node_draft_review(state: ProposalState) -> dict:
     user_input = interrupt({
         "gate":             "draft_review",
         "sections":         state["sections"],
+        "coherence_review": state.get("coherence_review"),
         "application_spec": state["grant"].get("application_spec"),
         "flagged_sections": state["flagged_sections"],
         "drafting_plan":    state.get("drafting_plan"),
@@ -329,11 +337,11 @@ def node_draft_review(state: ProposalState) -> dict:
             "Flagged sections scored low — review these carefully."
         ),
     })
-    updated_sections = dict(state["sections"])
+    updated_sections = {key: dict(value) for key, value in state["sections"].items()}
     for key, text in user_input.get("sections", {}).items():
         if key in updated_sections:
             updated_sections[key]["content"] = text
-    return {"sections": annotate_sections(updated_sections, state["grant"], order=True), "grant": merge_checklist(state["grant"], user_input)}
+    return {"sections": annotate_sections(updated_sections, state["grant"], order=True), "grant": merge_checklist(state["grant"], user_input), "coherence_review": current_review(state.get("coherence_review"), updated_sections)}
 
 
 def node_final_save(state: ProposalState) -> dict:
@@ -342,6 +350,7 @@ def node_final_save(state: ProposalState) -> dict:
         "gate":         "final_save",
         "application_spec": state["grant"].get("application_spec"),
         "sections":     state["sections"],
+        "coherence_review": state.get("coherence_review"),
         "instructions": "Your proposal is ready. Confirm to download.",
     })
     return {"gate": "complete", "grant": merge_checklist(state["grant"], user_input)}

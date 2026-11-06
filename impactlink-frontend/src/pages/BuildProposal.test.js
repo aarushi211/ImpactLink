@@ -1,27 +1,45 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import BuildProposal from "./BuildProposal";
+import api, { checkProposalConsistency, saveSessionChecklist } from "../services/api";
+import { emptyApplicationSpec } from "../utils/application";
+
+let mockPath = "/build/write";
+let mockNotifySession = () => {};
+let mockGrants = [];
 
 const mockSession = {
   sessionId: "saved", gate: "draft_review", loading: false, error: null,
   data: { sections: { summary: { title: "Summary", content: "The completed proposal text." } } },
   refresh: jest.fn(), advance: jest.fn(), advanceStream: jest.fn(),
+  reset: jest.fn(), start: jest.fn(),
 };
 const mockNavigate = jest.fn();
 const mockProfile = { org_name: "Demo nonprofit" };
 const mockSaveBuild = jest.fn(async payload => ({ ...payload, id: "build-1" }));
 const mockUpdateBuild = jest.fn(async (id, sections, budget, metadata) => ({ ...metadata, id, sections }));
-jest.mock("../hooks/useProposalSession", () => () => mockSession);
-jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate, useSearchParams: () => [new URLSearchParams(), jest.fn()] }), { virtual: true });
+jest.mock("../hooks/useProposalSession", () => () => {
+  const React = require("react");
+  const [, refresh] = React.useState(0);
+  mockNotifySession = () => refresh(value => value + 1);
+  return { ...mockSession };
+});
+jest.mock("react-router-dom", () => ({ useNavigate: () => mockNavigate, useLocation: () => ({ pathname: mockPath }), useSearchParams: () => [new URLSearchParams(), jest.fn()] }), { virtual: true });
 jest.mock("../components", () => ({ Nav: () => null }));
-jest.mock("../hooks/useGrants", () => () => ({ grants: [] }));
+jest.mock("../hooks/useGrants", () => () => ({ grants: mockGrants }));
 jest.mock("../context/AuthContext", () => ({ useAuth: () => ({ profile: mockProfile }) }));
 jest.mock("../hooks/useWorkStore", () => () => ({ saveBuild: mockSaveBuild, updateBuild: mockUpdateBuild, builds: [] }));
-jest.mock("../services/api", () => ({ __esModule: true, default: { post: jest.fn() }, reviseSection: jest.fn() }));
+jest.mock("../services/api", () => ({ __esModule: true, default: { post: jest.fn(), get: jest.fn() }, reviseSection: jest.fn(), checkProposalConsistency: jest.fn(), saveSessionChecklist: jest.fn() }));
 
 beforeEach(() => {
   sessionStorage.clear(); jest.clearAllMocks();
+  mockPath = "/build/write"; mockGrants = [];
+  mockSession.sessionId = "saved";
+  mockSession.loading = false; mockSession.error = null;
+  mockNavigate.mockImplementation(path => { if (typeof path === "string") mockPath = path.split("?")[0]; });
+  mockSession.reset.mockImplementation(() => { mockSession.sessionId = null; mockSession.gate = "none"; mockSession.data = {}; });
   mockSaveBuild.mockImplementation(async payload => ({ ...payload, id: "build-1" }));
   mockUpdateBuild.mockImplementation(async (id, sections, budget, metadata) => ({ ...metadata, id, sections }));
+  saveSessionChecklist.mockResolvedValue({});
   mockSession.gate = "draft_review";
   mockSession.data = { sections: { summary: { title: "Summary", content: "The completed proposal text." } } };
 });
@@ -35,6 +53,21 @@ test("finished proposal replies stay inside the chat's single scroll area", asyn
   expect(within(conversation).getByRole("button", { name: /Confirm Draft & Continue/ })).toBeInTheDocument();
   expect(conversation.style.flex).toBe("1");
   expect(Array.from(conversation.querySelectorAll("*")).filter(node => node.style.overflowY === "auto")).toHaveLength(0);
+});
+
+test("application setup follows the proposal name and privacy stays outside the chat", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  mockSession.gate = "none";
+  mockSession.data = {};
+  mockPath = "/build";
+  render(<BuildProposal />);
+  await act(async () => {});
+  const name = screen.getByPlaceholderText(/Grant Proposal/);
+  const setup = screen.getByText("Application structure and requirements");
+  expect(name.compareDocumentPosition(setup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByTestId("build-conversation")).not.toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Application structure and requirements" }).closest("details")).toBeNull();
+  expect(screen.queryByRole("complementary", { name: "Proposal building steps" })).not.toBeInTheDocument();
 });
 
 test("a generated proposal is saved before approval and Find Grants passes its full text", async () => {
@@ -64,6 +97,8 @@ test("streaming section text appears as a reply inside the same conversation", a
   const conversation = screen.getByTestId("build-conversation");
   expect(within(conversation).getByText("A proposal appearing word by word.")).toBeInTheDocument();
   expect(within(conversation).getByRole("region", { name: "Live proposal draft" })).toBeInTheDocument();
+  expect(screen.getByRole("complementary", { name: "Proposal building steps" })).toBeInTheDocument();
+  expect(screen.getByRole("complementary", { name: "Proposal building steps" }).style.position).toBe("fixed");
   expect(Array.from(conversation.querySelectorAll("*")).filter(node => node.style.overflowY === "auto")).toHaveLength(0);
 });
 
@@ -105,4 +140,72 @@ test("a restored prohibited policy disables AI revision while keeping manual edi
   expect(screen.getByTitle("Edit directly")).toBeEnabled();
   await act(async () => { fireEvent.click(screen.getByTitle("Edit directly")); });
   expect(screen.getByDisplayValue("The completed proposal text.")).toBeInTheDocument();
+});
+
+test("consistency results are saved with the proposal and manual edits mark them stale", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  const review = { status: "passed", issues: [], section_count: 1, characters_reviewed: 60, content_fingerprint: "original-content" };
+  mockSession.data = { ...mockSession.data, coherence_review: review };
+  const { rerender } = render(<BuildProposal />);
+  await act(async () => {});
+  expect(mockSaveBuild).toHaveBeenCalledWith(expect.objectContaining({ coherence_review: review }));
+  expect(screen.getByText("AI check found no inconsistencies")).toBeInTheDocument();
+  fireEvent.click(screen.getByTitle("Edit directly"));
+  fireEvent.change(screen.getByDisplayValue("The completed proposal text."), { target: { value: "A changed proposal." } });
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: /Save$/, exact: false })); });
+  expect(screen.getByText("Text changed since the consistency check")).toBeInTheDocument();
+  const updatedReview = { ...review, content_fingerprint: "updated-content" };
+  checkProposalConsistency.mockResolvedValue(updatedReview);
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Check full proposal consistency" })); });
+  expect(checkProposalConsistency).toHaveBeenCalledWith(expect.objectContaining({ summary: expect.objectContaining({ content: "A changed proposal." }) }), undefined);
+  expect(mockUpdateBuild).toHaveBeenCalledWith("build-1", expect.any(Object), null, expect.objectContaining({ coherence_review: updatedReview }));
+  mockSession.data = { ...mockSession.data, coherence_review: { ...review, status: "stale" } };
+  rerender(<BuildProposal />);
+  expect(screen.getByText("AI check found no inconsistencies")).toBeInTheDocument();
+});
+
+test("build checklist saving updates the session and saved build with local feedback", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  mockSession.data = { ...mockSession.data, application_spec: { stage: "full_proposal", sections: [], attachments: [], ai_policy: { status: "disclosure_required", disclosure_ready: false } } };
+  render(<BuildProposal />);
+  await act(async () => {});
+  fireEvent.click(screen.getByLabelText("Required AI disclosure is ready"));
+  await act(async () => { fireEvent.click(screen.getByText("Save application checklist")); });
+  expect(screen.getByText("Checklist saved.")).toBeInTheDocument();
+  expect(saveSessionChecklist).toHaveBeenCalledWith("saved", expect.objectContaining({ ai_policy: expect.objectContaining({ disclosure_ready: true }) }));
+  expect(mockUpdateBuild).toHaveBeenCalledWith("build-1", expect.any(Object), null, expect.objectContaining({ application_spec: expect.objectContaining({ ai_policy: expect.objectContaining({ disclosure_ready: true }) }) }));
+});
+
+test("selecting a grant automatically prefills the expanded setup form", async () => {
+  mockPath = "/build"; mockSession.gate = "none"; mockSession.data = {};
+  mockGrants = [{ grant_id: "g1", title: "Restoration grant" }];
+  api.get.mockResolvedValue({ data: { ...mockGrants[0], description: "Grant instructions" } });
+  api.post.mockResolvedValue({ data: { application_spec: emptyApplicationSpec("loi"), evidence: [], warnings: ["Portal limits need confirmation"] } });
+  render(<BuildProposal />);
+  fireEvent.change(screen.getByLabelText("Target grant"), { target: { value: "g1" } });
+  await screen.findByText(/Prefilled 0 questions/);
+  expect(screen.getByLabelText("Application stage")).toHaveValue("loi");
+  expect(screen.getByText("Portal limits need confirmation")).toBeInTheDocument();
+  expect(api.post).toHaveBeenCalledWith("/api/grants/g1/application-requirements");
+});
+
+test("Start opens the workspace and the assistant asks questions before drafting", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  mockPath = "/build"; mockSession.gate = "none"; mockSession.data = {}; mockSession.sessionId = null;
+  mockSession.start.mockImplementation(async (flow, grant) => {
+    mockSession.sessionId = "build-new"; mockSession.gate = "slot_filling";
+    mockSession.data = { grant, application_spec: grant.application_spec, question: "What problem does your project address?", slot_key: "problem", slots_filled: 0, slots_total: 1 };
+    mockNotifySession();
+    return "build-new";
+  });
+  render(<BuildProposal />);
+  fireEvent.change(screen.getByLabelText("Proposal name"), { target: { value: "New river project" } });
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Start building" })); });
+  expect(mockNavigate).toHaveBeenCalledWith("/build/write");
+  expect(mockSession.start).toHaveBeenCalledWith("scratch", expect.objectContaining({ build_context: { proposal_name: "New river project" }, application_spec: expect.objectContaining({ stage: "full_proposal" }) }), mockProfile);
+  expect(screen.getByText("What problem does your project address?")).toBeInTheDocument();
+  expect(screen.getByPlaceholderText("Type your answer…")).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Application structure and requirements" })).not.toBeInTheDocument();
+  expect(screen.getByRole("complementary", { name: "Proposal building steps" })).toBeInTheDocument();
+  expect(mockSession.advanceStream).not.toHaveBeenCalled();
 });

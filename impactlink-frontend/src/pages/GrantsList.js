@@ -8,6 +8,8 @@ import useUpload from "../hooks/useUpload";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
+import StateSelect from "../components/StateSelect";
+import "../components/FormControls.css";
 import { removeDemoGrants } from "../services/grants";
 
 function ViewToggle({ view, onChange }) {
@@ -48,13 +50,13 @@ export default function GrantsList() {
     if (!("applicant_type" in criteriaOverrides.current)) setApplicantType(profileApplicantType);
     if (!("project_states" in criteriaOverrides.current)) setProjectStates(profileProjectStates);
   }, [profileApplicantType, profileProjectStates]);
-  const eligibilityCriteria = (base = {}) => ({
-    applicant_type: profile?.applicant_type || base.applicant_type || applicantType,
-    project_states: base.project_states || profile?.project_states || [],
-    ...criteriaOverrides.current,
+  // Search uses exactly the choices currently shown in the controls.
+  const eligibilityCriteria = () => ({
+    applicant_type: criteriaOverrides.current.applicant_type ?? applicantType,
+    project_states: criteriaOverrides.current.project_states ?? projectStates.split(/[,;|]/).map(value => value.trim()).filter(Boolean),
   });
   const { proposals: savedProposals, loading: workLoading, refresh: refreshWorkStore } = useWorkStore();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedProposalId = searchParams.get("proposal");
   const autoMatchStarted = useRef(null);
   const matchRequest = useRef(0);
@@ -77,6 +79,7 @@ export default function GrantsList() {
   const [rematchLoading,     setRematchLoading]     = useState(false);
   const [rematchError,       setRematchError]       = useState(null);
   const [uploadedProposalName, setUploadedProposalName] = useState("");
+  const [preparedItem, setPreparedItem] = useState(undefined);
 
   // Saved drafts and builds can both be matched against current grant data.
   const matchableProposals = savedProposals.filter(
@@ -120,21 +123,29 @@ export default function GrantsList() {
     }
   };
 
-  const handleSavedProposalChange = (event) => {
-    const item = matchableProposals.find(p => p.id === event.target.value);
-    if (item) {
-      handleSelectSavedProposal(item);
-    } else {
-      matchRequest.current += 1;
-      setRematchLoading(false);
-      setSelectedProposalId(null);
-      setRematchGrants(null);
-      setRematchError(null);
-      setUploadedProposalName("");
+  const stageProposal = item => {
+    if (requestedProposalId && setSearchParams) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("proposal");
+      setSearchParams(next, { replace: true });
     }
+    matchRequest.current += 1;
+    setRematchLoading(false);
+    setPreparedItem(item);
+    lastMatchItem.current = item;
+    setSelectedProposalId(item?.id || null);
+    setUploadedProposalName(item?.title || "");
+    setRematchGrants([]);
+    setRematchError(null);
+    setSearchMode("filter");
+    sessionStorage.setItem("grants_searchMode", "filter");
   };
 
-  const handleProposalFile = async (event) => {
+  const handleSavedProposalChange = event => {
+    stageProposal(matchableProposals.find(item => item.id === event.target.value) || null);
+  };
+
+  const handleProposalFile = async event => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
@@ -142,30 +153,24 @@ export default function GrantsList() {
       setRematchError("Choose a PDF or DOCX proposal.");
       return;
     }
-
-    setRematchError(null);
+    stageProposal(null);
     sessionStorage.removeItem("upload_draft_id");
     const uploaded = await upload(file);
     if (!uploaded) return;
-
-    let uploadedMatches;
-    try {
-      uploadedMatches = removeDemoGrants(
-        JSON.parse(sessionStorage.getItem("matches") || "[]")
-      );
-    } catch (error) {
-      console.error("Could not load uploaded proposal matches.", error);
-      setRematchError("The proposal was uploaded, but its grant matches could not be loaded.");
+    const context = uploaded.proposal;
+    if (!context) {
+      setRematchError("The upload returned no proposal text. Please retry.");
       return;
     }
-
-    setUploadedProposalName(file.name.replace(/\.(pdf|docx)$/i, ""));
-    setRematchGrants(uploadedMatches);
-    setSelectedProposalId(sessionStorage.getItem("upload_draft_id") || null);
-    sessionStorage.setItem("grants_searchMode", "filter");
-    setSearchMode("filter");
+    stageProposal({
+      id: uploaded.savedId || sessionStorage.getItem("upload_draft_id") || null,
+      _type: "draft", title: file.name.replace(/\.(pdf|docx)$/i, ""), proposal_context: context,
+    });
     await refreshWorkStore();
   };
+
+  const readyItem = preparedItem !== undefined ? preparedItem : lastMatchItem.current || selectedSavedProposal || (proposal && Object.keys(proposal).length ? { title: proposal.project_title || "Current proposal", proposal_context: proposal } : null);
+  const findProposalGrants = () => { if (readyItem && !uploadLoading && !rematchLoading) handleSelectSavedProposal(readyItem); };
 
   // ── Agentic topic search — persisted in sessionStorage so results survive navigation ──
   const [searchMode, setSearchMode] = useState(function() {
@@ -219,7 +224,7 @@ export default function GrantsList() {
   const [aiError,   setAiError]   = useState(null);
   const auditedCache = useRef(null);
   useEffect(() => {
-    if (requestedProposalId || autoMatchStarted.current || grantsLoading || (!grants.length && !aiResults?.length) || sessionStorage.getItem("grant_match_request")) return;
+    if (preparedItem !== undefined || requestedProposalId || autoMatchStarted.current || grantsLoading || (!grants.length && !aiResults?.length) || sessionStorage.getItem("grant_match_request")) return;
     const ids = [...new Set([...grants, ...(aiResults || [])].map(grant => String(grant.grant_id)))].slice(0, 200);
     const criteria = eligibilityCriteria(proposal?.eligibility_context || {});
     const key = JSON.stringify([ids, criteria]);
@@ -334,8 +339,21 @@ export default function GrantsList() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Nav />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px" }}>
-        <AiPrivacyNotice counts={redactionCounts} />
-        {isGrants && <section aria-label="Eligibility filters" style={{ padding: 16, marginBottom: 20, border: "1px solid var(--border)", borderRadius: 10 }}>
+
+
+        <SectionHeader
+          label="Grant Intelligence"
+          title={isGrants ? "Matched Grants" : "NGO Collaborators"}
+          subtitle={
+            isGrants
+              ? (filteredGrants.length + " grant opportunities" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : uploadedProposalName ? ` for "${uploadedProposalName}"` : hasRealData ? " matched to your proposal" : ""))
+              : collabFetched
+                ? (filteredCollabs.length + " NGOs with aligned mission" + (profile ? " — excluding your org" : ""))
+                : "Mission-aligned NGOs for joint applications & partnerships"
+          }
+        />
+
+        {isGrants && <section className="il-form" aria-label="Eligibility filters" style={{ padding: "20px 24px", marginBottom: 18, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 12 }}>
           <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>Eligibility filters</h3>
           <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Closed opportunities and confirmed eligibility conflicts are excluded before ranking. Missing or ambiguous requirements remain visible as unverified. These are basic checks, not a funder eligibility decision.</p>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "end", gap: 12 }}>
@@ -350,33 +368,16 @@ export default function GrantsList() {
                 <option value="individual">Individual</option><option value="other_legal_entity">Other legal entity</option>
               </select>
             </label>
-            <label style={{ fontSize: 12 }}>Project U.S. states<br />
-              <input aria-label="Project U.S. states" placeholder="CA, NY; blank if unknown" value={projectStates} onChange={event => {
-                criteriaOverrides.current.project_states = event.target.value.split(/[,;|]/).map(value => value.trim()).filter(Boolean);
-                setProjectStates(event.target.value);
-              }} style={{ padding: 8, marginTop: 6 }} />
-            </label>
-            <button disabled={rematchLoading || aiLoading || (!lastMatchItem.current && !proposal && !aiQuery.trim())} onClick={() => {
-              if (searchMode === "ai" && aiQuery.trim()) runAiSearch();
-              else {
-                const item = lastMatchItem.current || selectedSavedProposal || { title: proposal?.project_title || "Current proposal", proposal_context: proposal || {} };
-                handleSelectSavedProposal(item);
-              }
-            }} style={{ padding: 9, cursor: "pointer" }}>Apply eligibility filters</button>
-          </div>
-        </section>}
+            <div style={{ fontSize: 12, color: "#999", marginBottom: 10 }}>Project U.S. states<br />
+              <StateSelect value={projectStates} onChange={next => {
+                criteriaOverrides.current.project_states = next.split(",").map(value => value.trim()).filter(Boolean);
+                setProjectStates(next);
+              }} />
+            </div>
 
-        <SectionHeader
-          label="Grant Intelligence"
-          title={isGrants ? "Matched Grants" : "NGO Collaborators"}
-          subtitle={
-            isGrants
-              ? (filteredGrants.length + " grant opportunities" + (selectedSavedProposal ? ` for "${selectedSavedProposal.title}"` : uploadedProposalName ? ` for "${uploadedProposalName}"` : hasRealData ? " matched to your proposal" : ""))
-              : collabFetched
-                ? (filteredCollabs.length + " NGOs with aligned mission" + (profile ? " — excluding your org" : ""))
-                : "Mission-aligned NGOs for joint applications & partnerships"
-          }
-        />
+          </div>
+          <p style={{ margin: "4px 0 0", color: "#888", fontSize: 12 }}>Choose criteria now; they are used when you click Find Grants or run a topic search.</p>
+        </section>}
 
         {isGrants && (
           <div style={{
@@ -407,12 +408,14 @@ export default function GrantsList() {
                   ? matchableProposals.length ? "Choose an uploaded or saved proposal…" : "No saved proposals yet"
                   : "Sign in to select a saved proposal"}
               </option>
+              {readyItem?.id && !matchableProposals.some(item => item.id === readyItem.id) && <option value={readyItem.id}>{readyItem.title}</option>}
               {matchableProposals.map(item => (
                 <option key={item.id} value={item.id}>{item.title}</option>
               ))}
             </select>
             <input
               ref={uploadInputRef}
+              aria-label="Upload proposal file"
               type="file"
               accept=".pdf,.docx"
               hidden
@@ -430,17 +433,16 @@ export default function GrantsList() {
                 whiteSpace: "nowrap",
               }}
             >
-              {uploadLoading ? "Uploading & matching…" : "Upload proposal"}
+              {uploadLoading ? "Uploading & reading..." : "Upload proposal"}
             </button>
-            {selectedProposalId && (
+            <button type="button" onClick={findProposalGrants} disabled={!readyItem || uploadLoading || rematchLoading} style={{ background: "var(--accent)", border: "none", color: "#fff", padding: "10px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, opacity: !readyItem || uploadLoading || rematchLoading ? 0.45 : 1, cursor: !readyItem || uploadLoading || rematchLoading ? "not-allowed" : "pointer" }}>
+              {rematchLoading ? "Finding grants..." : "Find Grants"}
+            </button>
+            {readyItem && !rematchLoading && <p style={{ width: "100%", margin: "0 0 4px", color: "#aaa", fontSize: 12 }}>Selected: {readyItem.title}. Review eligibility above, then click Find Grants to search.</p>}
+            {readyItem && (
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedProposalId(null);
-                  setRematchGrants(null);
-                  setRematchError(null);
-                  setUploadedProposalName("");
-                }}
+                onClick={() => stageProposal(null)}
                 style={{ background: "none", border: "none", color: "#888",
                   cursor: "pointer", fontSize: 12, padding: "6px" }}
               >
@@ -466,6 +468,8 @@ export default function GrantsList() {
             )}
           </div>
         )}
+
+
 
         <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
           <ViewToggle view={view} onChange={function(v) { setView(v); setSearch(""); }} />
@@ -691,6 +695,7 @@ export default function GrantsList() {
           </div>
         )}
 
+        <AiPrivacyNotice counts={redactionCounts} />
       </div>
     </div>
   );

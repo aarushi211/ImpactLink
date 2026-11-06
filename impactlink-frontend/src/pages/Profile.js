@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import { useAuth } from "../context/AuthContext.js";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
+import StateSelect from "../components/StateSelect";
 
 const SDG_OPTIONS = [
   "SDG 1: No Poverty", "SDG 2: Zero Hunger", "SDG 3: Good Health",
@@ -137,7 +138,6 @@ export default function Profile() {
         <Section title="Extra AI redaction">
           <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Add one full name, address or identifying phrase per line (2–200 characters; up to 100 terms). Matching ignores case and flexible spacing; include alternate spellings. These private terms are hidden from collaborator listings. Save changes to apply them across AI features; preview can test your unsaved list.</p>
           <textarea aria-label="Names and phrases to mask" value={privateTerms} maxLength={20100} onChange={event => setPrivateTerms(event.target.value)} style={{ ...inputStyle, minHeight: 95 }} />
-          <AiPrivacyNotice preview protectedTerms={privateTerms.split("\n").map(value => value.trim()).filter(Boolean)} />
         </Section>
 
         {/* Header */}
@@ -264,7 +264,7 @@ export default function Profile() {
                 </select>
               </Field>
               <Field label="Default project U.S. states">
-                <input aria-label="Project U.S. states" style={inputStyle} value={projectStates} onChange={event => setProjectStates(event.target.value)} placeholder="CA, NY — leave blank if unknown or outside the U.S." />
+                <StateSelect value={projectStates} onChange={setProjectStates} />
                 <p style={{ color: "#888", fontSize: 12 }}>Where the funded project will operate, rather than your office address. You can override these states when matching a proposal.</p>
               </Field>
             </Section>
@@ -372,6 +372,7 @@ export default function Profile() {
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
+          <AiPrivacyNotice preview protectedTerms={privateTerms.split("\n").map(value => value.trim()).filter(Boolean)} />
       </div>
     </div>
   );

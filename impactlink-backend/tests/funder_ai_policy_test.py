@@ -113,6 +113,41 @@ class PolicyEndpointTests(unittest.TestCase):
         self.assertTrue(graph.get_state(config).values['grant']['application_spec']['ai_policy']['disclosure_ready'])
         self.assertEqual(completed.json()['application_spec']['ai_policy']['source_reference'], 'RFP page 8')
 
+    def test_checklist_save_survives_reload_without_advancing_and_can_still_resume(self):
+        from langgraph.graph import StateGraph, START, END
+        from langgraph.checkpoint.memory import InMemorySaver
+        from flows.scratch_flow import node_final_save, ProposalState
+        builder = StateGraph(ProposalState)
+        builder.add_node('final_save', node_final_save)
+        builder.add_edge(START, 'final_save')
+        builder.add_edge('final_save', END)
+        graph = builder.compile(checkpointer=InMemorySaver())
+        config = {'configurable': {'thread_id': 'checklist-save'}}
+        recorded = grant('disclosure_required', source_reference='RFP page 8')
+        recorded['application_spec']['attachments'] = [{'id': 'board', 'title': 'Board list'}]
+        graph.invoke({'session_id': 'checklist-save', 'flow': 'scratch', 'gate': 'final_save', 'user_id': 'test-user', 'grant': recorded, 'sections': {'summary': {'content': 'Reviewed text'}}}, config)
+        self.backend.app.dependency_overrides[self.backend.verify_token] = lambda: 'test-user'
+        with patch.object(self.sessions, '_get_graph_state', side_effect=lambda *a: graph.get_state(config).values), patch.object(self.sessions, '_graph_for', return_value=graph):
+            response = self.client.patch('/api/session/checklist-save/checklist', json={'ai_disclosure_ready': True, 'attachment_statuses': {'board': 'ready'}})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(graph.get_state(config).values['gate'], 'final_save')
+            reloaded = self.sessions.get_session_status('checklist-save', 'test-user')
+            self.assertTrue(reloaded['application_spec']['ai_policy']['disclosure_ready'])
+            self.assertEqual(reloaded['application_spec']['attachments'][0]['status'], 'ready')
+            resumed = self.client.post('/api/session/checklist-save/advance', json={})
+            self.assertEqual(resumed.status_code, 200)
+            self.assertEqual(resumed.json()['gate'], 'complete')
+
+    def test_checklist_rejects_another_account_and_policy_replacement(self):
+        self.backend.app.dependency_overrides[self.backend.verify_token] = lambda: 'test-user'
+        state = {'flow': 'scratch', 'gate': 'draft_review', 'user_id': 'other-user', 'grant': grant('disclosure_required')}
+        with patch.object(self.sessions, '_get_graph_state', return_value=state), patch.object(self.sessions, '_graph_for') as graph:
+            forbidden = self.client.patch('/api/session/test/checklist', json={'ai_disclosure_ready': True})
+            self.assertEqual(forbidden.status_code, 403)
+            graph.assert_not_called()
+            invalid = self.client.patch('/api/session/test/checklist', json={'application_spec': grant('permitted')['application_spec']})
+            self.assertEqual(invalid.status_code, 422)
+
 
 if __name__ == '__main__':
     unittest.main()

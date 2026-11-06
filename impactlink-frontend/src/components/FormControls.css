@@ -1,0 +1,23 @@
+.il-form { text-align: left; }
+.il-form fieldset { min-width: 0; }
+.il-form label { display: block; color: #999; font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
+.il-form input:not([type="checkbox"]), .il-form select, .il-form textarea, .il-state-select select {
+  width: 100%; box-sizing: border-box; background: #111120; color: #ddd;
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
+  font: inherit; font-size: 12px; outline: none; margin-top: 5px;
+}
+.il-form input:focus, .il-form select:focus, .il-form textarea:focus, .il-state-select select:focus { border-color: var(--accent); }
+.il-form button, .il-state-select button {
+  background: #1a1a28; border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px; color: #bbb; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.il-form button:hover:not(:disabled), .il-state-select button:hover:not(:disabled) { border-color: var(--accent); color: #fff; }
+.il-form button:disabled, .il-form fieldset:disabled button { opacity: .45; cursor: not-allowed; }
+.il-form h4 { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 12px; }
+.il-form input[type="checkbox"] { accent-color: var(--accent); margin-right: 7px; }
+.il-form summary { list-style-position: outside; }
+.il-form .il-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.il-form .il-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.il-state-select { min-width: 200px; }
+.il-state-select .il-state-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.il-state-select .il-state-tags button { border-radius: 20px; padding: 3px 9px; font-size: 11px; }

@@ -1,20 +1,21 @@
+import "./FormControls.css";
 let nextLine = 0;
 const lineId = () => `cost-${Date.now()}-${++nextLine}`;
 export const emptyCostInputs = () => ({ staff: [], direct_costs: [], indirect: { method: "unconfirmed", rate_pct: 0, base: "MTDC", reference: "", de_minimis_eligible: false, funder_cap_pct: null, funder_cap_base: "MTDC" }, unallowable_kinds: [] });
 const kinds = { supplies: "Materials & supplies", services: "Services / contractors", travel: "Travel", equipment: "Equipment", capital: "Capital expenditures", rental: "Rental costs", tuition: "Tuition remission", scholarships: "Scholarships / fellowships", patient_care: "Patient care", participant_support: "Participant support", subaward: "Subaward" };
-const style = { width: "100%", boxSizing: "border-box", padding: 7, borderRadius: 5, background: "#1a1a28", color: "#ddd", border: "1px solid var(--border)" };
+const style = { width: "100%", boxSizing: "border-box", padding: "9px 12px", borderRadius: 8, background: "#111120", color: "#ddd", border: "1px solid var(--border)" };
 
 export default function BudgetInputs({ value, onChange, disabled }) {
   const update = (group, id, field, next) => onChange({ ...value, [group]: value[group].map(row => row.id === id ? { ...row, [field]: next } : row) });
   const remove = (group, id) => onChange({ ...value, [group]: value[group].filter(row => row.id !== id) });
   const indirect = (field, next) => onChange({ ...value, indirect: { ...value.indirect, [field]: next } });
   const input = (label, current, change, props = {}) => <label style={{ fontSize: 12, color: "#aaa" }}>{label}<input aria-label={label} style={style} value={current ?? ""} onChange={event => change(event.target.value)} {...props} /></label>;
-  return <fieldset disabled={disabled} style={{ border: "1px solid var(--border)", padding: 16, borderRadius: 8, marginTop: 18 }}>
-    <legend style={{ color: "#ddd", fontSize: 13 }}>Cost assumptions</legend>
+  return <fieldset className="il-form" disabled={disabled} style={{ border: 0, borderTop: "1px solid var(--border)", padding: "20px 0 0", margin: "24px 0 0" }}>
+    <legend style={{ color: "#999", fontSize: 11, fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Cost assumptions</legend>
     <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Enter actual or researched salary and unit-cost estimates. FTE is each person's share of full-time effort. Fringe applies to project salary. Costs are calculated without filling the grant ceiling.</p>
     <h4 style={{ color: "#ddd" }}>Staff and fringe</h4>
     {value.staff.map((row, index) => <div key={row.id} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12, marginBottom: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+      <div className="il-form-grid">
         {input(`Role ${index + 1}`, row.role, next => update("staff", row.id, "role", next))}
         {input(`Headcount ${index + 1}`, row.headcount, next => update("staff", row.id, "headcount", next === "" ? "" : Number(next)), { type: "number", min: 1, step: 1 })}
         {input(`Annual salary per person ${index + 1}`, row.annual_salary, next => update("staff", row.id, "annual_salary", next), { type: "number", min: 0, step: "0.01" })}
@@ -27,7 +28,7 @@ export default function BudgetInputs({ value, onChange, disabled }) {
     <button onClick={() => onChange({ ...value, staff: [...value.staff, { id: lineId(), role: "", headcount: 1, annual_salary: "", fte_per_person: "1", months: "12", fringe_rate_pct: "0" }] })}>Add staff role</button>
     <h4 style={{ color: "#ddd" }}>Non-personnel direct costs</h4>
     {value.direct_costs.map((row, index) => <div key={row.id} style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12, marginBottom: 12 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+      <div className="il-form-grid">
         {input(`Cost description ${index + 1}`, row.description, next => update("direct_costs", row.id, "description", next))}
         <label style={{ color: "#aaa", fontSize: 12 }}>Cost type<select aria-label={`Cost type ${index + 1}`} style={style} value={row.kind} onChange={event => {
           const kind = event.target.value;

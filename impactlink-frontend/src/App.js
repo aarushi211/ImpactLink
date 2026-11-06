@@ -29,9 +29,9 @@ export default function App() {
           <Route path="/grants"     element={<P><GrantsList /></P>} />
           <Route path="/grants/:id" element={<P><GrantDetail /></P>} />
           <Route path="/upload"     element={<P><Navigate to="/grants" replace /></P>} />
-          <Route path="/draft"      element={<P><Draft /></P>} />
+          <Route path="/draft/*"    element={<P><Draft /></P>} />
           <Route path="/budget"     element={<P><Budget /></P>} />
-          <Route path="/build"      element={<P><BuildProposal /></P>} />
+          <Route path="/build/*"    element={<P><BuildProposal /></P>} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -87,6 +87,33 @@ class RedactionTests(unittest.TestCase):
         self.assertIn('ValueError', rendered)
         self.assertIn('[REDACTED_EMAIL]', rendered)
 
+    def test_uvicorn_access_formatter_keeps_required_fields_and_masks_private_paths(self):
+        from uvicorn.logging import AccessFormatter
+        record = logging.LogRecord('uvicorn.access', logging.INFO, __file__, 1,
+                                   '%s - "%s %s HTTP/%s" %d',
+                                   ('127.0.0.1:63147', 'POST', '/api/match?email=jane@example.org', '1.1', 200), None)
+        privacy = PrivacyLogFilter()
+        formatter = AccessFormatter('%(client_addr)s - "%(request_line)s" %(status_code)s', use_colors=False)
+        # Multiple handlers may apply the same filter to the record.
+        for _ in range(2):
+            privacy.filter(record)
+            rendered = formatter.format(record)
+            self.assertEqual(len(record.args), 5)
+            self.assertNotIn('jane@example.org', rendered)
+            self.assertIn('[REDACTED_EMAIL]', rendered)
+            self.assertIn('200 OK', rendered)
+
+    def test_uvicorn_access_formatter_stays_safe_when_redaction_fails(self):
+        from unittest.mock import patch
+        from uvicorn.logging import AccessFormatter
+        record = logging.LogRecord('uvicorn.access', logging.INFO, __file__, 1, '%s %s %s %s %d',
+                                   ('private', 'POST', '/private', '1.1', 200), None)
+        with patch('utils.privacy.redact_text', side_effect=RuntimeError('failure')):
+            PrivacyLogFilter().filter(record)
+        rendered = AccessFormatter('%(request_line)s %(status_code)s', use_colors=False).format(record)
+        self.assertNotIn('/private', rendered)
+        self.assertIn('withheld', rendered)
+
 
 if __name__ == '__main__':
     unittest.main()

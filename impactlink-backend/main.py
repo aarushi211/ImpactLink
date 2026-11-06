@@ -41,6 +41,8 @@ from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
 from services.budget.costing import CostPlan
 from services.application import ApplicationSection, ApplicationSpec, constraint_prompt, length_check, ensure_ai_drafting_allowed
+from agents.coherence_agent import CoherenceAgent, review_metadata
+from services.application_extraction import extract_application_setup
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
@@ -51,6 +53,7 @@ from api.session import (
     advance_session,
     stream_advance_session,
     get_session_status,
+    update_session_checklist,
 )
 from utils.metrics import metrics_collector
 from utils.session_stream import heartbeat_events
@@ -151,6 +154,16 @@ class ReviseRequest(BaseModel):
 class RedactionPreviewRequest(BaseModel):
     text: str = Field(max_length=50000)
     custom_terms: Optional[list[str]] = Field(default=None, max_length=100)
+
+
+class ConsistencySection(BaseModel):
+    title: str = Field(default="", max_length=200)
+    content: str = Field(max_length=200000)
+
+
+class ConsistencyRequest(BaseModel):
+    sections: dict[str, ConsistencySection] = Field(max_length=25)
+    application_spec: Optional[ApplicationSpec] = None
 
 class BuildRequest(BaseModel):
     answers: list
@@ -315,8 +328,8 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_ai_user
         "applicant_type": applicant_profile.get("applicant_type", ""),
         "project_states": applicant_profile.get("project_states", []),
     }
-    matches = await asyncio.to_thread(find_similar_grants, proposal, 5)
-    return {"proposal": proposal, "matches": matches}
+    # Upload parses the document only. Matching is an explicit /api/match action.
+    return {"proposal": proposal, "matches": []}
 
 @app.post("/api/match")
 def match(req: ProposalRequest, uid: str = Depends(verify_ai_user, scope="request")):
@@ -440,6 +453,33 @@ def remove_user_work(work_type: str, work_id: str, uid: str = Depends(verify_tok
 
 # ── Section revise (human-in-the-loop edit assist) ─────────────────────────
 
+@app.post("/api/build/check-consistency")
+async def check_consistency(req: ConsistencyRequest, uid: str = Depends(verify_ai_user, scope="request")):
+    del uid
+    grant = {"application_spec": req.application_spec.model_dump()} if req.application_spec else {}
+    try:
+        ensure_ai_drafting_allowed(grant)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    sections = {key: section.model_dump() for key, section in req.sections.items()}
+    report = await asyncio.to_thread(CoherenceAgent.check, sections, grant)
+    return review_metadata(report, sections)
+
+
+@app.post("/api/grants/{grant_id}/application-requirements")
+async def grant_application_requirements(grant_id: str, uid: str = Depends(verify_ai_user, scope="request")):
+    del uid
+    grant = await asyncio.to_thread(get_grant_by_id, grant_id)
+    if not grant:
+        raise HTTPException(404, "Grant not found")
+    try:
+        return await asyncio.to_thread(extract_application_setup, grant)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except Exception:
+        log.exception("Application setup extraction failed")
+        raise HTTPException(502, "Could not extract application setup. You can enter requirements manually or retry.")
+
 @app.post("/api/build/revise")
 async def build_revise(req: ReviseRequest, uid: str = Depends(verify_ai_user, scope="request")):
     """Apply user feedback to a single section via SectionRewriteAgent."""
@@ -520,3 +560,13 @@ async def session_status(session_id: str, uid: str = Depends(verify_token)):
         if "Unauthorized" in str(e):
             raise HTTPException(403, str(e))
         raise HTTPException(404, str(e))
+
+
+@app.patch("/api/session/{session_id}/checklist")
+async def session_checklist(session_id: str, body: dict, uid: str = Depends(verify_token)):
+    try:
+        return await asyncio.to_thread(update_session_checklist, session_id, body, user_id=uid)
+    except ValueError as exc:
+        message = str(exc)
+        code = 403 if "Unauthorized" in message else 404 if message == "Session not found" else 409 if "already drafting" in message else 422
+        raise HTTPException(code, message)

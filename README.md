@@ -1,106 +1,91 @@
-<div align="center">
+# ImpactLink
 
-# ⬡ ImpactLink
+**A grant discovery and proposal preparation prototype for nonprofits.**
 
-**AI grant intelligence for NGOs** — find grants, draft proposals, build compliant budgets.
+[Live demo](https://impactlink-cbfc5.web.app) | [Architecture](AI_Architecture.md) | [Backend setup](impactlink-backend/DEVELOPMENT.md) | [Evaluation](impactlink-backend/EVALUATION.md) | [Future work](FUTURE_WORK.md)
 
-[![Live Demo](https://img.shields.io/badge/Demo-Live-6C63FF?style=for-the-badge)](https://impactlink-cbfc5.web.app)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-0D0D1A?style=for-the-badge&logo=fastapi&logoColor=6C63FF)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/Frontend-React-0D0D1A?style=for-the-badge&logo=react&logoColor=6C63FF)](https://reactjs.org/)
-[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-0D0D1A?style=for-the-badge)](https://langchain-ai.github.io/langgraph/)
+ImpactLink connects grant search, proposal drafting and explicit budget calculations. AI interprets instructions and drafts text; Python calculates costs and checks recorded limits. The application supports preparation and review, but does not verify submission readiness or predict funding success.
 
-[**Live Demo**](https://impactlink-cbfc5.web.app) · [**Architecture**](./AI_Architecture.md) · [**Setup**](./impactlink-backend/DEVELOPMENT.md) · [**Evaluation**](./impactlink-backend/EVALUATION.md)
+## Implemented capabilities
 
-</div>
-
----
-
-## What it does
-
-ImpactLink helps nonprofits **match grants**, **draft multi-section proposals**, and **generate rule-compliant budgets**. The core idea: **LangGraph orchestrates probabilistic LLM agents**; **Python enforces deterministic budget math**.
-
-| Capability | Summary |
+| Capability | Current behavior |
 |---|---|
-| Grant search | Semantic search over 114 CA grants (`pgvector` + LLM rerank) |
-| Build proposal | Slot-filling → PlanningAgent → 10 sections with score/route/retry loops |
-| Budget engine | Wage floors, indirect caps, personnel modeling — no LLM math |
-| Improve flow | Gap analysis + targeted rewrites on uploaded proposals |
+| Grant discovery | Local embeddings and PostgreSQL `pgvector` search with AI reranking. Official California and Grants.gov refresh adapters preserve source identity and verification metadata. Corpus size changes with refreshes. |
+| Eligibility | Deadline, declared applicant category and recorded geography checks exclude confirmed mismatches. Missing or additional conditions remain unverified. |
+| Build proposals | Guided questions, drafting plans and streamed section replies within the chat. A ten-section general starter is available; funder questions can replace it. |
+| Funder application structure | Ordered questions, word/character limits, LOI and reporting starters, logic-model/work-plan prompts and attachment checklists. Checklist entries are not uploaded documents. |
+| Improve proposals | PDF/DOCX parsing, gap review, targeted rewrites and tracked comparisons. Sessions pause for human review and persist in PostgreSQL. |
+| Budget model | Explicit salaries, headcount, FTE, months, fringe and direct costs; MTDC/TDC indirect bases, rate references, caps and unallowable categories. Over-budget plans retain actual costs and offer explicit scope options. |
+| Saved work | Reopen generated/revised proposals and budgets from the dashboard. Find Grants uses the current generated text automatically. PDF export paginates long sections. |
+| AI privacy | Outbound identifier patterns, local English personal-name detection and private account-specific terms. Profile includes a redaction preview. AI requests stop if privacy settings or the detector cannot load. Originals remain stored in the app. |
+| Funder AI-use policies | Record unknown, permitted, disclosure-required or prohibited use, with sources and conditions. Recorded prohibitions block proposal AI drafting/revision and consistency rechecks. Required disclosure must be marked ready before session completion. |
+| Consistency review | Full-text checks up to 60,000 characters including headings, rechecks after up to two automatic edits, visible unresolved/incomplete checks, and stale results after edits. Manual rechecks and saved review results are supported in Build. |
 
-**Stack:** React · FastAPI · LangGraph · OpenAI API · Supabase PostgreSQL · Firebase Auth
+Policies, checklist readiness, financial assumptions and applicant details are user-recorded. Automatic checks can miss sensitive content or contradictions. AI scores are not independent evidence of proposal quality.
 
----
+## Stack and data flow
 
-## Architecture (high level)
+**React 19 | FastAPI | LangGraph | OpenAI API | Neon PostgreSQL/pgvector | Firebase Auth, Firestore and Storage**
 
-```
-React SPA  ──REST──▶  FastAPI
-                        ├── LangGraph sessions (scratch + improve flows)
-                        ├── pgvector grant search
-                        └── Budget engine (deterministic)
-              OpenAI API · Supabase PG · Firebase Storage
+```text
+React SPA -- REST + server-sent events --> FastAPI
+  +-- LangGraph: scratch and improve sessions
+  +-- Local embeddings + pgvector grant retrieval
+  +-- Python budget calculations and application-limit checks
+  +-- Local privacy checks before outbound AI calls
+  +-- Neon: grants, saved work, session checkpoints
+  +-- Firebase: identity, profiles, original uploads
+  +-- OpenAI API: interpretation, drafting, reranking, scoring and review
 ```
 
-**Scratch flow:** slot Q&A → plan → draft 10 sections (scored + retried) → coherence check → human review → PDF.
+Database tenant isolation currently relies on application ownership checks. Database-enforced isolation remains [future work](FUTURE_WORK.md#1-database-level-user-isolation).
 
-Details: [AI_Architecture.md](./AI_Architecture.md)
+## Local setup
 
----
+Configure the backend environment using the [development guide](impactlink-backend/DEVELOPMENT.md), and Firebase/API settings using the [frontend README](impactlink-frontend/README.md).
 
-## Results at a glance
-
-Evaluated on 3 hand-crafted NGO scenarios against a 114-grant California corpus (June 2026, local dev).
-
-| Area | Result |
-|---|---|
-| Budget compliance tests | **5/5 pass** |
-| Grant retrieval (live) | **P@5 0.47 · R@5 0.78** |
-| Full draft pipeline | **3/3** scenarios, 10 sections, ~81s avg |
-| Scorer discrimination | Weak draft **20** vs strong **92** |
-
-Methodology and commands: [impactlink-backend/EVALUATION.md](./impactlink-backend/EVALUATION.md)
-
----
-
-## Quick start
+From the repository root, in separate terminals:
 
 ```bash
-git clone <repo-url> && cd ImpactLink
-
-# Backend (see DEVELOPMENT.md for .env)
-cd impactlink-backend && pip install -r requirements.txt
+# Backend: activate a Python virtual environment first
+cd impactlink-backend
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 uvicorn main:app --reload --port 8000
-
-# Frontend
-cd impactlink-frontend && npm install && npm start
 ```
 
-Open [localhost:3000](http://localhost:3000) → sign in → **Build** or **Grants**.
+```bash
+# Frontend
+cd impactlink-frontend
+npm ci
+npm start
+```
 
-Full setup (Supabase, Firebase, OpenAI API key): **[impactlink-backend/DEVELOPMENT.md](./impactlink-backend/DEVELOPMENT.md)**
+Requirements include the local English name model; it is installed during setup, not downloaded during AI requests. Open [localhost:3000](http://localhost:3000) and sign in.
 
----
+## Demo flow
 
-## Demo path (~3 min)
+1. In Profile, set the applicant category and project states. Add private redaction terms if needed.
+2. Search Grants for a topic such as "urban greening Lower Los Angeles River disadvantaged communities." Review eligibility and source freshness; available results depend on the current corpus and deadlines.
+3. In Build, record the funder questions, limits, attachments and AI-use policy, then answer the guided questions.
+4. Watch the draft stream into the chat. Review consistency findings, edit and recheck text, and prepare any required disclosure.
+5. Save the proposal, use Find Grants to match its text, reopen it from the dashboard and export a PDF. Enter explicit cost assumptions in Budget Setup to create a budget.
 
-1. **Grants** — search *"urban greening Lower Los Angeles River disadvantaged communities"*
-2. **Build** — select a grant → answer slot questions → watch agent orchestration panel
-3. Review 10 drafted sections → **Confirm Draft & Continue** → download PDF
+## Validation and limitations
 
----
+The latest local checks on **November 5, 2026** passed **144 backend tests**, **63 frontend tests** and the frontend production build. The frontend run excludes the existing default `App.test.js` scaffold. These are regression checks, not a live deployment audit or a grant-quality benchmark.
+
+Earlier retrieval/drafting measurements used three synthetic scenarios and an older corpus/configuration. They are historical smoke-test results, not current accuracy or latency guarantees. See [Evaluation](impactlink-backend/EVALUATION.md) for commands and limitations.
+
+## Future work
+
+Next priorities are database-enforced user isolation, deeper eligibility rules, cash/in-kind matching contributions, independent evaluation, refresh operations and document/post-award workflows. Grant-writer interviews and a researched competitive comparison are also outstanding. The [prioritized backlog](FUTURE_WORK.md) records scope and completion criteria.
 
 ## Documentation
 
-| Doc | Audience |
+| Document | Contents |
 |---|---|
-| [AI_Architecture.md](./AI_Architecture.md) | Agents, LangGraph topology, scoring routes, RAG, budget engine |
-| [impactlink-backend/DEVELOPMENT.md](./impactlink-backend/DEVELOPMENT.md) | Local setup, API reference, data flows, troubleshooting |
-| [impactlink-backend/EVALUATION.md](./impactlink-backend/EVALUATION.md) | Eval harness, metrics, grant data pipeline |
-| [impactlink-frontend/README.md](./impactlink-frontend/README.md) | Frontend structure and env |
-
----
-
-<div align="center">
-
-**Engineering social impact through intelligent automation**
-
-</div>
+| [Architecture](AI_Architecture.md) | Current data flow, sessions, privacy and consistency review |
+| [Backend development](impactlink-backend/DEVELOPMENT.md) | Environment, APIs, refresh operations and troubleshooting |
+| [Frontend README](impactlink-frontend/README.md) | Routes, UI workflows, configuration and checks |
+| [Evaluation](impactlink-backend/EVALUATION.md) | Regression commands, historical results and evidence gaps |
+| [Future work](FUTURE_WORK.md) | Remaining engineering, operations and user validation |

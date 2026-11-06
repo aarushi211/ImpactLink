@@ -65,7 +65,8 @@ log = logging.getLogger(__name__)
 
 
 def _application_response(response, grant):
-    spec = response.get("application_spec") or grant.get("application_spec")
+    response.setdefault("grant", grant)
+    spec = grant.get("application_spec") or response.get("application_spec")
     if spec is not None:
         response["application_spec"] = spec
         response["application_validation"] = validate_application(response.get("sections", {}), {"application_spec": spec})
@@ -186,6 +187,7 @@ def _extract_gate_response(raw_result) -> dict:
                        or (raw_result.get("profile") or {}).get("organization_name", ""),
         "grant_title": (raw_result.get("grant") or {}).get("title", ""),
         "sections":    raw_result.get("sections", {}),
+        "coherence_review": raw_result.get("coherence_review"),
     }
 
 
@@ -333,6 +335,7 @@ def _advance_session(
             "gate":       "complete",
             "session_id": session_id,
             "sections":   state_values.get("sections", {}),
+            "coherence_review": state_values.get("coherence_review"),
         }
 
     graph  = _graph_for(flow)
@@ -397,6 +400,7 @@ def _stream_advance_session(
                 "gate": "complete",
                 "session_id": session_id,
                 "sections": state_values.get("sections", {}),
+                "coherence_review": state_values.get("coherence_review"),
             },
         }
         return
@@ -446,6 +450,26 @@ def _stream_advance_session(
 
 # ── Session status ─────────────────────────────────────────────────────────────
 
+def update_session_checklist(session_id: str, updates: dict, user_id: Optional[str] = None) -> dict:
+    """Persist review statuses without advancing the graph or invoking AI."""
+    if set(updates) - {"attachment_statuses", "ai_disclosure_ready"}:
+        raise ValueError("Application requirements: only checklist statuses can be updated")
+    with session_execution(session_id):
+        for flow in ("improve", "scratch"):
+            state = _get_graph_state(session_id, flow)
+            if not state:
+                continue
+            if not user_id or state.get("user_id") != user_id:
+                raise ValueError("Unauthorized: session belongs to a different user.")
+            _check_ownership(state, user_id)
+            if state.get("gate") not in {"draft_review", "final_save", "complete"}:
+                raise ValueError("Application requirements: wait for draft review before saving the checklist")
+            grant = merge_checklist(state.get("grant", {}), updates)
+            _graph_for(state.get("flow", flow)).update_state(_config(session_id), {"grant": grant})
+            return {"application_spec": grant.get("application_spec"), "gate": state.get("gate")}
+    raise ValueError("Session not found")
+
+
 def get_session_status(
     session_id: str,
     user_id:    Optional[str] = None,
@@ -480,6 +504,7 @@ def get_session_status(
         "gate":             response.get("gate", state_values.get("gate", "none")),
         "flagged_sections": response.get("flagged_sections", state_values.get("flagged_sections", [])),
         "sections":         response.get("sections", state_values.get("sections", {})),
+        "coherence_review": response.get("coherence_review", state_values.get("coherence_review")),
         "original_sections": state_values.get("original_sections", {}),
         "analysis":         response.get("analysis", state_values.get("analysis")),
         "slots":            response.get("slots", state_values.get("slots", {})),

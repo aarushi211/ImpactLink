@@ -1,169 +1,111 @@
-# 🏗️ ImpactLink: System Architecture & AI Topology
+# ImpactLink architecture
 
-This document outlines the architectural decisions, data flows, and state management paradigms powering ImpactLink. The core philosophy: **LLMs are probabilistic, but enterprise software must be deterministic.**
+This describes the current repository implementation. The hosted demo may require deployment to reflect the latest local changes. ImpactLink is a prototype: deterministic calculations and validation complement AI drafting but do not establish factual correctness or funding eligibility.
 
-**See also:** [Backend setup](./impactlink-backend/DEVELOPMENT.md) · [Evaluation](./impactlink-backend/EVALUATION.md) · [Project README](./README.md)
+[Overview](README.md) | [Backend setup](impactlink-backend/DEVELOPMENT.md) | [Evaluation](impactlink-backend/EVALUATION.md) | [Future work](FUTURE_WORK.md)
 
----
+## 1. Components and persistence
 
-## 1. High-Level System Context
-
-ImpactLink operates on a serverless, decoupled architecture prioritizing asynchronous throughput and fault tolerance.
-
-- **Client Layer**: React 18 SPA utilizing Server-Sent Events (SSE) for low-latency streaming of AI agent states.
-- **Orchestration Layer**: FastAPI (Python) serving as the asynchronous gateway, managing LangGraph state machines and connection pooling.
-- **Data Layer**: Supabase (PostgreSQL) handling normalized relational data, `pgvector` embeddings, and Row Level Security (RLS) for tenant isolation.
-- **Inference Layer**: OpenAI API using `gpt-6.1-sol` for proposal drafting, scoring, and structured agent outputs.
-
----
-
-## 2. Stateful Orchestration: The LangGraph Topology
-
-Drafting a grant proposal is a high-latency, multi-step process that cannot rely on a single stateless prompt chain. We modeled the drafting process as a **Cyclic State Machine** with parallel execution capabilities.
-
-### 2.1 The State Schema
-State is maintained via LangGraph Checkpointers backed by PostgreSQL, ensuring that user sessions can survive network drops and serverless cold starts.
-
-```python
-class ProposalState(TypedDict):
-    session_id:         str
-    flow:               Literal["improve", "scratch"]
-    profile:            dict
-    grant:              dict
-    funder_vocab:       list[str]
-    slots:              dict[str, Slot]          # scratch flow only
-    analysis:           Optional[dict]         # improve flow only
-    original_sections:  dict[str, str]
-    sections:           dict[str, SectionResult]
-    diffs:              dict[str, list[DiffToken]]
-    drafting_plan:      Optional[dict]           # PlanningAgent output (scratch flow)
-    agent_trace:        list[dict]               # visible agent decisions for demo
-    gate:               str                      # human interrupt identifier
-    retry_counts:       dict[str, int]
-    flagged_sections:   list[str]
-```
-
-### 2.2 Scratch Flow Graph Topology
-The scratch flow (`flows/scratch_flow.py`) is a LangGraph `StateGraph` with human-in-the-loop gates:
-
-```
-init_slots → slot_filling ⟲ → slot_confirm → plan_draft → draft_sections → coherence_check → draft_review → final_save → complete
-```
-
-- **VocabExtractor** runs at `init_slots` to pull funder-specific phrases from the grant description.
-- **Slot extraction** loops via `slot_filling` until all profile slots are filled, then pauses at `slot_confirm`.
-- **PlanningAgent** (`agents/planning_agent.py`) runs at `plan_draft` before any section is written. It produces a `DraftingPlan` with per-section priorities, evidence needs, cross-section dependencies, and red flags. The plan is stored in `ProposalState.drafting_plan` and injected into each `SectionDraftAgent` prompt.
-- **Agent trace** (`ProposalState.agent_trace`) records visible routing decisions for demo and debugging (e.g. `[PlanningAgent] problem_statement priority=1, evidence=[...]`).
-
-### 2.3 SectionSubgraph: Named Per-Section Agents
-`node_draft_sections` does not draft inline. It orchestrates parallel runs of `run_section_subgraph()` (`flows/section_subgraph.py`), one per canonical section in `agents/prompts.SECTIONS`:
-
-| Agent | Role |
+| Component | Responsibility |
 |---|---|
-| **SectionDraftAgent** | Generates initial section content via `SECTION_PROMPT` |
-| **SectionScoringAgent** | LLM-as-a-Judge rubric scoring (0–100) |
-| **SectionRewriteAgent** | Targeted revision when score &lt; 75 |
+| React 19 SPA | Authenticated workflows, streamed draft replies, editing, saved-work navigation and PDF layout |
+| FastAPI | REST APIs, Firebase token verification, account privacy scope, SSE and worker-thread dispatch |
+| LangGraph | Checkpointed scratch/improve workflows with human review gates |
+| Neon PostgreSQL | Grant records and `pgvector` embeddings, saved `user_work`, session checkpoints |
+| Firebase Auth / Firestore / Storage | Identity, nonprofit profiles including private redaction terms, and original uploads |
+| OpenAI API | Extraction, drafting, reranking, intent interpretation, scoring and review through the shared wrapper |
+| Local models | `all-MiniLM-L6-v2` embeddings and spaCy English personal-name detection |
 
-Each subgraph logs routing decisions for observability:
-```
-[SectionScoringAgent] budget_narrative score=68 → route=targeted_rewrite (retry 1/2)
-[SectionScoringAgent] budget_narrative score=92 → approve
-```
+Database pools have bounded sizes, release idle connections, check connections before reuse and disable prepared statements for transaction-pooler compatibility. Checkpoints support recovery after browser disconnects; they do not guarantee that a task survives process termination.
 
-`budget_narrative` additionally receives a pre-calculated table from **BudgetInjector** (deterministic Python engine) before drafting.
+Isolation currently relies on authenticated application ownership checks. PostgreSQL row-level security is **not implemented**. See [future work](FUTURE_WORK.md#1-database-level-user-isolation).
 
-### 2.3.1 Deterministic Section Tools
-| Tool | File | When invoked |
-|---|---|---|
-| `get_grant_requirement` | `agents/tools/grant_requirements.py` | Injected into every `SectionDraftAgent` prompt |
-| `check_budget_consistency` | `agents/tools/budget_consistency.py` | Scoring routes `budget_narrative` to `needs_tool_call` before rewrite |
+## 2. Proposal workflows
 
-### 2.4 Phased Parallel Drafting
-`node_draft_sections` drafts in three dependency waves (`DRAFTING_WAVES` in `planning_agent.py`):
+`state/proposal_state.py` defines identity, profile/grant inputs, original/generated sections, diffs, slot answers, drafting plan, agent trace, retries, flags and optional `coherence_review` metadata. Funder requirements live in `grant.application_spec`.
 
-| Wave | Sections | Rationale |
-|---|---|---|
-| 1 | problem_statement, proposed_solution, target_beneficiaries | Core narrative foundation |
-| 2 | goals_and_objectives, evaluation_plan, organizational_capacity, budget_narrative | Structure + budget |
-| 3 | executive_summary, sustainability, equity_statement | Summarize prior waves |
+### Build from scratch
 
-Within each wave, `ThreadPoolExecutor` runs SectionSubgraph instances concurrently (2 workers). Later waves receive a rolling summary of prior sections (~1200 chars) for cross-section consistency.
-
-### 2.5 Structured Scoring Router
-`SectionScoringAgent` returns a `ScoringDecision` — not just a score:
-
-```python
-class ScoringDecision(BaseModel):
-    score: int
-    routing: Literal["approve", "targeted_rewrite", "needs_tool_call", "escalate"]
-    targeted_feedback: list[TargetedFeedback]
-    tool_to_call: Optional[str]
-    cross_section_impact: list[str]
+```text
+init_slots -> slot_filling (repeat) -> slot_confirm
+  -> plan_draft -> draft_sections -> coherence_check
+  -> draft_review -> final_save -> complete
 ```
 
-`route_after_scoring()` drives the SectionSubgraph loop:
-- **approve** — score ≥ 75, section done
-- **targeted_rewrite** — `SectionRewriteAgent` fixes only listed issues
-- **needs_tool_call** — invokes `check_budget_consistency` or `get_grant_requirement`, then rewrites
-- **escalate** — max retries exhausted; flagged for human review
+The planner supplies priorities, evidence needs and dependencies. Without custom questions, a ten-section starter uses three dependency waves:
 
-### 2.6 CoherenceAgent
-After all sections draft, `node_coherence_check` runs `CoherenceAgent.check()` across the full proposal before `draft_review`.
+| Wave | General starter sections |
+|---|---|
+| 1 | Problem statement, proposed solution, target beneficiaries |
+| 2 | Goals/objectives, evaluation, organizational capacity, budget narrative |
+| 3 | Executive summary, sustainability, equity statement |
 
-**Detection method (LLM holistic review, not programmatic diff):**
-1. Each section is truncated to ~500 characters in `_sections_digest()` and concatenated into one prompt.
-2. A single OpenAI call (JSON mode) compares all sections together and returns a `CoherenceReport` with up to 5 structured issues (beneficiary count mismatches, budget vs. narrative gaps, KPI/goal misalignment, etc.).
-3. If parsing fails, the agent fails open (`coherent=True`) so drafting is not blocked.
+Each wave runs up to four section workers by default (`DRAFT_MAX_WORKERS`, capped at four). Later waves receive summaries of earlier text. Custom funder questions replace the general section set; LOI/reporting stages have distinct starters.
 
-**Fix loop (max 2):**
-- `CoherenceAgent.top_fixes()` sorts issues by severity (`high` → `medium` → `low`) and takes the top 2.
-- For each issue, `targeted_retry_rewrite()` revises only the flagged section using the issue text as feedback.
-- Decisions are appended to `agent_trace` for demo/debug visibility.
+The section subgraph drafts, scores and routes to approval, targeted revision, a deterministic tool or human escalation. It permits at most two rewrite retries and currently uses a score threshold of 75. AI rubric scores are not calibrated probabilities or fundability ratings.
 
-**Trade-offs:** This is one cheap cross-section pass after parallel drafting, but it is probabilistic — it can miss subtle contradictions or hallucinate false positives. A future upgrade could add deterministic checks (e.g. regex on dollar amounts, beneficiary counts) before the LLM pass.
+### Improve an existing proposal
 
-## 3. The Hybrid RAG Pipeline (Supabase + pgvector)
-Standard Semantic RAG is insufficient for grant matching, as funding relies heavily on hard constraints (e.g., geographic boundaries, maximum award ceilings).
+The improve flow extracts funder vocabulary, analyzes gaps, pauses for user additions/rewrite selection, then rewrites and scores sections before review and confirmation. Uploaded context can supply missing custom application answers. The UI compares original and revised text. The automatic coherence node below belongs to the scratch flow.
 
-### 3.1 Tiered Ingestion & Chunking
-**Semantic Splitting**: Documents are chunked using percentile-based semantic splitters rather than arbitrary character counts, preserving complete thoughts and paragraphs.
+### Streaming and recovery
 
-**Metadata Tagging**: During ingestion, an LLM extracts key parameters (Region, Focus Area, Budget constraints) and stores them as standard relational columns alongside the `pgvector` embeddings.
+`POST /api/session/{id}/advance/stream` emits section starts, tokens, statuses, completed sections, progress and a final response. Synchronous graph work runs off the event loop; SSE heartbeats keep idle connections active. Initial text is provisional: scoring, revision and coherence edits can change it before review.
 
-<!-- ### 3.2 Unified Query Execution
-When a user searches for grants, the system executes a single, atomic PostgreSQL query:
+Draft replies appear in the chat conversation. An execution guard rejects simultaneous advances for the same session within the process. Checkpoints and `GET /api/session/{id}` support recovery; cross-process execution coordination is not claimed.
 
-**Pre-filtering**: Standard SQL `WHERE` clauses immediately filter out non-compliant grants based on hard constraints (e.g., `WHERE region = 'Kenya' AND max_award >= 50000`).
+## 3. Application requirements and AI-use policies
 
-**Semantic Ranking**: The `pgvector` cosine similarity (`<=>`) operation is executed only on the pre-filtered subset, drastically reducing computational overhead and ensuring sub-50ms latency. -->
+`services/application.py` validates user-recorded stage, source reference, process notes, ordered questions, limits, attachment checklist and AI policy. Deterministic word/character checks flag generated text and reject missing/over-limit final answers before resuming review checkpoints. Characters include spaces and normalized line breaks; final portal counts need verification.
 
-## 4. The Deterministic Financial Engine
-Budgets cannot suffer from LLM hallucinations. ImpactLink completely decouples financial intent from mathematical calculation.
+Attachments are stage-specific, self-reported checklist entries, not stored/validated attachment files. LOI/reporting starters and optional logic-model/work-plan prompts are preparation aids, not portal integrations or full post-award management.
 
-### 4.1 Intent Parsing
-The `Budget Agent` operates in a strictly constrained JSON-mode. It is only permitted to output intents and quantities (e.g., `{"item": "Field Worker", "quantity": 3, "duration_months": 12}`).
+AI policies are `unknown`, `permitted`, `disclosure_required` or `prohibited`. Recorded prohibitions block session creation, drafting resumes and standalone revision/consistency checks. Resumes consult saved policy rather than a replacement in the request. Manual review remains available. Required disclosure must be marked ready before final session completion; drafts can still be saved. Policy verification and submission of disclosures remain the user's responsibility.
 
-### 4.2 Python Validation Core
-The JSON payload is passed to a rigid Python engine (`services/budget/compliance.py`).
-- **Localization:** It cross-references the requested intent against a local database of minimum wage floors and Cost-of-Living (CoL) indices for the target region.
-- **Rule Enforcement:** It automatically calculates and applies the exact allowed percentages for Overhead/Indirect Costs.
-- **Proportional Scaling:** If the requested items exceed the grant's maximum award, the engine applies an algebraic scaling algorithm to reduce line items proportionally, ensuring the final budget is mathematically perfect and strictly compliant.
+## 4. Consistency review
 
-<!-- <!-- ## 4. Resiliency & Infrastructure Design
-To maintain production-grade uptime despite external API volatility: -->
+`agents/coherence_agent.py` reviews full section text up to **60,000 characters including headings**. Empty/blank sections or larger inputs return `incomplete` without sending a partial prompt and claiming a pass.
 
-- **Provider-Agnostic Failover:** A custom LLM wrapper intercepts HTTP 429 (Rate Limit) and 503 (Service Unavailable) errors. It automatically rotates to standby API keys or alternative inference providers using an exponential backoff strategy, guaranteeing transaction completion.
-- **Clock-Skew Mitigation:** Cross-region serverless deployments often face JWT validation failures due to microsecond clock drifts. Custom authentication middleware implements a 1.5-second skew tolerance to ensure stable authorization flows.
-<!-- - **Stateless Containers:** The FastAPI application runs in isolated Docker containers via Google Cloud Run, allowing it to scale from 0 to 100+ instances concurrently without state collision, relying entirely on the PostgreSQL Checkpointers for memory.    -->
+The model returns a coherent verdict and at most five structured issues with exact section keys, suggested actions and severity. Invalid JSON, contradictory verdicts, unknown section references and provider errors return `unavailable`, never a successful verdict.
 
-## 5. Phase 2 Architecture: Enterprise Scale (Roadmap)
-To transition from a high-performance prototype to an enterprise-grade platform, the following architectural shifts are currently on the roadmap:
+The scratch flow attempts at most two severity-prioritized edits, preserves original text when an edit fails, and checks the full resulting proposal again. Edited sections remain flagged for review; earlier section scores predate these edits. A failed edit prevents a successful final review status.
 
-### 5.1 Push-Down Compute (RPC Vector Filtering)
-Currently, vector similarity and metadata filtering (e.g., matching grant regions) are handled partially at the application layer. The roadmap includes migrating this to a Supabase Remote Procedure Call (RPC). This will allow the database to execute pre-filtering via SQL `WHERE` clauses before running the `pgvector` cosine similarity (`<=>`), drastically reducing memory overhead on the FastAPI servers.
+Saved `coherence_review` metadata records `passed`, `issues_found`, `incomplete`, `unavailable` or `stale`, with issues, coverage, edit attempts and a content fingerprint. Manual edits invalidate previous results. Build can request another authenticated check through `POST /api/build/check-consistency`; manual rechecks do not automatically rewrite text. Reports travel through session responses and saved build metadata.
 
-### 5.2 Strict Database Tenancy (RLS)
-While data isolation is currently managed via application logic (validating `user_id` on requests), the system will migrate to PostgreSQL Row Level Security (RLS). This pushes tenancy verification directly to the database engine, eliminating the risk of application-layer data leaks.
+This remains an AI consistency assessment, not source-evidence verification. It can miss contradictions or flag harmless differences. Incomplete checks proceed to human review with explicit warnings rather than being presented as passes.
 
-### 5.3 PII Redaction Middleware
-To comply with strict NGO data privacy standards, a middleware layer utilizing regex and NLP parsing will be introduced to scrub Personally Identifiable Information (Emails, Phone Numbers, Names) from all JSON payloads before they are transmitted to the LLM inference providers.
+## 5. Grant retrieval and refresh
+
+`services/vector_store.py` uses local embeddings and PostgreSQL cosine-distance retrieval followed by AI reranking. `services/eligibility.py` evaluates deadlines, recorded applicant categories and geography before final results are selected. Confirmed mismatches are excluded; unknown dates, local restrictions and additional requirements remain unverified. Tax status, fiscal sponsorship, financial capacity and matching-fund eligibility need deeper structured checks.
+
+`services/grant_refresh.py` and `scripts/refresh_grants.py` normalize official California and Grants.gov records. Refreshes track source identity/URLs, source updates, verification timestamps and content hashes, updating incrementally and re-embedding changed content. Discovery limits apply to new records; tracked federal records refresh independently of the discovery keyword. Routine refreshes preserve the corpus instead of replacing it wholesale.
+
+The daily workflow in `.github/workflows/refresh-grants.yml` requires `GRANT_REFRESH_DATABASE_URL`. A workflow file is not evidence of successful production scheduling: deployment, credentials, run verification and alerts remain operational work. Corpus size and available opportunities change over time.
+
+## 6. Budget calculations
+
+The active entry point is `services/budget/generator.py`, backed by `services/budget/costing.py`. It requires explicit cost inputs rather than inferring financial assumptions from prose.
+
+- Personnel: annual salary x headcount x FTE per person x project months / 12; fringe applies to project salary.
+- Direct lines retain quantities, unit costs and categories. Recorded unallowable categories are rejected rather than silently removed.
+- Indirect: selected MTDC/TDC base, eligible exclusions, cumulative subaward handling, recorded rate method/reference and entered caps. De minimis inputs require explicit eligibility confirmation.
+- Over-budget plans retain actual costs and expose the gap. Scope options recalculate explicit changes; the engine does not proportionally scale every line or invent fractional staff.
+- Natural-language refinements become constrained cost-input edits recalculated by Python.
+
+This validates arithmetic against entered assumptions. It does not certify award compliance, determine wage-law compliance or fully model cash/in-kind matching contributions. Legacy budget modules are not the active public calculation path.
+
+## 7. Privacy and provider behavior
+
+`utils/privacy.py`, `utils/name_detection.py` and `utils/llm.py` layer identifier patterns, local English personal-name detection and private account-specific terms before outbound model calls. The shared wrapper handles ordinary, structured, synchronous, asynchronous and streaming calls and tool-history values while preserving operational/schema fields.
+
+Authenticated AI routes load current account privacy settings and propagate them through worker threads and streams. Failure to load settings or the name model stops AI processing. Profile previews run locally on the app server without an AI call or saving preview text. Private term lists are omitted from collaborator directories.
+
+Optional provider response storage/model caching and environment-based external tracing are disabled. Logging filters mask common identifiers and omit exception message bodies. Original uploaded/saved text remains in app storage. Detection is not complete anonymization: non-English names and identifying narratives can be missed, and harmless text can be masked. Provider retention policies still apply.
+
+The shared client reads `OPENAI_API_KEY` and `OPENAI_MODEL`, with bounded SDK retries. There is no standby-key rotation or guaranteed provider failover. Firebase token verification retries once after a 1.5-second delay when a token is reported as used too early; this is not a microsecond clock tolerance.
+
+## 8. Evidence and future work
+
+Latest local regression checks passed 144 backend tests, 63 frontend tests and a frontend production build; the default frontend scaffold test is excluded. These checks do not establish production reliability or real-world proposal quality. Historical synthetic measurements are separated in the [evaluation guide](impactlink-backend/EVALUATION.md).
+
+The [future-work backlog](FUTURE_WORK.md) covers database isolation, deeper eligibility, match accounting, independent evaluation, refresh operations, document/post-award workflows and practitioner research.

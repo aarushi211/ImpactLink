@@ -13,8 +13,9 @@ test("eligibility fields are explicitly declared and saved with the profile", as
   render(<Profile />);
   expect(screen.getByLabelText("Applicant type")).toHaveValue("");
   fireEvent.change(screen.getByLabelText("Applicant type"), { target: { value: "public_agency" } });
-  fireEvent.change(screen.getByLabelText("Project U.S. states"), { target: { value: "CA, New York" } });
+  fireEvent.change(screen.getByLabelText("Project U.S. states"), { target: { value: "CA" } });
+  fireEvent.change(screen.getByLabelText("Project U.S. states"), { target: { value: "NY" } });
   fireEvent.change(screen.getByLabelText("Names and phrases to mask"), { target: { value: "Zyqra\nPrivate case 44" } });
   await act(async () => { fireEvent.click(screen.getByText("Save Changes")); });
-  expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ applicant_type: "public_agency", project_states: ["CA", "New York"], privacy_redaction_terms: ["Zyqra", "Private case 44"] }));
+  expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ applicant_type: "public_agency", project_states: ["CA", "NY"], privacy_redaction_terms: ["Zyqra", "Private case 44"] }));
 });

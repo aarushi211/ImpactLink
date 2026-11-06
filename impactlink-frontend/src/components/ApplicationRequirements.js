@@ -1,8 +1,11 @@
 import { emptyApplicationSpec, applicationCheck, lengthCheck, sectionRequirements, aiPolicyCheck } from "../utils/application";
+import { useEffect, useRef, useState } from "react";
+import api from "../services/api";
+import "./FormControls.css";
 
 let sequence = 0;
 const identifier = prefix => `${prefix}_${Date.now()}_${++sequence}`;
-const inputStyle = { width: "100%", boxSizing: "border-box", padding: 8, background: "#161625", color: "#ddd", border: "1px solid var(--border)", borderRadius: 5 };
+const inputStyle = { width: "100%", boxSizing: "border-box", padding: "9px 12px", background: "#111120", color: "#ddd", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 };
 const panel = { border: "1px solid var(--border)", borderRadius: 9, padding: 14, margin: "12px 0", fontSize: 12, color: "#bbb", background: "var(--bg-card)" };
 
 export function FunderAiPolicyNotice({ spec }) {
@@ -22,7 +25,22 @@ export function FunderAiPolicyNotice({ spec }) {
   </div>;
 }
 
-export function ApplicationRequirementsEditor({ value, onChange, disabled, existingSections = [] }) {
+export function ApplicationRequirementsEditor({ value, onChange, disabled, existingSections = [], grant, collapsible = true, showPrefill = true }) {
+  const [extracting, setExtracting] = useState(false);
+  const [candidate, setCandidate] = useState(null);
+  const [error, setError] = useState("");
+  const request = useRef(0);
+  useEffect(() => { request.current += 1; setCandidate(null); setError(""); setExtracting(false); }, [grant?.grant_id]);
+  const prefill = async () => {
+    const sequence = ++request.current;
+    setExtracting(true); setError(""); setCandidate(null);
+    try {
+      const response = grant?.application_spec ? { data: { application_spec: grant.application_spec, evidence: [], warnings: ["Review the requirements already recorded for this grant before applying."] } } : await api.post(`/api/grants/${encodeURIComponent(grant.grant_id)}/application-requirements`);
+      if (sequence === request.current) setCandidate(response.data);
+    } catch (err) {
+      if (sequence === request.current) setError(typeof err.response?.data?.detail === "string" ? err.response.data.detail : "Could not prefill requirements. Enter them manually or retry.");
+    } finally { if (sequence === request.current) setExtracting(false); }
+  };
   const spec = { ...emptyApplicationSpec(), ...value };
   const policy = aiPolicyCheck(spec);
   const updatePolicy = updates => update("ai_policy", { status: policy.status, source_reference: policy.source_reference, notes: policy.notes, disclosure_ready: policy.disclosure_ready, ...updates });
@@ -30,10 +48,24 @@ export function ApplicationRequirementsEditor({ value, onChange, disabled, exist
   const sectionUpdate = (key, field, next) => update("sections", spec.sections.map(item => item.key === key ? { ...item, [field]: next } : item));
   const addSection = (title = "", instructions = "") => update("sections", [...spec.sections, { key: identifier("question"), title, instructions, max_words: null, max_characters: null, required: true }]);
   const addAttachment = title => update("attachments", [...spec.attachments, { id: identifier("attachment"), title, stage: spec.stage, required: true, status: "not_started", notes: "" }]);
-  return <><FunderAiPolicyNotice spec={spec} /><details style={panel}>
-    <summary style={{ cursor: "pointer", color: "#ddd", fontWeight: 700 }}>Application structure and requirements</summary>
+  const Container = collapsible ? "details" : "section";
+  return <div className="il-form"><Container {...(collapsible ? { open: true } : {})} style={{ ...panel, borderRadius: 12, padding: "18px 20px" }}>
+    {collapsible ? <summary style={{ cursor: "pointer", color: "#ddd", fontWeight: 700 }}>Application structure and requirements</summary> : <h2 style={{ color: "#eee", fontSize: 17, margin: "0 0 12px" }}>Application structure and requirements</h2>}
     <fieldset disabled={disabled} style={{ border: 0, padding: 0 }}>
       <p>Record the funder's exact questions, limits and documents. With no custom questions, the writer uses a general starter for the selected stage. Adding questions replaces that starter structure.</p>
+      {showPrefill && <>
+      <button type="button" className="il-primary" disabled={!grant?.grant_id || extracting} onClick={prefill}>{extracting ? "Reading grant requirements..." : "Prefill from selected grant"}</button>
+      <p>Prefill reads the grant text stored in the database. Review the source excerpts before applying; missing portal questions or PDF instructions still need to be added.</p>
+      {error && <p role="alert" style={{ color: "var(--red)" }}>{error}</p>}
+      {candidate && <section aria-label="Extracted requirements preview" style={{ background: "#111120", border: "1px solid var(--border)", borderRadius: 8, padding: 12, marginBottom: 14 }}>
+        <strong>Review suggested setup before replacing this form</strong>
+        <p>{candidate.application_spec.sections.length} questions, {candidate.application_spec.attachments.length} attachments; stage: {candidate.application_spec.stage.replace(/_/g, " ")}; AI policy: {candidate.application_spec.ai_policy?.status?.replace(/_/g, " ") || "unknown"}.</p>
+        {(candidate.evidence || []).map((item, index) => <p key={index}><strong>{item.field}</strong><br /><q>{item.quote}</q></p>)}
+        {(candidate.warnings || []).map((warning, index) => <p key={index}>{warning}</p>)}
+        <button type="button" className="il-primary" onClick={() => { onChange(candidate.application_spec); setCandidate(null); }}>Use extracted setup</button>{" "}
+        <button type="button" onClick={() => setCandidate(null)}>Keep current setup</button>
+      </section>}
+      </>}
       <label>Application stage<select aria-label="Application stage" style={inputStyle} value={spec.stage} onChange={event => onChange({ ...spec, stage: event.target.value, sections: [] })}><option value="full_proposal">Full proposal</option><option value="loi">Letter of inquiry (LOI)</option><option value="reporting">Post-award report</option></select></label>
       <label>Funder source / instructions reference<input aria-label="Funder requirements source" style={inputStyle} placeholder="RFP URL, form name or document page" value={spec.source_reference} onChange={event => update("source_reference", event.target.value)} /></label>
       <label>Application process notes<textarea aria-label="Application process notes" style={inputStyle} value={spec.process_notes} onChange={event => update("process_notes", event.target.value)} placeholder="LOI first, invitation, portal, reporting schedule or other confirmed steps" /></label>
@@ -75,10 +107,29 @@ export function ApplicationRequirementsEditor({ value, onChange, disabled, exist
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{["IRS determination letter", "Board list", "Audited financials", "Letters of support", "UEI / SAM registration", "Other required document"].map(title => <button key={title} onClick={() => addAttachment(title)}>Add {title}</button>)}</div>
     </fieldset>
     {disabled && <p>Structure is locked for this session. Start a new session to change questions or limits.</p>}
-  </details></>;
+  </Container><FunderAiPolicyNotice spec={spec} /></div>;
 }
 
 export function ApplicationReview({ spec, sections, onChange, onSave, disabled }) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const checklistKey = JSON.stringify(spec);
+  const latestKey = useRef(checklistKey);
+  latestKey.current = checklistKey;
+  useEffect(() => { setSaved(false); setSaveError(""); }, [checklistKey]);
+  const save = async () => {
+    if (saving || disabled) return;
+    setSaving(true); setSaved(false); setSaveError("");
+    const key = checklistKey;
+    try {
+      const result = await onSave(spec);
+      if (result === null || result === false) throw new Error("No proposal was saved. Please retry.");
+      if (latestKey.current === key) setSaved(true);
+    } catch (error) {
+      if (latestKey.current === key) setSaveError(typeof error.response?.data?.detail === "string" ? error.response.data.detail : error.message || "Could not save the checklist. Please retry.");
+    } finally { setSaving(false); }
+  };
   if (!spec) return null;
   const check = applicationCheck(spec, sections);
   return <section aria-label="Application requirements review" style={panel}>
@@ -86,7 +137,7 @@ export function ApplicationReview({ spec, sections, onChange, onSave, disabled }
     <p>Requirements recorded from: {spec.source_reference || "source not supplied"}. Submission readiness is not verified.</p>
     {spec.process_notes && <p>{spec.process_notes}</p>}
     <FunderAiPolicyNotice spec={spec} />
-    {aiPolicyCheck(spec).status === "disclosure_required" && <label style={{ display: "block", marginBottom: 12 }}><input type="checkbox" aria-label="Required AI disclosure is ready" disabled={disabled} checked={Boolean(spec.ai_policy?.disclosure_ready)} onChange={event => onChange({ ...spec, ai_policy: { ...spec.ai_policy, disclosure_ready: event.target.checked } })} />I have prepared the required AI disclosure using the funder's instructions (self-reported).</label>}
+    {aiPolicyCheck(spec).status === "disclosure_required" && <label style={{ display: "block", marginBottom: 12 }}><input type="checkbox" aria-label="Required AI disclosure is ready" disabled={disabled || saving} checked={Boolean(spec.ai_policy?.disclosure_ready)} onChange={event => onChange({ ...spec, ai_policy: { ...spec.ai_policy, disclosure_ready: event.target.checked } })} />I have prepared the required AI disclosure using the funder's instructions (self-reported).</label>}
     {!check.can_finalize_text && <p role="alert" style={{ color: "#f87171" }}>Fix missing or over-limit answers before confirming: {[...check.missing, ...check.over].map(key => sectionRequirements(spec, key).title || key.replace(/_/g, " ")).join(", ")}</p>}
     {Object.entries(sections).map(([key, section]) => {
       const req = sectionRequirements(spec, key);
@@ -95,7 +146,9 @@ export function ApplicationReview({ spec, sections, onChange, onSave, disabled }
       return <p key={key} style={{ color: count.within_limits ? "#aaa" : "#f87171" }}>{req.title || key}: {count.words}{req.max_words != null ? ` / ${req.max_words}` : ""} words · {count.characters}{req.max_characters != null ? ` / ${req.max_characters}` : ""} characters</p>;
     })}
     <p>Characters include spaces and line breaks. Final counts should be checked in the funder's portal.</p>
-    {spec.attachments.filter(item => item.stage === spec.stage).map(item => <label key={item.id} style={{ display: "block", marginBottom: 10 }}>{item.title}{item.required ? " (required)" : " (optional)"}<select aria-label={`Checklist status: ${item.title}`} style={inputStyle} disabled={disabled} value={item.status} onChange={event => onChange({ ...spec, attachments: spec.attachments.map(row => row.id === item.id ? { ...row, status: event.target.value } : row) })}><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="ready">Ready (self-reported)</option><option value="not_applicable">Not applicable — confirm with funder</option></select>{item.required && item.status !== "ready" && <span style={{ color: "#facc15" }}>Required item still needs review.</span>}</label>)}
-    {onSave && <button disabled={disabled} onClick={onSave}>Save application checklist</button>}
+    {spec.attachments.filter(item => item.stage === spec.stage).map(item => <label key={item.id} style={{ display: "block", marginBottom: 10 }}>{item.title}{item.required ? " (required)" : " (optional)"}<select aria-label={`Checklist status: ${item.title}`} style={inputStyle} disabled={disabled || saving} value={item.status} onChange={event => onChange({ ...spec, attachments: spec.attachments.map(row => row.id === item.id ? { ...row, status: event.target.value } : row) })}><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="ready">Ready (self-reported)</option><option value="not_applicable">Not applicable — confirm with funder</option></select>{item.required && item.status !== "ready" && <span style={{ color: "#facc15" }}>Required item still needs review.</span>}</label>)}
+    {onSave && <button type="button" disabled={disabled || saving} onClick={save}>{saving ? "Saving checklist..." : "Save application checklist"}</button>}
+    {saved && <p role="status" style={{ color: "var(--green)" }}>Checklist saved.</p>}
+    {saveError && <p role="alert" style={{ color: "var(--red)" }}>{saveError}</p>}
   </section>;
 }

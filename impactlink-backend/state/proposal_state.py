@@ -54,6 +54,7 @@ class ProposalState(TypedDict):
     # Flow B only: planning + observability
     drafting_plan:      Optional[dict]  # serialized DraftingPlan from PlanningAgent
     agent_trace:        list[dict]      # visible routing decisions for demo/debug
+    coherence_review:   NotRequired[dict | None]  # Full-text coverage and unresolved issues
 
     # Flow B only: slot-filling
     slots:              dict[str, Slot]

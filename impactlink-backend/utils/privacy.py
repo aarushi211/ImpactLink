@@ -165,9 +165,16 @@ def redact_values(value):
 
 class PrivacyLogFilter(logging.Filter):
     def filter(self, record):
+        access_record = record.name == "uvicorn.access" and isinstance(record.args, tuple) and len(record.args) == 5
         try:
-            record.msg = redact_text(record.getMessage(), detect_names=False).text
-            record.args = ()
+            if access_record:
+                # Uvicorn's AccessFormatter unpacks these fields, even after getMessage().
+                address, method, path, version, status = record.args
+                record.msg = '%s - "%s %s HTTP/%s" %d'
+                record.args = tuple(redact_text(str(value), detect_names=False).text for value in (address, method, path, version)) + (int(status),)
+            else:
+                record.msg = redact_text(record.getMessage(), detect_names=False).text
+                record.args = ()
             if record.exc_info:
                 error_type, _, tb = record.exc_info
                 record.exc_text = redact_text("".join(traceback.format_tb(tb)) + error_type.__name__ + " (exception message omitted)\n", detect_names=False).text
@@ -177,7 +184,10 @@ class PrivacyLogFilter(logging.Filter):
             if record.stack_info:
                 record.stack_info = redact_text(record.stack_info, detect_names=False).text
         except Exception:
-            record.msg, record.args = "Log content withheld by privacy filter", ()
+            if access_record:
+                record.msg, record.args = '%s - "%s %s HTTP/%s" %d', ("withheld", "withheld", "withheld", "1.1", 0)
+            else:
+                record.msg, record.args = "Log content withheld by privacy filter", ()
             record.exc_info, record.exc_text, record.stack_info = None, None, None
         return True
 

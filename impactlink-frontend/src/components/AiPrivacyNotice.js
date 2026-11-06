@@ -25,7 +25,7 @@ export default function AiPrivacyNotice({ preview = false, counts, protectedTerm
     }
     finally { if (request === requestSequence.current) setLoading(false); }
   };
-  return <details style={{ margin: "12px 0", padding: "10px 14px", border: "1px solid var(--border)", borderRadius: 8, background: "var(--bg-card)", color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>
+  return <details aria-label="AI privacy disclaimer" style={{ margin: "24px 0 0", padding: "12px 0", border: 0, borderTop: "1px solid var(--border)", color: "#888", fontSize: 11, lineHeight: 1.6 }}>
     <summary style={{ cursor: "pointer", color: "#bbb" }}>AI privacy · local name detection and identifier masking; originals saved in the app</summary>
     <p>AI features send relevant proposal text, profile details and your instructions to the configured AI provider. We combine local English person-name detection, identifier patterns and your saved names or phrases to mask. Detection runs on the app server before the AI request.</p>
     <p>Automatic checks can still miss names, addresses and sensitive narratives or mask harmless text. Add known identifiers to the private list in Profile, preview the result and remove remaining confidential case details. Saved terms apply across your account's AI features. AI processing stops if the local name model or privacy settings cannot be loaded.</p>

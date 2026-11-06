@@ -2,13 +2,16 @@
 
 Local setup, API reference, and operational notes for `impactlink-backend/`.
 
+This describes the current repository, not verification that every local change
+has been deployed. See [Future work](../FUTURE_WORK.md) for remaining work.
+
 ---
 
 ## Prerequisites
 
 - Python 3.11+
 - Neon PostgreSQL with `pgvector` enabled
-- Firebase project (Auth + Storage)
+- Firebase project (Auth + Firestore + Storage)
 - OpenAI API key ([OpenAI platform](https://platform.openai.com/api-keys))
 
 ---
@@ -84,9 +87,15 @@ cd impactlink-backend
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 # source .venv/bin/activate     # macOS/Linux
-pip install -r requirements.txt
+pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Requirements include spaCy and the `en_core_web_sm` English name model. The
+model is installed during setup and loaded locally; requests never download
+weights. Docker also verifies model loading during image build. If the model
+or an account's privacy settings cannot load, AI routes stop rather than use
+weaker protection. Original uploads/saved text remain in app storage.
 
 ### Docker
 
@@ -108,12 +117,28 @@ Set `REACT_APP_API_URL=http://localhost:8000` in `impactlink-frontend/.env` (or 
 
 ### CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR:
+GitHub Actions (`.github/workflows/ci.yml`) runs on pushes to `main`/`master` and pull requests:
 
 - `python scripts/evaluate_logic.py --offline` — deterministic budget compliance (no API keys)
 - `python scripts/evaluate_retrieval.py` — offline keyword retrieval against `Data/eval_grants_catalog.json`
 
 Full LLM-backed evals (`evaluate_all.py --with-pipeline`) run locally; see [EVALUATION.md](./EVALUATION.md).
+
+CI currently runs those two evaluation scripts, not the complete local regression
+suites. Latest local verification on November 5, 2026 passed 144 backend tests,
+63 frontend tests and the frontend production build. Regression commands:
+
+```bash
+# From impactlink-backend, using its virtual environment
+python -m unittest discover -s tests -p '*_test.py'
+
+# From impactlink-frontend
+npm test -- --watchAll=false --runInBand --testPathIgnorePatterns=src/App.test.js
+npm run build
+```
+
+The recorded frontend run used `CI=true` and excludes the default `App.test.js`
+scaffold. Adding the complete checks to CI remains future work.
 
 ---
 
@@ -155,7 +180,9 @@ refinements update the existing saved budget rather than creating another one.
 Updates use `PATCH /api/work/{type}/{id}`. Grant details can be loaded directly
 with `GET /api/grants/{grant_id}`, independently of browser matching caches.
 
-Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
+Saved-work, session and AI routes require `Authorization: Bearer <Firebase JWT>`.
+Authenticated AI routes also load the caller's saved privacy terms. Database
+ownership enforcement currently lives in application code; RLS is future work.
 
 ### Session (drafting)
 
@@ -163,21 +190,24 @@ Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
 |---|---|---|
 | `POST` | `/api/session` | Start `improve` or `scratch` flow |
 | `POST` | `/api/session/{id}/advance` | Advance one gate (5 min timeout) |
+| `POST` | `/api/session/{id}/advance/stream` | Stream drafting events with heartbeats and a final response |
 | `GET` | `/api/session/{id}` | Current gate + state |
 
 ### Grants & upload
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/upload` | Parse PDF/DOCX, return matches |
+| `POST` | `/api/upload` | Parse PDF/DOCX only; matching is a separate action |
 | `POST` | `/api/match` | Re-match proposal to grants |
 | `POST` | `/api/grants/search` | Topic search over corpus |
+| `POST` | `/api/grants/eligibility/check` | Check recorded eligibility rules for grant IDs |
+| `GET` | `/api/grants/{grant_id}` | Fetch grant details independently of cached matches |
 
 ### Budget
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/budget/generate` | Generate compliant line-item budget |
+| `POST` | `/api/budget/generate` | Calculate a budget from explicit cost inputs |
 | `POST` | `/api/budget/refine` | Natural-language budget edits |
 
 ### Other
@@ -185,9 +215,13 @@ Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/api/build/revise` | AI-revise one section with user feedback |
+| `POST` | `/api/build/check-consistency` | Full-text consistency recheck; returns coverage, issues and status |
+| `POST` | `/api/privacy/preview` | Local redaction preview without an AI call or saving preview text |
 | `GET` | `/api/metrics` | Aggregated latency stats |
 | `GET` | `/api/metrics/{session_id}` | Per-session timing breakdown |
-| `GET/POST/PATCH/DELETE` | `/api/work/{drafts\|builds\|budgets}` | Persist user work |
+| `GET` | `/api/work/{work_type}/me` | List the caller's saved work |
+| `POST` | `/api/work/{work_type}` | Save work for the caller |
+| `PATCH/DELETE` | `/api/work/{work_type}/{work_id}` | Update or delete the caller's work |
 
 ### Human gates
 
@@ -199,6 +233,31 @@ Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
 | `draft_review` | `{sections: {key: edited_text}}` |
 | `final_save` | `{}` |
 
+Review/confirmation payloads may also contain `attachment_statuses` and
+`ai_disclosure_ready`. Final completion rejects an unready disclosure when the
+saved application policy requires it. Drafts can still be saved for review.
+
+### Application requirements, privacy and consistency
+
+`grant.application_spec` stores stage, source/process notes, ordered questions,
+length caps, attachment checklist and funder AI policy. Missing/over-limit final
+answers are rejected before the checkpoint resumes. Policies are user-recorded;
+unknown is not permission. Prohibited policies block proposal drafting/revision
+and consistency checks, while saved text remains available for manual editing.
+
+The builder's `coherence_review` records `passed`, `issues_found`, `incomplete`,
+`unavailable` or `stale`, coverage, issues, edit attempts and a content fingerprint.
+The automatic scratch-flow check reviews full text up to 60,000 characters
+including headings, attempts at most two edits and rechecks. Failures never
+become passes. Manual edits stale the earlier result; recheck results are saved
+with the build. A consistency pass does not establish factual correctness.
+
+Profile stores `privacy_redaction_terms` privately. AI request scopes combine
+these terms with identifier patterns and local English personal-name detection;
+the scope propagates through streams and workers. Detection can miss sensitive
+narratives or non-English identifiers. Originals are retained, optional provider
+response storage is disabled, and provider retention policies still apply.
+
 ---
 
 ## Data flows
@@ -206,8 +265,14 @@ Saved-work and session routes require `Authorization: Bearer <Firebase JWT>`.
 ### Grant discovery
 
 ```
-POST /api/upload → parser.parse_proposal() → vector_store.find_similar_grants()
+POST /api/upload → parser.parse_proposal() → staged proposal
+User clicks Find Grants → POST /api/match → vector_store.find_similar_grants()
 ```
+
+Eligibility inputs appear above Upload and remain editable before and after
+uploading. Uploading or choosing a saved proposal does not start a search.
+The separate Find Grants button submits the visible criteria. Explicit Find
+Grants links from generated/saved proposal workflows retain their matching handoff.
 
 ### Build proposal (scratch)
 
@@ -220,8 +285,13 @@ POST /api/session {flow: "scratch"}
 ### Budget
 
 ```
-POST /api/budget/generate → generator.py (rules → personnel → allocate → compliance)
+POST /api/budget/generate → generator.py → costing.calculate_budget(explicit inputs)
 ```
+
+Salary, headcount, FTE, months, fringe, direct costs and indirect assumptions
+must be supplied. The engine preserves over-budget costs and shows funding
+gaps/scope options; it does not scale all lines proportionally. Financial
+assumptions and award-specific eligibility still need human review.
 
 ---
 
@@ -229,14 +299,31 @@ POST /api/budget/generate → generator.py (rules → personnel → allocate →
 
 | Script | Purpose |
 |---|---|
-| `scripts/enrich_grants.py` | Scrape grants.ca.gov detail pages → rich JSON |
-| `load_vectors.py` | Embed grants → PostgreSQL `grants` table |
+| `scripts/refresh_grants.py` | Preview/apply incremental California or Grants.gov updates |
+| `services/grant_refresh.py` | Official-source adapters, normalization, source hashes and refresh logic |
 | `scripts/sync_eval_grants_from_db.py` | Export DB → `Data/eval_grants_catalog.json` |
-| `scripts/fetch_grants.py` | Bulk data.ca.gov API (field mapping needs fix) |
+| `scripts/enrich_grants.py`, `load_vectors.py` | Legacy scrape/seed tools; not the routine refresh path |
 
-**Production DB** (114 grants) was loaded via `enrich_grants.py` + `load_vectors.py`, not `fetch_grants.py`.
+The corpus now supports California and federal records; its count changes as
+sources refresh. Eligibility/source columns are defined in migrations `002` and
+`003`; provision them before using refreshes on a new database. Existing migrated
+environments already have these additions.
 
-Do **not** run `load_vectors.py` on broken `fetch_grants.py` output — it overwrites good data.
+```bash
+# From impactlink-backend; defaults to a read-only preview
+python scripts/refresh_grants.py --source california --limit 100
+python scripts/refresh_grants.py --source grants_gov --keyword nonprofit --limit 50
+# Add --apply to persist a reviewed refresh batch and changed embeddings.
+```
+
+Discovery limits apply to new grants; tracked federal grants refresh regardless
+of keyword. Routine refreshes preserve existing records and source identity.
+Avoid using legacy replacement/seed scripts for scheduled refreshes.
+
+`.github/workflows/refresh-grants.yml` defines daily runs at 10:23 UTC and manual
+dispatch. It needs the repository secret `GRANT_REFRESH_DATABASE_URL`. Successful
+production scheduling, failure alerts and freshness monitoring must be verified
+separately; they are listed in [Future work](../FUTURE_WORK.md).
 
 ---
 
@@ -281,7 +368,7 @@ Python run, put it in the backend `.env` or process environment.
 Build Proposal streams the initial section text into a live preview, including
 interleaved sections from parallel workers. Scoring and any required revisions
 follow generation; `section_complete` replaces the preview with reviewed text.
-The final coherence check supplies the authoritative draft before editing and
+The final coherence stage supplies the draft and explicit review status before editing and
 approval open. Stream events include `section_start`, `token`, `section_status`,
 `section_complete`, `progress`, and the final `complete` response.
 
@@ -295,7 +382,8 @@ approval open. Stream events include `section_start`, `token`, `section_status`,
 | Session advance times out | Full drafting can take over 10 minutes. Slot confirmation uses SSE progress and 15-second heartbeats, with a 90-second idle timeout and a 20-minute overall limit. Recover using the build page's `?session=<id>` URL or Check saved session status. |
 | CORS errors | `ALLOW_ORIGINS=http://localhost:3000` |
 | `401 Unauthorized` | Sign in via Firebase; check frontend Firebase config |
-| Budget tool fails on Windows | Emoji `print()` encoding in `generator.py`; fails open |
+| Local name protection unavailable | Reinstall backend requirements/model in the active environment; AI processing remains blocked until restored. |
+| Consistency check incomplete/unavailable | Inspect the displayed status; oversized/blank inputs and failed checks require manual review or another check, not a pass. |
 
 ---
 

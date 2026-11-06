@@ -281,7 +281,7 @@ class PlanningAgent:
             "grant_agency": grant.get("agency", ""),
             "grant_description": (grant.get("description", "") or "")[:2500],
             "funder_vocab": vocab_str,
-            "profile": json.dumps(profile, indent=2)[:2000],
+            "profile": json.dumps(profile, indent=2),
         })
 
         try:

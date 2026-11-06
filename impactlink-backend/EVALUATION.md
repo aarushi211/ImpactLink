@@ -2,11 +2,45 @@
 
 Repeatable metrics for budget logic, grant retrieval, and multi-agent drafting.
 
+## Current regression verification
+
+Latest local checks on November 5, 2026: **144 backend tests**, **63 frontend
+tests across 19 suites**, and the frontend production build passed. These checks
+cover regression behavior, not independent proposal quality or deployed-service
+reliability. The frontend run excludes the default `App.test.js` scaffold and
+used `CI=true`.
+
+```bash
+# From impactlink-backend, in its virtual environment
+python -m unittest discover -s tests -p '*_test.py'
+
+# From impactlink-frontend
+npm test -- --watchAll=false --runInBand --testPathIgnorePatterns=src/App.test.js
+npm run build
+```
+
+Coverage includes budget calculations/scope changes, eligibility and refresh
+logic, application limits, AI-policy enforcement, privacy/provider-payload
+checks, streamed requests, checkpoint recovery, saved-work workflows and
+full-text consistency statuses. The current deterministic budget evaluation
+contains eight synthetic checks; the older five-case result below belongs to
+the previous engine.
+
+CI currently runs the offline budget/retrieval scripts, not these complete
+regression suites. [Future work](../FUTURE_WORK.md#4-independent-evaluation-and-broader-automated-checks)
+tracks broader CI, human review and independent datasets.
+
 Scenarios: `Data/eval_scenarios.json` (3 hand-crafted NGO profiles aligned to grants in PostgreSQL).
 
 ---
 
-## Latest results (June 2026, local dev)
+## Historical results (June 2026, local dev)
+
+These are retained historical measurements from three synthetic scenarios and
+the earlier 114-grant California corpus. They have **not** been re-established
+for the current sources, eligibility filters, budget engine, model configuration,
+privacy checks or consistency review. Do not present them as current quality or
+latency benchmarks. Three scenarios do not support broad accuracy claims.
 
 | Suite | Metric | Result |
 |---|---|---|
@@ -50,8 +84,8 @@ python scripts/evaluate_all.py --with-pipeline --quick
 # Individual suites
 python scripts/evaluate_logic.py
 python scripts/evaluate_retrieval.py
-python scripts/evaluate_pipeline.py --all              # ~4 min
-python scripts/evaluate_pipeline.py --all --quick      # ~1 min
+python scripts/evaluate_pipeline.py --all
+python scripts/evaluate_pipeline.py --all --quick
 python scripts/evaluate_generation.py
 ```
 
@@ -77,17 +111,20 @@ Reports → `Data/eval_results/*.json`. LLM runs use the configured OpenAI model
 
 | Source | Role |
 |---|---|
-| PostgreSQL `grants` table | Ground truth for live eval (114 CA grants) |
+| PostgreSQL `grants` table | Current corpus for live retrieval; source records are not independent relevance labels |
 | `Data/eval_grants_catalog.json` | Offline retrieval (sync from DB) |
 | `Data/eval_scenarios.json` | NGO slots + grant metadata + `relevant_grant_ids` |
 
-Refresh catalog after DB reload:
+Refresh the offline snapshot after source updates:
 
 ```bash
 python scripts/sync_eval_grants_from_db.py
 ```
 
-**Note:** `scripts/fetch_grants.py` output is not the production DB source. Use `enrich_grants.py` + `load_vectors.py` to reload grants.
+Routine source refreshes use `scripts/refresh_grants.py`, with preview mode by
+default and `--apply` for writes. See [Development](./DEVELOPMENT.md#grant-data-pipeline).
+The offline catalog and scenario labels can become stale independently; exporting
+the database does not validate relevance labels or create a held-out benchmark.
 
 ---
 
