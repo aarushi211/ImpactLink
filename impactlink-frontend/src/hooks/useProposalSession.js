@@ -18,6 +18,7 @@ export default function useProposalSession(initialSessionId = null) {
   const [data, setData]           = useState({});
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState(null);
+  const [progress, setProgress]   = useState("");
 
   // Sync state from a backend response (GateResponse)
   const _sync = useCallback((res) => {
@@ -34,6 +35,7 @@ export default function useProposalSession(initialSessionId = null) {
       analysis: res.analysis || prev.analysis || null,
       drafting_plan: res.drafting_plan || prev.drafting_plan || null,
       agent_trace:   res.agent_trace   || prev.agent_trace   || [],
+      running: Boolean(res.running),
     }));
   }, []);
 
@@ -65,14 +67,17 @@ export default function useProposalSession(initialSessionId = null) {
       _sync(res);
       return res;
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || "Failed to advance session");
+      const timedOut = err.code === "ECONNABORTED" || err.code === "ETIMEDOUT";
+      setError(timedOut
+        ? "The drafting request timed out. The backend may still be working. Check the saved session status before confirming again."
+        : err.response?.data?.detail || err.message || "Failed to advance session");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const advanceStream = async (userInput = {}, onToken = () => {}) => {
+  const advanceStream = async (userInput = {}, onToken = () => {}, onSection = () => {}) => {
     if (!sessionId) {
       const missingSessionError = new Error("Start a Draft Assistant session before advancing.");
       setError(missingSessionError.message);
@@ -80,8 +85,9 @@ export default function useProposalSession(initialSessionId = null) {
     }
     setLoading(true);
     setError(null);
+    setProgress("Preparing your draft...");
     try {
-      const res = await advanceSessionStream(sessionId, userInput, onToken);
+      const res = await advanceSessionStream(sessionId, userInput, onToken, event => setProgress(event.message || "Drafting..."), onSection);
       _sync(res);
       return res;
     } catch (err) {
@@ -89,6 +95,7 @@ export default function useProposalSession(initialSessionId = null) {
       throw err;
     } finally {
       setLoading(false);
+      setProgress("");
     }
   };
 
@@ -98,6 +105,7 @@ export default function useProposalSession(initialSessionId = null) {
     try {
       const res = await getSessionStatus(sessionId);
       _sync(res);
+      setError(res.running ? "Your draft is still running. Check the saved session status again shortly." : null);
     } catch (err) {
       setError("Failed to refresh session status");
     } finally {
@@ -131,6 +139,7 @@ export default function useProposalSession(initialSessionId = null) {
     data,
     loading,
     error,
+    progress,
     start,
     advance,
     advanceStream,

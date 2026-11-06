@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Optional
+from typing import Callable, Optional
 
 from agents.prompts import (
     SECTION_PROMPT,
@@ -47,8 +47,8 @@ from utils.metrics import metrics_collector
 
 log = logging.getLogger(__name__)
 
-def _get_llm():
-    return get_chat_model()
+def _get_llm(*, streaming=False):
+    return get_chat_model(streaming=streaming)
 
 
 class SectionDraftAgent:
@@ -63,8 +63,9 @@ class SectionDraftAgent:
         vocab_str: str,
         drafting_plan: Optional[dict] = None,
         prior_sections_context: str = "",
+        on_token: Optional[Callable[[str], None]] = None,
     ) -> str:
-        llm = _get_llm()
+        llm = _get_llm(streaming=on_token is not None)
         chain = SECTION_PROMPT | llm
 
         instructions = section["instructions"]
@@ -94,15 +95,29 @@ class SectionDraftAgent:
             if budget_ctx:
                 user_values += f"\n\nPre-calculated budget table:\n{budget_ctx}"
 
-        response = chain.invoke({
+        payload = {
             "section_title": section["title"],
             "word_target": section["word_target"],
             "instructions": instructions,
             "proposal": str(profile),
             "grant": str(grant_ctx),
             "user_values": user_values + f"\n\nFunder vocabulary:\n{vocab_str}",
-        })
-        return response.content.strip()
+        }
+        if on_token is None:
+            return chain.invoke(payload).content.strip()
+        parts = []
+        with metrics_collector.timer("llm_call", "openai_draft_stream"):
+            for chunk in chain.stream(payload):
+                content = chunk.content
+                if isinstance(content, list):
+                    content = "".join(
+                        block.get("text", "") for block in content
+                        if isinstance(block, dict) and block.get("type") in ("text", "output_text")
+                    )
+                if isinstance(content, str) and content:
+                    parts.append(content)
+                    on_token(content)
+        return "".join(parts).strip()
 
 
 class SectionScoringAgent:
@@ -161,6 +176,8 @@ def run_section_subgraph(
     funder_vocab: list[str],
     drafting_plan: Optional[dict] = None,
     prior_sections_context: str = "",
+    on_token: Optional[Callable[[str], None]] = None,
+    on_status: Optional[Callable[[str], None]] = None,
 ) -> tuple[str, SectionResult]:
     """
     Run the full per-section pipeline: draft → score → (rewrite → score)*.
@@ -187,7 +204,11 @@ def run_section_subgraph(
         vocab_str,
         drafting_plan,
         prior_sections_context,
+        on_token=on_token,
     )
+
+    if on_status:
+        on_status("reviewing")
 
     retry_count = 0
     last_score = 0
@@ -241,6 +262,8 @@ def run_section_subgraph(
                     + format_grant_requirements(grant_req)
                 )
 
+        if on_status:
+            on_status("revising")
         content = SectionRewriteAgent.rewrite(
             section_title,
             content,

@@ -8,9 +8,12 @@ node_draft_sections.
 
 import logging
 import concurrent.futures
+import os
+from contextvars import copy_context
 
 from langgraph.graph import StateGraph, END
 from langgraph.types import interrupt
+from langgraph.config import get_stream_writer
 from dotenv import load_dotenv
 
 from state.proposal_state import ProposalState
@@ -34,7 +37,19 @@ from utils.metrics import metrics_collector
 load_dotenv()
 log = logging.getLogger(__name__)
 
-MAX_WORKERS = 2
+try:
+    MAX_WORKERS = max(1, min(4, int(os.getenv("DRAFT_MAX_WORKERS", "4"))))
+except ValueError:
+    log.warning("Invalid DRAFT_MAX_WORKERS; using 4")
+    MAX_WORKERS = 4
+
+
+def _progress_writer():
+    try:
+        return get_stream_writer()
+    except RuntimeError:
+        # Offline evaluation also invokes these nodes outside a graph runtime.
+        return lambda event: None
 
 
 # ── Node functions ─────────────────────────────────────────────────────────────
@@ -122,6 +137,7 @@ def node_slot_confirm(state: ProposalState) -> dict:
 def node_plan_draft(state: ProposalState) -> dict:
     """PlanningAgent: analyze grant + profile and produce a structured drafting plan."""
     sid = state["session_id"]
+    _progress_writer()({"type": "progress", "message": "Planning your proposal..."})
     log.info("[%s] node: plan_draft (PlanningAgent)", sid)
 
     with metrics_collector.timer("node", "plan_draft", session_id=sid):
@@ -161,6 +177,8 @@ def node_draft_sections(state: ProposalState) -> dict:
     """Orchestrate phased parallel SectionSubgraph runs (3 dependency waves)."""
     log.info("[%s] node: draft_sections (phased SectionSubgraph)", state["session_id"])
     sid = state["session_id"]
+    writer = _progress_writer()
+    writer({"type": "progress", "message": "Drafting and reviewing proposal sections..."})
 
     with metrics_collector.timer("node", "draft_sections", session_id=sid) as node_meta:
         profile = state.get("profile") or slots_to_profile(state["slots"])
@@ -189,6 +207,8 @@ def node_draft_sections(state: ProposalState) -> dict:
             )
 
             def run_one(section: dict, ctx: str = prior_context):
+                key = section["key"]
+                writer({"type": "section_start", "section_key": key, "title": section["title"]})
                 return run_section_subgraph(
                     section,
                     session_id=sid,
@@ -197,17 +217,21 @@ def node_draft_sections(state: ProposalState) -> dict:
                     funder_vocab=vocab,
                     drafting_plan=drafting_plan,
                     prior_sections_context=ctx,
+                    on_token=lambda text: writer({"type": "token", "section_key": key, "content": text}),
+                    on_status=lambda phase: writer({"type": "section_status", "section_key": key, "phase": phase}),
                 )
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                 futures = {
-                    executor.submit(run_one, s): s["key"] for s in wave_sections
+                    executor.submit(copy_context().run, run_one, s): s["key"] for s in wave_sections
                 }
                 for future in concurrent.futures.as_completed(futures):
                     section_key = futures[future]
                     try:
                         key, result = future.result()
                         new_sections[key] = result
+                        writer({"type": "section_complete", "section_key": key, "section": result})
+                        writer({"type": "progress", "message": f"Drafted {len(new_sections)} of {len(SECTIONS)} sections."})
                         new_retry_counts[key] = result["retries"]
                         if result["flagged"] and key not in new_flagged:
                             new_flagged.append(key)
@@ -219,6 +243,7 @@ def node_draft_sections(state: ProposalState) -> dict:
 
         node_meta["sections_drafted"] = len(new_sections)
         node_meta["drafting_waves"] = len(DRAFTING_WAVES)
+        node_meta["max_workers"] = MAX_WORKERS
 
     return {
         "profile":          profile,
@@ -232,6 +257,7 @@ def node_draft_sections(state: ProposalState) -> dict:
 def node_coherence_check(state: ProposalState) -> dict:
     """CoherenceAgent: cross-section validation and targeted fixes (max 2)."""
     sid = state["session_id"]
+    _progress_writer()({"type": "progress", "message": "Checking consistency across your proposal..."})
     log.info("[%s] node: coherence_check (CoherenceAgent)", sid)
 
     sections = dict(state.get("sections") or {})

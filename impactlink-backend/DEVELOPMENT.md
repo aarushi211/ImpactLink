@@ -7,7 +7,7 @@ Local setup, API reference, and operational notes for `impactlink-backend/`.
 ## Prerequisites
 
 - Python 3.11+
-- Supabase PostgreSQL with `pgvector` enabled
+- Neon PostgreSQL with `pgvector` enabled
 - Firebase project (Auth + Storage)
 - OpenAI API key ([OpenAI platform](https://platform.openai.com/api-keys))
 
@@ -20,7 +20,7 @@ Create `impactlink-backend/.env`:
 ```env
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-6.1-sol
-DATABASE_URL=postgresql://postgres:...@db....supabase.co:5432/postgres
+DATABASE_URL=postgresql://neondb_owner:...@ep-example-pooler.us-west-2.aws.neon.tech/neondb?sslmode=require
 FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 ALLOW_ORIGINS=http://localhost:3000
 PORT=8000
@@ -29,6 +29,51 @@ PORT=8000
 Place `firebase-service-account.json` in `impactlink-backend/` (Firebase Console → Service Accounts).
 
 LangGraph checkpoint tables are created automatically on first run (`PostgresSaver.setup()` in `api/session.py`).
+
+### Migrating existing data to Neon
+
+ImpactLink's local environments and live backend now use Neon. See
+[NEON_MIGRATION.md](./NEON_MIGRATION.md) for the completed cutover and validation.
+The steps below document the migration tooling for future use with an empty target.
+
+Create an empty Neon database in a region near the backend. Keep the existing
+Supabase `DATABASE_URL` in `impactlink-backend/.env` and add `NEON_DATABASE_URL`
+using Neon's **direct** connection string (disable connection pooling in its
+Connect dialog). Include `sslmode=require`. Keep credentials out of git/chat.
+
+Install PostgreSQL client tools (`pg_dump`, `pg_restore`) at least as new as the
+source server. The migration script also finds Windows PostgreSQL installs.
+From `impactlink-backend/`, using the backend virtualenv:
+
+```bash
+python scripts/migrate_to_neon.py         # Read-only preflight; target must be empty
+# Stop backend writes before copying, and keep them stopped until cutover.
+python scripts/migrate_to_neon.py --copy
+```
+
+The script copies the public application schema, including grant embeddings,
+saved work, and all LangGraph checkpoint tables, using one consistent source
+snapshot. It verifies every table's row count and contents before reporting
+success. Firebase data remains in Firebase. The source database is never changed.
+Dump files are temporary and deleted when the command exits.
+
+After verification, preserve the old URL securely as `SUPABASE_DATABASE_URL`,
+then set `DATABASE_URL` to the Neon connection string in both local `.env` files
+(repo root for Compose, backend for Python). For runtime, Neon's pooled URL is
+supported; keep the direct URL for future migrations. Update the deployed
+backend's database secret/environment and restart or redeploy it. Check grant
+search, saved work, and resuming an existing proposal session before allowing
+writes again. If validation fails before writes resume, restore the old URL.
+After new writes reach Neon, switching back requires reconciling those writes.
+
+Database pools release idle connections after 60 seconds, validate connections
+before checkout, and disable prepared statements for transaction pooler
+compatibility. Neon can sleep during inactivity and wake on the next request.
+
+The repository root contains `neon.ts` and Neon CLI dependencies. `neon deploy`
+reconciles the linked branch and pulls its database URLs into the root `.env`.
+Keep the backend `.env` synchronized separately when running Python directly.
+`npm run build` at the repository root builds the React frontend.
 
 ---
 
@@ -203,11 +248,30 @@ the key. API usage is billed separately from ChatGPT subscriptions.
 
 ### Benchmarks (local)
 
-| Metric | Typical |
+The November 5 baseline used two section workers and the current model:
+
+| Metric | Observed |
 |---|---|
-| Full 10-section draft | ~37–108s (avg ~81s) |
-| Single LLM call | ~1–2s |
-| Budget generation | ~1.3s |
+| Full 10-section draft after slot confirmation | 625s |
+| Planning | 58s |
+| Section drafting, scoring, and rewrites | 561s |
+
+Section concurrency now defaults to four workers. The three dependency waves
+remain sequential, and all scoring, rewrite, and coherence checks remain enabled.
+The new schedule can run each wave in one batch instead of two. Actual latency
+depends on model response times and API rate limits; the four-worker end-to-end
+time needs a new measurement. Metrics record `max_workers` on `draft_sections`.
+
+Set `DRAFT_MAX_WORKERS=1`, `2`, or `3` to lower concurrency if the account is
+rate-limited. The maximum is four. Compose forwards this setting; for a direct
+Python run, put it in the backend `.env` or process environment.
+
+Build Proposal streams the initial section text into a live preview, including
+interleaved sections from parallel workers. Scoring and any required revisions
+follow generation; `section_complete` replaces the preview with reviewed text.
+The final coherence check supplies the authoritative draft before editing and
+approval open. Stream events include `section_start`, `token`, `section_status`,
+`section_complete`, `progress`, and the final `complete` response.
 
 ---
 
@@ -215,8 +279,8 @@ the key. API usage is billed separately from ChatGPT subscriptions.
 
 | Issue | Fix |
 |---|---|
-| `DATABASE_URL environment variable is required` | Add Supabase URL to `.env` |
-| Session advance times out | Drafting can take 30–90s; client timeout is 5 min |
+| `DATABASE_URL environment variable is required` | Add the Neon PostgreSQL URL to `.env` |
+| Session advance times out | Full drafting can take over 10 minutes. Slot confirmation uses SSE progress and 15-second heartbeats, with a 90-second idle timeout and a 20-minute overall limit. Recover using the build page's `?session=<id>` URL or Check saved session status. |
 | CORS errors | `ALLOW_ORIGINS=http://localhost:3000` |
 | `401 Unauthorized` | Sign in via Firebase; check frontend Firebase config |
 | Budget tool fails on Windows | Emoji `print()` encoding in `generator.py`; fails open |

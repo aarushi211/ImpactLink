@@ -18,3 +18,10 @@ langgraph_sessions.db
 impactlink-backend/langgraph_sessions.db
 *.json
 .venv/
+.neon
+node_modules/
+.cache/
+.env.local
+.env.*.local
+!/package.json
+!/package-lock.json

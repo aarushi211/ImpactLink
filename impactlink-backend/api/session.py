@@ -59,6 +59,7 @@ from agents.gap_analysis_agent import validate_user_additions
 from flows.improve_flow import build_improve_graph
 from flows.scratch_flow import build_scratch_graph
 from utils.diff import normalize_section_headings
+from utils.session_execution import session_execution, is_session_running
 
 log = logging.getLogger(__name__)
 
@@ -72,10 +73,11 @@ if not db_url:
     raise RuntimeError("DATABASE_URL environment variable is required.")
 pool = ConnectionPool(
     conninfo=db_url,
-    min_size=1,
+    min_size=0,
     max_size=20,
+    max_idle=60,
     check=ConnectionPool.check_connection,
-    kwargs={"autocommit": True, "prepare_threshold": None}  # None = disable prepared statements (required for PgBouncer/Supabase)
+    kwargs={"autocommit": True, "prepare_threshold": None, "connect_timeout": 10}
 )
 checkpointer = PostgresSaver(pool)
 checkpointer.setup()
@@ -256,6 +258,15 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
 def advance_session(
     session_id: str,
     user_input: Optional[dict] = None,
+    user_id: Optional[str] = None,
+) -> dict:
+    with session_execution(session_id):
+        return _advance_session(session_id, user_input, user_id)
+
+
+def _advance_session(
+    session_id: str,
+    user_input: Optional[dict] = None,
     user_id:    Optional[str]  = None,
 ) -> dict:
     """
@@ -329,6 +340,15 @@ def stream_advance_session(
     user_input: Optional[dict] = None,
     user_id: Optional[str] = None,
 ) -> Iterator[dict]:
+    with session_execution(session_id):
+        yield from _stream_advance_session(session_id, user_input, user_id)
+
+
+def _stream_advance_session(
+    session_id: str,
+    user_input: Optional[dict] = None,
+    user_id: Optional[str] = None,
+) -> Iterator[dict]:
     """Resume a session and yield rewrite tokens followed by its next gate."""
     user_input = user_input or {}
     state_values = None
@@ -364,9 +384,14 @@ def stream_advance_session(
     for mode, chunk in graph.stream(
         Command(resume=user_input),
         _config(session_id),
-        stream_mode=["messages", "updates"],
+        stream_mode=["messages", "updates", "custom"],
     ):
-        if mode == "messages":
+        if mode == "custom":
+            if isinstance(chunk, dict) and chunk.get("type") in {
+                "progress", "token", "section_start", "section_status", "section_complete"
+            }:
+                yield chunk
+        elif mode == "messages":
             message, metadata = chunk
             if "draft_section_stream" not in metadata.get("tags", []):
                 continue
@@ -428,6 +453,7 @@ def get_session_status(
     response = dict(pending or {})
     response.update({
         "session_id":       session_id,
+        "running":          is_session_running(session_id),
         "flow":             state_values.get("flow", flow),
         "gate":             response.get("gate", state_values.get("gate", "none")),
         "flagged_sections": response.get("flagged_sections", state_values.get("flagged_sections", [])),

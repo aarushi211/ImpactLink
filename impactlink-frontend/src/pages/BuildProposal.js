@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useReducer } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import api, { reviseSection } from "../services/api";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
+import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -443,7 +444,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
 
 export default function BuildProposal() {
   const navigate       = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { profile } = useAuth();
   const { grants }  = useGrants();
   const { saveBuild, builds } = useWorkStore();
@@ -459,6 +460,7 @@ export default function BuildProposal() {
   const [answers,   setAnswers]   = useState([]);
   // Drafted sections: { section_key: { title, content, approved } }
   const [sections,  setSections]  = useState({});
+  const [liveSections, updateLiveSections] = useReducer(buildPreviewReducer, {});
   const [secOrder,  setSecOrder]  = useState([]);
 
   const [selectedGrantId, setSelectedGrant] = useState("");
@@ -468,7 +470,17 @@ export default function BuildProposal() {
   const inputRef   = useRef(null);
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
 
-  const session = useProposalSession();
+  const session = useProposalSession(searchParams.get("session"));
+
+  // Keep the checkpoint ID in the URL so a refresh can recover a long draft.
+  useEffect(() => {
+    if (!session.sessionId || searchParams.get("session") === session.sessionId) return;
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous);
+      next.set("session", session.sessionId);
+      return next;
+    }, { replace: true });
+  }, [session.sessionId, searchParams, setSearchParams]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -580,13 +592,27 @@ export default function BuildProposal() {
         setMessages(prev => [...prev, { role: "user", type: "answer", text, stepKey: lastQuestion.key }]);
         setAnswers(prev => [...prev, { step_key: lastQuestion.key, user_answer: text }]);
         
-        await session.advance({ answer: text, slot_key: lastQuestion.key });
+        try {
+          await session.advance({ answer: text, slot_key: lastQuestion.key });
+        } catch (_) {
+          // The session hook exposes the failure in the recovery panel below.
+        }
     }
   };
 
   const handleConfirmSlots = async () => {
+      if (session.loading || session.data.running || session.error || session.gate !== "slot_confirm") return;
       setMessages(prev => [...prev, { role: "user", type: "answer", text: "Confirmed. Please proceed to drafting." }]);
-      await session.advance({ confirmed: true });
+      updateLiveSections({ type: "reset" });
+      try {
+        await session.advanceStream(
+          { confirmed: true },
+          (sectionKey, content) => updateLiveSections({ type: "token", section_key: sectionKey, content }),
+          updateLiveSections,
+        );
+      } catch (_) {
+        // Keep the current session available for status recovery.
+      }
   };
 
   // ── Approve / revise section ──────────────────────────────
@@ -818,7 +844,7 @@ export default function BuildProposal() {
   const totalSections  = secOrder.length;
   const allApproved    = totalSections > 0 && approvedCount === totalSections;
   const hasStarted     = messages.length > 0;
-  const loading        = session.loading;
+  const loading        = session.loading || Boolean(session.data.running);
   const showOrchestration = hasStarted && session.gate !== "none";
   const agentTrace = session.data.agent_trace || [];
   const draftingPlan = session.data.drafting_plan;
@@ -1115,6 +1141,7 @@ export default function BuildProposal() {
                               </table>
                               <button 
                                 onClick={handleConfirmSlots}
+                                disabled={loading || Boolean(session.error) || session.gate !== "slot_confirm"}
                                 style={{ 
                                   marginTop: 14, background: "var(--accent)", border: "none", 
                                   color: "#fff", padding: "8px 16px", borderRadius: 8, 
@@ -1167,14 +1194,26 @@ export default function BuildProposal() {
                   borderRadius:"4px 14px 14px 14px", padding:"12px 16px",
                 }}>
                   <TypingDots />
+                  {session.progress && <p role="status" style={{ margin: "8px 0 0", fontSize: 12 }}>{session.progress}</p>}
                 </div>
               </div>
             )}
 
+            {session.error && (
+              <div role="alert" style={{ padding: 16, marginBottom: 16, border: "1px solid #ef4444", borderRadius: 10 }}>
+                <p style={{ margin: "0 0 10px" }}>{session.error}</p>
+                <button type="button" disabled={session.loading} onClick={session.refresh}>
+                  Check saved session status
+                </button>
+              </div>
+            )}
             <div ref={chatEndRef} />
           </div>
 
           {/* Proposal sections (main area) */}
+          {Object.keys(liveSections).length > 0 && !["draft_review", "final_save", "complete"].includes(session.gate) && (
+            <BuildDraftPreview sections={liveSections} interrupted={Boolean(session.error)} />
+          )}
           {totalSections > 0 && (
             <div style={{
               flex: 1, overflowY: "auto", minHeight: 0,

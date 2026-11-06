@@ -48,6 +48,7 @@ from api.session import (
     get_session_status,
 )
 from utils.metrics import metrics_collector
+from utils.session_stream import heartbeat_events
 
 import time as _time
 from starlette.requests import Request
@@ -422,17 +423,17 @@ async def session_advance_stream(
     def events():
         try:
             for event in stream_advance_session(session_id, body, user_id=uid):
-                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+                yield event
         except ValueError as e:
             message = str(e)
             log.warning("Streamed session advance rejected: %s", message)
-            yield f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+            yield {"type": "error", "message": message}
         except Exception:
             log.exception("Streamed session advance failed")
-            yield f"data: {json.dumps({'type': 'error', 'message': 'Draft generation failed. Please try again.'})}\n\n"
+            yield {"type": "error", "message": "Draft generation failed. Check the saved session status before retrying."}
 
     return StreamingResponse(
-        events(),
+        heartbeat_events(events()),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

@@ -72,17 +72,27 @@ export const advanceSession = async (sessionId, userInput = {}) => {
   return res.data; // GateResponse
 };
 
-export const advanceSessionStream = async (sessionId, userInput = {}, onToken = () => {}) => {
+export const advanceSessionStream = async (sessionId, userInput = {}, onToken = () => {}, onProgress = () => {}, onSection = () => {}) => {
   const headers = { "Content-Type": "application/json" };
   if (auth.currentUser) {
     headers.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300_000);
+  let idleTimeout;
+  let timedOut = false;
+  const abort = () => { timedOut = true; controller.abort(); };
+  const resetIdleTimeout = () => {
+    clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(abort, 90_000);
+  };
+  // Heartbeats keep a healthy long-running draft alive; retain an overall cap.
+  const timeout = setTimeout(abort, 20 * 60_000);
+  resetIdleTimeout();
+  let reader;
   try {
     const response = await fetch(
-      `${api.defaults.baseURL}/api/session/${sessionId}/advance/stream`,
+      `${(api.defaults.baseURL || "").replace(/\/+$/, "")}/api/session/${sessionId}/advance/stream`,
       {
         method: "POST",
         headers,
@@ -98,7 +108,7 @@ export const advanceSessionStream = async (sessionId, userInput = {}, onToken = 
       throw new Error("Streaming is not supported by this browser.");
     }
 
-    const reader = response.body.getReader();
+    reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     let result = null;
@@ -114,6 +124,10 @@ export const advanceSessionStream = async (sessionId, userInput = {}, onToken = 
       const event = JSON.parse(data);
       if (event.type === "token") {
         onToken(event.section_key, event.content);
+      } else if (event.type === "progress") {
+        onProgress(event);
+      } else if (["section_start", "section_status", "section_complete"].includes(event.type)) {
+        onSection(event);
       } else if (event.type === "error") {
         throw new Error(event.message || "Draft generation failed.");
       } else if (event.type === "complete") {
@@ -123,6 +137,7 @@ export const advanceSessionStream = async (sessionId, userInput = {}, onToken = 
 
     while (true) {
       const { value, done } = await reader.read();
+      resetIdleTimeout();
       buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
       let boundary = buffer.indexOf("\n\n");
       while (boundary !== -1) {
@@ -136,8 +151,18 @@ export const advanceSessionStream = async (sessionId, userInput = {}, onToken = 
     if (buffer.trim()) processEvent(buffer);
     if (!result) throw new Error("Draft stream ended before completion.");
     return result;
+  } catch (error) {
+    if (timedOut) {
+      throw new Error("The drafting connection timed out. Your session is saved; check its status before starting another draft.");
+    }
+    throw error;
   } finally {
     clearTimeout(timeout);
+    clearTimeout(idleTimeout);
+    if (reader) {
+      await reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
   }
 };
 
@@ -145,7 +170,7 @@ export const advanceSessionStream = async (sessionId, userInput = {}, onToken = 
  * getSessionStatus re-hydrates the frontend state (e.g. after refresh).
  */
 export const getSessionStatus = async (sessionId) => {
-  const res = await api.get(`/api/session/${sessionId}`);
+  const res = await api.get(`/api/session/${sessionId}`, { timeout: 15_000 });
   return res.data;
 };
 
