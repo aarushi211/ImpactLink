@@ -2,9 +2,15 @@
 
 from contextlib import contextmanager
 import threading
+from langgraph.types import Command
 
 _lock = threading.Lock()
 _running = set()
+
+
+def resume_session_command(user_input):
+    """An empty confirmation must still carry a truthy LangGraph resume value."""
+    return Command(resume=user_input or {"confirmed": True})
 
 
 def is_session_running(session_id):

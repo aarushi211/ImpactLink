@@ -50,7 +50,6 @@ import uuid
 import logging
 from typing import Iterator, Optional
 
-from langgraph.types import Command
 import os
 from psycopg_pool import ConnectionPool
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -59,9 +58,18 @@ from agents.gap_analysis_agent import validate_user_additions
 from flows.improve_flow import build_improve_graph
 from flows.scratch_flow import build_scratch_graph
 from utils.diff import normalize_section_headings
-from utils.session_execution import session_execution, is_session_running
+from utils.session_execution import session_execution, is_session_running, resume_session_command
+from services.application import normalize_spec, validate_application, validate_review_input, merge_checklist
 
 log = logging.getLogger(__name__)
+
+
+def _application_response(response, grant):
+    spec = response.get("application_spec") or grant.get("application_spec")
+    if spec is not None:
+        response["application_spec"] = spec
+        response["application_validation"] = validate_application(response.get("sections", {}), {"application_spec": spec})
+    return response
 
 
 # ── Checkpointer — shared by both graphs ──────────────────────────────────────
@@ -202,6 +210,8 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     flow    = body.get("flow")
     profile = body.get("profile", {})
     grant   = body.get("grant", {})
+    if isinstance(grant, dict) and grant.get("application_spec") is not None:
+        grant = {**grant, "application_spec": normalize_spec(grant["application_spec"])}
 
     if flow not in ("improve", "scratch"):
         raise ValueError(f"flow must be 'improve' or 'scratch', got {flow!r}")
@@ -217,7 +227,9 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     if flow == "improve":
         for key, val in body.get("original_sections", {}).items():
             original_sections[key] = val if isinstance(val, str) else val.get("content", "")
-        original_sections = normalize_section_headings(original_sections)
+        spec = grant.get("application_spec") or {}
+        if not spec.get("sections") and spec.get("stage", "full_proposal") == "full_proposal":
+            original_sections = normalize_section_headings(original_sections)
 
     # Initial state — same shape as ProposalState TypedDict
     initial_state = {
@@ -250,7 +262,7 @@ def create_session(body: dict, user_id: Optional[str] = None) -> dict:
     response["session_id"] = session_id
     response["original_sections"] = original_sections
 
-    return response
+    return _application_response(response, grant)
 
 
 # ── Session advancement ────────────────────────────────────────────────────────
@@ -307,6 +319,9 @@ def _advance_session(
 
     _check_ownership(state_values, user_id)
 
+    validate_review_input(state_values, user_input)
+    merge_checklist(state_values.get("grant", {}), user_input)
+
     if state_values.get("gate") == "gap_review" and "user_additions" in user_input:
         validate_user_additions(user_input["user_additions"])
 
@@ -326,13 +341,13 @@ def _advance_session(
     # Command.RESUME tells LangGraph to continue from the last interrupt()
     # and return user_input as the value of that interrupt() call.
     raw_result = graph.invoke(
-        Command(resume=user_input),
+        resume_session_command(user_input),
         config,
     )
 
     response = _extract_gate_response(raw_result)
     response["session_id"] = session_id
-    return response
+    return _application_response(response, raw_result.get("grant") or state_values.get("grant", {}))
 
 
 def stream_advance_session(
@@ -365,6 +380,8 @@ def _stream_advance_session(
         raise ValueError(f"Session not found: {session_id}")
 
     _check_ownership(state_values, user_id)
+    validate_review_input(state_values, user_input)
+    merge_checklist(state_values.get("grant", {}), user_input)
     if state_values.get("gate") == "gap_review" and "user_additions" in user_input:
         validate_user_additions(user_input["user_additions"])
 
@@ -382,7 +399,7 @@ def _stream_advance_session(
     graph = _graph_for(flow)
     interrupts = None
     for mode, chunk in graph.stream(
-        Command(resume=user_input),
+        resume_session_command(user_input),
         _config(session_id),
         stream_mode=["messages", "updates", "custom"],
     ):
@@ -419,7 +436,7 @@ def _stream_advance_session(
         )
     response = _extract_gate_response(raw_result)
     response["session_id"] = session_id
-    yield {"type": "complete", "response": response}
+    yield {"type": "complete", "response": _application_response(response, raw_result.get("grant") or state_values.get("grant", {}))}
 
 
 # ── Session status ─────────────────────────────────────────────────────────────
@@ -464,4 +481,4 @@ def get_session_status(
         "diffs":            response.get("diffs", state_values.get("diffs", {})),
         "funder_vocab":     response.get("funder_vocab", state_values.get("funder_vocab", [])),
     })
-    return response
+    return _application_response(response, state_values.get("grant", {}))

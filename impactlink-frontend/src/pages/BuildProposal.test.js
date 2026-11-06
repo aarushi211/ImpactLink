@@ -66,3 +66,14 @@ test("streaming section text appears as a reply inside the same conversation", a
   expect(within(conversation).getByRole("region", { name: "Live proposal draft" })).toBeInTheDocument();
   expect(Array.from(conversation.querySelectorAll("*")).filter(node => node.style.overflowY === "auto")).toHaveLength(0);
 });
+
+test("funder limits survive saving and block confirmation of an over-limit answer", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  const spec = { stage: "loi", source_reference: "Funder form page 2", process_notes: "LOI before full application", sections: [{ key: "summary", title: "Summary", instructions: "Summarize the project", max_words: 2, max_characters: null, required: true }], attachments: [] };
+  mockSession.data = { ...mockSession.data, application_spec: spec };
+  render(<BuildProposal />);
+  await act(async () => {});
+  expect(screen.getByRole("button", { name: /Confirm Draft & Continue/ })).toBeDisabled();
+  expect(screen.getByRole("alert")).toHaveTextContent("over-limit");
+  expect(mockSaveBuild).toHaveBeenCalledWith(expect.objectContaining({ application_spec: spec, proposal_context: expect.objectContaining({ application_spec: spec }) }));
+});

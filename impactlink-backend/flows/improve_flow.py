@@ -16,6 +16,7 @@ import concurrent.futures
 import contextvars
 import logging
 from utils.metrics import metrics_collector
+from services.application import section_definitions, section_for, spec_for, length_check, constraint_prompt, annotate_sections, merge_checklist
 
 log = logging.getLogger(__name__)
 MAX_WORKERS = 2
@@ -42,6 +43,13 @@ def node_analyze_gaps(state: ProposalState) -> dict:
             grant=state["grant"],
             funder_vocab=state["funder_vocab"],
         )
+    spec = spec_for(state["grant"])
+    if spec and (spec.sections or spec.stage != "full_proposal"):
+        for section in section_definitions(state["grant"]):
+            if section.get("required", True) and not state["original_sections"].get(section["key"], "").strip():
+                analysis.setdefault("missing_sections", []).append({"section": section["key"], "description": f"Application question: {section['title']}", "severity": "high"})
+                if section["key"] not in analysis.setdefault("sections_to_rewrite", []):
+                    analysis["sections_to_rewrite"].append(section["key"])
     return {"analysis": analysis, "gate": "gap_review"}
 
 
@@ -92,10 +100,17 @@ def node_rewrite_sections(state: ProposalState) -> dict:
         funder_vocab        = state["funder_vocab"]
         analysis            = state["analysis"]
         user_additions      = validate_user_additions(analysis.get("user_additions", ""))
+        spec = spec_for(grant)
+        custom = bool(spec and (spec.sections or spec.stage != "full_proposal"))
+        definitions = {item["key"]: item for item in section_definitions(grant)}
+        if custom:
+            sections_to_rewrite = list(dict.fromkeys([key for key in sections_to_rewrite if key in definitions] + [key for key in definitions if not original_text.get(key, "").strip()]))
 
         # Preserve unrewritten sections
         new_sections = {}
         for key, text in original_text.items():
+            if custom and key not in definitions:
+                continue
             new_sections[key] = {
                 "title": key.replace("_", " ").title(),
                 "content": text, "score": 0, "retries": 0, "flagged": False,
@@ -109,9 +124,12 @@ def node_rewrite_sections(state: ProposalState) -> dict:
             section_start = _time.perf_counter()
 
             from agents.rewriter_agent import gaps_for_section as gfs
-            title         = section_key.replace("_", " ").title()
-            original      = original_text.get(section_key, "")
+            definition    = definitions.get(section_key, {})
+            title         = definition.get("title", section_key.replace("_", " ").title())
+            original      = original_text.get(section_key, "") or ("\n\n".join(original_text.values())[:20000] if custom else "")
             relevant_gaps = gfs(analysis, section_key)
+            if custom:
+                relevant_gaps = [*relevant_gaps, {"severity": "high", "description": definition.get("instructions", "") + "\n" + constraint_prompt(definition)}]
 
             content     = rewrite_section(section_key, title, original,
                                           relevant_gaps, funder_vocab, grant, profile,
@@ -124,10 +142,11 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 result     = score_section(section_key, title, content, grant, funder_vocab)
                 last_score = result["score"]
                 feedback   = result["feedback"]
-                if not needs_retry(last_score, retry_count):
+                limits = length_check(content, definition)
+                if not needs_retry(last_score, retry_count) and (limits["within_limits"] or retry_count >= MAX_RETRIES):
                     break
                 content     = retry_rewrite(
-                    title, content, feedback, funder_vocab, user_additions
+                    title, content, feedback + "\n" + constraint_prompt(definition) + "\n" + "; ".join(limits["violations"]), funder_vocab, user_additions
                 )
                 retry_count += 1
 
@@ -158,7 +177,7 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 if result["flagged"] and key not in new_flagged:
                     new_flagged.append(key)
 
-        new_sections = normalize_section_headings(new_sections)
+        new_sections = annotate_sections(new_sections if custom else normalize_section_headings(new_sections), grant, order=custom)
 
         revised_text = {k: v["content"] for k, v in new_sections.items()}
         diffs = diff_sections(original_text, revised_text)
@@ -184,6 +203,7 @@ def node_draft_review(state: ProposalState) -> dict:
     user_input = interrupt({
         "gate":             "draft_review",
         "sections":         state["sections"],
+        "application_spec": state["grant"].get("application_spec"),
         "diffs":            state["diffs"],
         "flagged_sections": state["flagged_sections"],
         "instructions":     (
@@ -199,7 +219,7 @@ def node_draft_review(state: ProposalState) -> dict:
         if key in updated_sections:
             updated_sections[key]["content"] = edited_text
 
-    return {"sections": updated_sections, "gate": "final_save"}
+    return {"sections": annotate_sections(updated_sections, state["grant"]), "grant": merge_checklist(state["grant"], user_input), "gate": "final_save"}
 
 
 def node_final_save(state: ProposalState) -> dict:
@@ -208,14 +228,15 @@ def node_final_save(state: ProposalState) -> dict:
     """
     log.info("[%s] node: final_save (interrupting)", state["session_id"])
 
-    interrupt({
+    user_input = interrupt({
         "gate":         "final_save",
+        "application_spec": state["grant"].get("application_spec"),
         "sections":     state["sections"],
         "instructions": "Your proposal is ready. Confirm to download.",
     })
 
     # Nothing to update — user just confirmed
-    return {"gate": "complete"}
+    return {"gate": "complete", "grant": merge_checklist(state["grant"], user_input)}
 
 
 # ── Graph assembly ─────────────────────────────────────────────────────────

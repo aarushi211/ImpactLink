@@ -6,7 +6,7 @@ Every agent reads from and writes to this object.
 Serializes cleanly to JSON for Postgres storage.
 """
 
-from typing import TypedDict, Literal, Optional
+from typing import TypedDict, Literal, Optional, NotRequired
 
 
 # ── Slot definition (used in scratch flow) ────────────────────────────────────
@@ -26,6 +26,7 @@ class SectionResult(TypedDict):
     score:       int          # last scorer result (0–100)
     retries:     int          # how many rewrites were done
     flagged:     bool         # True if score still low after max retries
+    limits:      NotRequired[dict]  # Deterministic word and character checks
 
 
 # ── Diff token (for frontend tracked-changes rendering) ───────────────────────

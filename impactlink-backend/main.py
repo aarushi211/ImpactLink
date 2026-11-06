@@ -37,6 +37,7 @@ from services.vector_store import find_similar_grants, topic_search_grants, get_
 from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
 from services.budget.costing import CostPlan
+from services.application import ApplicationSection, constraint_prompt, length_check
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
@@ -140,6 +141,7 @@ class ReviseRequest(BaseModel):
     current_draft: str
     feedback:      str
     section_title: str = "Proposal Section"
+    section_requirements: Optional[ApplicationSection] = None
 
 class BuildRequest(BaseModel):
     answers: list
@@ -412,10 +414,10 @@ async def build_revise(req: ReviseRequest, uid: str = Depends(verify_token)):
             retry_rewrite,
             req.section_title,
             req.current_draft,
-            req.feedback,
+            req.feedback + ("\n\n" + constraint_prompt(req.section_requirements.model_dump()) if req.section_requirements else ""),
             [],
         )
-        return {"content": content}
+        return {"content": content, "limits": length_check(content, req.section_requirements.model_dump() if req.section_requirements else {})}
     except Exception as e:
         log.exception("Section revise failed")
         raise HTTPException(500, str(e))
@@ -437,7 +439,7 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
     except ValueError as e:
         if "Unauthorized" in str(e):
             raise HTTPException(403, str(e))
-        if "User instructions" in str(e):
+        if "User instructions" in str(e) or "Application requirements" in str(e):
             raise HTTPException(422, str(e))
         raise HTTPException(404, str(e))
     except Exception as e:

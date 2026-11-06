@@ -9,6 +9,8 @@ import useProposalSession from "../hooks/useProposalSession";
 import { createProposalPdf } from "../utils/proposalPdf";
 import { proposalContext, stageProposalMatch } from "../services/proposals";
 import BuildDraftPreview, { buildPreviewReducer } from "../components/BuildDraftPreview";
+import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
+import { applicationCheck, lengthCheck, sectionRequirements, attachmentStatuses } from "../utils/application";
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -246,7 +248,7 @@ function TypingDots() {
 }
 
 // Draft section card — shows section content with approve/revise controls
-function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, icon }) {
+function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, icon, requirements }) {
   const [showRevise,  setShowRevise]  = useState(false);
   const [feedback,    setFeedback]    = useState("");
   const [revising,    setRevising]    = useState(false);
@@ -263,7 +265,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
     if (!feedback.trim()) return;
     setRevising(true);
     try {
-      const data = await reviseSection(content, feedback, title);
+      const data = await reviseSection(content, feedback, title, requirements?.key ? requirements : undefined);
       onRevise(data.content);
       setEditContent(data.content);
       setFeedback("");
@@ -339,6 +341,7 @@ function DraftCard({ stepKey, title, content, onApprove, onRevise, approved, ico
             </button>
             <button
               onClick={onApprove}
+              disabled={!lengthCheck(content, requirements).within_limits}
               style={{ background: "var(--accent)", border: "none",
                 color: "#fff", padding: "5px 14px", borderRadius: 7,
                 fontSize: 11, fontWeight: 700, cursor: "pointer" }}
@@ -470,6 +473,7 @@ export default function BuildProposal() {
   const [secOrder,  setSecOrder]  = useState([]);
 
   const [selectedGrantId, setSelectedGrant] = useState("");
+  const [applicationSpec, setApplicationSpec] = useState(null);
   const [proposalName,   setProposalName]   = useState("");
 
   const chatEndRef = useRef(null);
@@ -478,6 +482,9 @@ export default function BuildProposal() {
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
 
   const session = useProposalSession(searchParams.get("session"));
+  useEffect(() => {
+    if (session.data.application_spec) setApplicationSpec(session.data.application_spec);
+  }, [session.data.application_spec]);
 
   const buildSnapshot = useCallback(source => {
     const previous = builds.find(item => item.id === savedBuildIdRef.current) || {};
@@ -490,11 +497,13 @@ export default function BuildProposal() {
       grant_id: selectedGrant?.grant_id ? String(selectedGrant.grant_id) : previous.grant_id || "",
       sections: cleanSections, section_order: Object.keys(cleanSections), answers: answers.length ? answers : previous.answers || [],
       session_id: session.sessionId || previous.session_id,
+      application_spec: applicationSpec || session.data.application_spec || previous.application_spec || null,
       status: Object.values(source || {}).every(section => section.approved) ? "approved" : "draft",
     };
+    if (!applicationCheck(payload.application_spec, source).can_finalize_text) payload.status = "draft";
     payload.proposal_context = proposalContext({ ...payload, proposal_context: previous.proposal_context }, profile || {});
     return payload;
-  }, [proposalName, selectedGrant, profile, answers, session.sessionId, builds]);
+  }, [proposalName, selectedGrant, profile, answers, session.sessionId, session.data.application_spec, applicationSpec, builds]);
 
   const persistBuild = useCallback(async source => {
     if (pendingBuildSave.current) await pendingBuildSave.current;
@@ -639,9 +648,10 @@ export default function BuildProposal() {
     setMessages([welcomeMsg]);
     
     try {
-        await session.start("scratch", selectedGrant || { title: "New Project" }, profile || { org_name: "Your Organization" });
+        await session.start("scratch", { ...(selectedGrant || { title: "New Project" }), ...(applicationSpec ? { application_spec: applicationSpec } : {}) }, profile || { org_name: "Your Organization" });
     } catch (err) {
         console.error("Start error:", err);
+        setMessages([]);
     }
   };
 
@@ -705,7 +715,7 @@ export default function BuildProposal() {
   const handleRevise = (sectionKey, newContent) => {
     setSections(prev => ({
       ...prev,
-      [sectionKey]: { ...prev[sectionKey], content: newContent },
+      [sectionKey]: { ...prev[sectionKey], content: newContent, approved: false },
     }));
   };
 
@@ -715,7 +725,7 @@ export default function BuildProposal() {
       payload[k] = sections[k]?.content ?? "";
     });
     try {
-      await session.advance({ sections: payload });
+      await session.advance({ sections: payload, attachment_statuses: applicationSpec ? attachmentStatuses(applicationSpec) : undefined });
     } catch (e) {
       console.error("Confirm draft error:", e);
     }
@@ -723,7 +733,7 @@ export default function BuildProposal() {
 
   const handleCompleteSession = async () => {
     try {
-      await session.advance({});
+      await session.advance({ attachment_statuses: applicationSpec ? attachmentStatuses(applicationSpec) : undefined });
       setDone(true);
     } catch (e) {
       console.error("Complete session error:", e);
@@ -761,6 +771,7 @@ export default function BuildProposal() {
         restoredBuild.current = loadId;
         savedBuildIdRef.current = saved.id;
         setProposalName(saved.title || "");
+        setApplicationSpec(saved.application_spec || saved.proposal_context?.application_spec || null);
         if (saved.grant_id) setSelectedGrant(saved.grant_id);
         const savedSecs  = saved.sections      || {};
         const savedOrder = saved.section_order || Object.keys(savedSecs);
@@ -785,7 +796,7 @@ export default function BuildProposal() {
     const raw = sessionStorage.getItem("saved_build");
     if (raw) {
       try {
-        const { sections: savedSecs, section_order: savedOrder, answers: savedAnswers } = JSON.parse(raw);
+        const { sections: savedSecs, section_order: savedOrder, answers: savedAnswers, application_spec: savedSpec } = JSON.parse(raw);
         if (savedSecs && savedOrder) {
           const restored = {};
           savedOrder.forEach(k => {
@@ -794,6 +805,7 @@ export default function BuildProposal() {
           setSections(restored);
           setSecOrder(savedOrder);
           setAnswers(savedAnswers || []);
+          if (savedSpec) setApplicationSpec(savedSpec);
           setDone(true);
           setMessages([{
             role: "ai", type: "complete",
@@ -810,7 +822,8 @@ export default function BuildProposal() {
 
   const approvedCount  = Object.values(sections).filter(s => s.approved).length;
   const totalSections  = secOrder.length;
-  const allApproved    = totalSections > 0 && approvedCount === totalSections;
+  const applicationReport = applicationCheck(applicationSpec, sections);
+  const allApproved    = totalSections > 0 && approvedCount === totalSections && applicationReport.can_finalize_text;
   const hasStarted     = messages.length > 0;
   const loading        = session.loading || Boolean(session.data.running);
   const showOrchestration = hasStarted && session.gate !== "none";
@@ -893,7 +906,7 @@ export default function BuildProposal() {
           </select>
 
           {(allApproved || (done && totalSections > 0)) && (
-            <button onClick={handlePDF} disabled={pdfLoading} style={{
+            <button onClick={handlePDF} disabled={pdfLoading || !applicationReport.can_finalize_text} style={{
               background: pdfLoading ? "#1a1a28" : "#e63946",
               border:"none", color:"#fff",
               padding:"6px 14px", borderRadius:7,
@@ -931,6 +944,9 @@ export default function BuildProposal() {
             padding: "24px 28px 16px",
             minHeight: 0,
           }}>
+
+            <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={hasStarted} />
+            {totalSections > 0 && <ApplicationReview spec={applicationSpec} sections={sections} onChange={setApplicationSpec} disabled={session.loading} onSave={() => persistBuild(sections).catch(error => setBuildSaveError(error.message))} />}
 
             {/* Empty / start state */}
             {!hasStarted && (
@@ -1195,7 +1211,7 @@ export default function BuildProposal() {
                   </p>
                   <button
                     onClick={handleConfirmDraftReview}
-                    disabled={session.loading}
+                    disabled={session.loading || !applicationReport.can_finalize_text}
                     style={{
                       background: "var(--accent)", border: "none", color: "#fff",
                       padding: "8px 16px", borderRadius: 8, fontSize: 12,
@@ -1220,7 +1236,7 @@ export default function BuildProposal() {
                   </p>
                   <button
                     onClick={handleCompleteSession}
-                    disabled={session.loading}
+                    disabled={session.loading || !applicationReport.can_finalize_text}
                     style={{
                       background: "#166534", border: "none", color: "#fff",
                       padding: "8px 16px", borderRadius: 8, fontSize: 12,
@@ -1245,6 +1261,7 @@ export default function BuildProposal() {
                       content={sec.content}
                       approved={sec.approved}
                       icon={STEP_ICONS[idx] || "✦"}
+                      requirements={sectionRequirements(applicationSpec, key)}
                       onApprove={() => handleApprove(key)}
                       onRevise={(newContent) => handleRevise(key, newContent)}
                     />

@@ -8,6 +8,7 @@ export function proposalContext(item, profile = {}) {
   ]));
   return {
     ...base,
+    application_spec: item.application_spec || base.application_spec || null,
     eligibility_context: {
       ...(base.eligibility_context || {}),
       applicant_type: profile.applicant_type || base.eligibility_context?.applicant_type || "",

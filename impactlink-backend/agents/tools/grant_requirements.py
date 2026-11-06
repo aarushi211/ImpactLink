@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from utils.metrics import timed
+from services.application import spec_for, section_for
 
 SECTION_REQUIREMENTS: dict[str, dict[str, Any]] = {
     "executive_summary": {
@@ -98,6 +99,10 @@ SECTION_REQUIREMENTS: dict[str, dict[str, Any]] = {
 def get_grant_requirement(section_key: str, grant: dict) -> dict[str, Any]:
     """Return eligibility, limits, and required elements for a section."""
     section_meta = SECTION_REQUIREMENTS.get(section_key, {})
+    spec = spec_for(grant)
+    application_section = section_for(grant, section_key) if spec else {}
+    if spec and (spec.sections or spec.stage != "full_proposal"):
+        section_meta = {"required_elements": [application_section.get("instructions", "Answer this application question.")], "word_target_hint": application_section.get("word_target", "")}
     description = grant.get("description", "") or ""
 
     return {
@@ -110,9 +115,15 @@ def get_grant_requirement(section_key: str, grant: dict) -> dict[str, Any]:
         "award_floor": grant.get("award_floor", 0),
         "match_required": grant.get("cost_sharing_required", False),
         "required_elements": section_meta.get("required_elements", []),
+        "requirements_source": "user_recorded" if spec and (spec.sections or spec.stage != "full_proposal") else "general_template",
         "word_target_hint": section_meta.get("word_target_hint", ""),
         "application_tip": grant.get("application_tip", ""),
         "close_date": grant.get("close_date", ""),
+        "application_stage": spec.stage if spec else None,
+        "process_notes": spec.process_notes if spec else "",
+        "source_reference": spec.source_reference if spec else "",
+        "max_words": application_section.get("max_words"),
+        "max_characters": application_section.get("max_characters"),
     }
 
 
@@ -128,11 +139,19 @@ def format_grant_requirements(req: dict) -> str:
     if req.get("match_required"):
         lines.append("Cost sharing / match is required.")
     if req.get("required_elements"):
-        lines.append("Required elements for this section:")
+        lines.append("Recorded application question guidance:" if req.get("requirements_source") == "user_recorded" else "General drafting guidance (not verified funder requirements):")
         for el in req["required_elements"]:
             lines.append(f"  - {el}")
     if req.get("word_target_hint"):
         lines.append(f"Target length: {req['word_target_hint']}")
     if req.get("application_tip"):
         lines.append(f"Application tip: {req['application_tip']}")
+    if req.get("application_stage"):
+        lines.append(f"Application stage: {req['application_stage']}. Requirements are user-recorded; verify against the funder source: {req.get('source_reference') or 'not supplied'}")
+    if req.get("max_words"):
+        lines.append(f"Hard word limit: {req['max_words']}")
+    if req.get("max_characters"):
+        lines.append(f"Hard character limit (including spaces): {req['max_characters']}")
+    if req.get("process_notes"):
+        lines.append(f"Recorded process notes: {req['process_notes']}")
     return "\n".join(lines)

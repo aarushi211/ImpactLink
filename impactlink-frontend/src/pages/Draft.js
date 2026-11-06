@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 import useWorkStore from "../hooks/useWorkStore";
 import useProposalSession from "../hooks/useProposalSession";
 import api from "../services/api";
+import { ApplicationRequirementsEditor, ApplicationReview } from "../components/ApplicationRequirements";
+import { applicationCheck, attachmentStatuses, starterSections } from "../utils/application";
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -593,6 +595,10 @@ export default function Draft() {
   const { profile, currentUser } = useAuth();
   const { grants, proposal } = useGrants();
   const session = useProposalSession();
+  const [applicationSpec, setApplicationSpec] = useState(null);
+  useEffect(() => {
+    if (session.data.application_spec) setApplicationSpec(session.data.application_spec);
+  }, [session.data.application_spec]);
   const restoreSession = session.restore;
   const { saveDraft, updateDraft, drafts, proposals } = useWorkStore();
   const [originalSections, setOriginalSections] = useState({});
@@ -616,7 +622,8 @@ export default function Draft() {
     ))
   );
   const compareSectionDiffs = { ...cachedCompareDiffs, ...liveCompareDiffs };
-  const sectionOrder = Array.from(new Set([
+  const customOrder = applicationSpec?.sections?.length ? applicationSpec.sections.map(item => item.key) : applicationSpec && applicationSpec.stage !== "full_proposal" ? starterSections[applicationSpec.stage] : null;
+  const sectionOrder = customOrder || Array.from(new Set([
     ...Object.keys(originalSections),
     ...Object.keys(sections),
   ]));
@@ -768,6 +775,7 @@ export default function Draft() {
     if (saved.grant_id) setSelectedGrantId(saved.grant_id);
     setSavedDraftId(saved.id);
     // Restoration logic: simulate a "completed" session with these sections
+    setApplicationSpec(saved.application_spec || saved.proposal_context?.application_spec || saved.grant?.application_spec || null);
     session.setData({ sections: restoredSections });
     session.setGate("complete");
     // Also seed editedContent so edits work from the start
@@ -941,7 +949,7 @@ export default function Draft() {
     ));
 
     try {
-        const sessionId = await session.start("improve", selectedGrant, profile || {}, currentSections);
+        const sessionId = await session.start("improve", { ...selectedGrant, ...(applicationSpec ? { application_spec: applicationSpec } : {}) }, profile || {}, currentSections);
         if (currentUser?.uid && sessionId) {
           try {
             sessionStorage.setItem(
@@ -963,6 +971,11 @@ export default function Draft() {
 
   const handleAdvance = async (payload = {}) => {
       try {
+          if (["draft_review", "final_save"].includes(session.gate)) {
+            const finalSections = Object.fromEntries(sectionOrder.map(key => [key, { content: payload.sections?.[key] ?? editedContent[key] ?? sections[key]?.content ?? "" }]));
+            if (!applicationCheck(applicationSpec, finalSections).can_finalize_text) return;
+          }
+          payload = { ...payload, ...(applicationSpec ? { attachment_statuses: attachmentStatuses(applicationSpec) } : {}) };
           const shouldStreamDraft = Array.isArray(payload.sections_to_rewrite)
             && Object.prototype.hasOwnProperty.call(payload, "user_additions");
           let result;
@@ -1049,7 +1062,7 @@ export default function Draft() {
       });
       let persistedDraftId = savedDraftId;
       if (savedDraftId) {
-        const updated = await updateDraft(savedDraftId, secToSave, null, { original_sections: originalSections, section_order: sectionOrder, proposal_context: proposalContext({ title: selectedGrant.title, proposal_context: resolvedProposal || {}, sections: secToSave }, profile) });
+        const updated = await updateDraft(savedDraftId, secToSave, null, { application_spec: applicationSpec, original_sections: originalSections, section_order: sectionOrder, proposal_context: proposalContext({ title: selectedGrant.title, application_spec: applicationSpec, proposal_context: resolvedProposal || {}, sections: secToSave }, profile) });
         if (!updated) throw new Error("Could not save revision");
       } else {
         const matchIds = (activeProposal?.matches_id || []);
@@ -1058,9 +1071,10 @@ export default function Draft() {
           grant_title:      selectedGrant.title,
           grant_id:         String(selectedGrant.grant_id),
           agency:           selectedGrant.agency || "",
-          proposal_context: proposalContext({ title: selectedGrant.title, proposal_context: resolvedProposal || {}, sections: secToSave }, profile),
+          proposal_context: proposalContext({ title: selectedGrant.title, application_spec: applicationSpec, proposal_context: resolvedProposal || {}, sections: secToSave }, profile),
           matched_grants: grants.filter(grant => (activeProposal?.matches_id || []).map(String).includes(String(grant.grant_id))),
-          grant: selectedGrant,
+          grant: { ...selectedGrant, ...(applicationSpec ? { application_spec: applicationSpec } : {}) },
+          application_spec: applicationSpec,
           matches_id:       matchIds,
           sections:         secToSave,
           original_sections: originalSections,
@@ -1230,6 +1244,7 @@ export default function Draft() {
 
   const totalWords  = Object.values(wordCounts).reduce((a, b) => a + b, 0);
   const hasSections = sectionCount > 0;
+  const applicationReport = applicationCheck(applicationSpec, Object.fromEntries(sectionOrder.map(key => [key, { content: editedContent[key] ?? sections[key]?.content ?? "" }])));
   const activeContentValue = activeTab ? (editedContent[activeTab] ?? sections[activeTab]?.content ?? "") : "";
   const scrollToSection = (key) => {
     setActiveTab(key);
@@ -1326,7 +1341,7 @@ export default function Draft() {
               </button>
               <button
                 onClick={handleDownloadPDF}
-                disabled={pdfLoading}
+                disabled={pdfLoading || !applicationReport.can_finalize_text}
                 style={{
                   background: pdfLoading ? "#1a1a2e" : "#e63946",
                   border: "none", color: "#fff",
@@ -1357,6 +1372,10 @@ export default function Draft() {
       </div>
 
       {/* ── Body ────────────────────────────────────────── */}
+      <div style={{ padding: "0 20px" }}>
+        <ApplicationRequirementsEditor value={applicationSpec} onChange={setApplicationSpec} disabled={loading || session.gate !== "none"} existingSections={Object.entries({ ...originalSections, ...sections }).map(([key, section]) => ({ key, title: section?.title || key.replace(/_/g, " ") }))} />
+        {hasSections && <ApplicationReview spec={applicationSpec} sections={Object.fromEntries(sectionOrder.map(key => [key, { ...sections[key], content: editedContent[key] ?? sections[key]?.content ?? "" }]))} onChange={setApplicationSpec} disabled={loading} onSave={() => handleSave()} />}
+      </div>
       <div style={{ display: "flex", flex: 1 }}>
 
         {/* Left panel — sections list */}

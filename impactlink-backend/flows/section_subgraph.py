@@ -44,6 +44,7 @@ from agents.vocab_extractor import vocab_to_prompt_str
 from state.proposal_state import SectionResult
 from utils.llm import get_chat_model
 from utils.metrics import metrics_collector
+from services.application import constraint_prompt, length_check
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class SectionDraftAgent:
         llm = _get_llm(streaming=on_token is not None)
         chain = SECTION_PROMPT | llm
 
-        instructions = section["instructions"]
+        instructions = section["instructions"] + "\n\n" + constraint_prompt(section)
         if drafting_plan:
             plan = DraftingPlan.model_validate(drafting_plan)
             plan_ctx = plan.to_section_context(section["key"])
@@ -226,6 +227,9 @@ def run_section_subgraph(
         last_decision = decision
         last_score = decision["score"]
         route = route_after_scoring(decision, retry_count)
+        limits = length_check(content, section)
+        if not limits["within_limits"] and retry_count < MAX_RETRIES:
+            route = "rewrite"
 
         log.info(
             "[%s] [SectionScoringAgent] '%s' score=%d → route=%s",
@@ -240,7 +244,9 @@ def run_section_subgraph(
         if route == "escalate":
             break
 
-        rewrite_feedback = format_targeted_feedback(decision)
+        rewrite_feedback = format_targeted_feedback(decision) + "\n\n" + constraint_prompt(section)
+        if not limits["within_limits"]:
+            rewrite_feedback += "\nShorten the answer while preserving the key facts: " + "; ".join(limits["violations"])
         targeted = decision.get("targeted_feedback") or []
         tool_name = decision.get("tool_to_call")
 
@@ -282,7 +288,7 @@ def run_section_subgraph(
         metadata={"score": last_score, "retries": retry_count},
     )
 
-    flagged = is_flagged(last_score, retry_count)
+    flagged = is_flagged(last_score, retry_count) or not length_check(content, section)["within_limits"]
     if flagged:
         log.warning(
             "[%s] [SectionScoringAgent] '%s' score=%d → escalate (flagged after %d retries)",
@@ -298,4 +304,5 @@ def run_section_subgraph(
         score=last_score,
         retries=retry_count,
         flagged=flagged,
+        limits=length_check(content, section),
     )

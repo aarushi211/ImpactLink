@@ -8,9 +8,8 @@ log = logging.getLogger(__name__)
 # ── Master system prompt ──────────────────────────────────────────────────────
 # This is the single most important thing. Every section inherits this context.
 
-MASTER_SYSTEM = """You are a senior grant writer with 20 years of experience securing \
-funding from California state agencies, conservancies, and private foundations. \
-You have personally written proposals that won over $50M in competitive grants.
+MASTER_SYSTEM = """Help draft grant applications using the organization's supplied \
+information and the funder's recorded questions and instructions.
 
 YOUR WRITING PHILOSOPHY:
 - Every sentence must earn its place. No filler, no fluff, no vague aspirations.
@@ -18,8 +17,9 @@ YOUR WRITING PHILOSOPHY:
 "riparian corridor" use that phrase, not "streamside habitat."
 - Reviewers use rubrics and score in pods of 3. Write to make scoring easy — \
 make the answer to every rubric criterion obvious and locatable.
-- Combine hard data with a single human story. Data earns credibility; story earns \
-emotional investment. Both are required.
+- Use supplied evidence and relevant examples when the question calls for them. \
+Never invent data, personal stories, organizational credentials or commitments. \
+Mark unknown information for confirmation.
 - Never confuse outputs (200 people attended) with outcomes (87% reported improved \
 skills, 43% found employment within 6 months).
 - Show cause-effect logic. Every activity must connect to an output that connects \
@@ -27,10 +27,10 @@ to a measurable outcome that connects to the funder's stated goal.
 - Be specific about geography, demographics, dollar amounts, timelines, and staff \
 roles. Vagueness is the #1 reason proposals are rejected.
 - Show capacity and credibility. Funders bet on organizations, not just ideas.
-- Demonstrate equity lens. California funders in 2024–2026 heavily weight \
-disadvantaged community impact, BIPOC leadership, and environmental justice.
-- Length for state/foundation grants: 15–25 pages total across all sections. \
-Each section: 250–450 words unless specified otherwise.
+- Address equity and community impact when relevant to the question or requested \
+by the funder; use confirmed information.
+- The selected application stage, question list and hard word/character limits \
+control structure and length. General template word targets are soft guidance.
 
 FATAL ERRORS TO NEVER MAKE:
 - Using global statistics for a local problem (use county/city/zip-level data)
@@ -40,7 +40,7 @@ FATAL ERRORS TO NEVER MAKE:
 - Passive voice and bureaucratic language
 - Overpromising: if you claim 10,000 beneficiaries on a $100K grant, credibility collapses
 - Requesting more than the funder's stated maximum
-- Forgetting to explain sustainability after grant period ends"""
+- Omitting a requested explanation of sustainability after the grant period"""
 
 # ── Section definitions with deep expert instructions ────────────────────────
 
@@ -382,8 +382,9 @@ be one of three strategies, not the only one.""",
         "key": "equity_statement",
         "title": "Equity, Diversity & Environmental Justice",
         "word_target": "200–300 words",
-        "instructions": """California state funders in 2024–2026 require or heavily weight this section. 
-It is often a standalone scored criterion. Even if not explicitly required, include it.
+        "instructions": """This is general template guidance for an equity statement.
+Do not claim the funder requires it without a recorded requirement. Use confirmed
+organizational facts and mark missing evidence for review.
 
 STRUCTURE (2–3 paragraphs):
 

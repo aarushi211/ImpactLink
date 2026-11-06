@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 from agents.prompts import SECTIONS
+from services.application import section_definitions
 from utils.llm import get_chat_model
 from utils.metrics import timed
 
@@ -142,7 +143,7 @@ Return ONLY a JSON object with this exact structure:
 
 Rules:
 - priority 1 = most critical for this funder; 10 = least
-- Include all 10 section keys in section_priorities
+- Include every listed section key exactly once in section_priorities
 - red_flags: 0–5 concrete risks; empty list if none
 - Be specific to this grant — no generic advice"""),
     ("user", """GRANT TITLE: {grant_title}
@@ -162,7 +163,7 @@ def _get_llm():
     return get_chat_model(json_mode=True)
 
 
-def _default_plan(funder_vocab: list[str]) -> DraftingPlan:
+def _default_plan(funder_vocab: list[str], sections=None) -> DraftingPlan:
     vocab_sample = funder_vocab[:5] if funder_vocab else []
     return DraftingPlan(
         section_priorities=[
@@ -173,7 +174,7 @@ def _default_plan(funder_vocab: list[str]) -> DraftingPlan:
                 evidence_needed=[],
                 funder_phrases_to_use=vocab_sample,
             )
-            for i, s in enumerate(SECTIONS)
+            for i, s in enumerate(sections if sections is not None else SECTIONS)
         ],
         cross_section_dependencies=[
             CrossSectionDependency(
@@ -268,7 +269,8 @@ class PlanningAgent:
         profile: dict,
         funder_vocab: list[str],
     ) -> DraftingPlan:
-        section_keys = ", ".join(s["key"] for s in SECTIONS)
+        sections = section_definitions(grant)
+        section_keys = json.dumps([{key: section.get(key) for key in ("key", "title", "instructions", "max_words", "max_characters")} for section in sections], ensure_ascii=False)
         vocab_str = "\n".join(f"- {v}" for v in funder_vocab) or "None extracted."
 
         llm = _get_llm()
@@ -283,7 +285,13 @@ class PlanningAgent:
         })
 
         try:
-            return _parse_plan_json(response.content)
+            plan = _parse_plan_json(response.content)
+            expected = {section["key"] for section in sections}
+            parsed = {item.key: item for item in plan.section_priorities if item.key in expected}
+            fallback = _default_plan(funder_vocab, sections)
+            plan.section_priorities = [parsed.get(item.key, item) for item in fallback.section_priorities]
+            plan.cross_section_dependencies = [item for item in plan.cross_section_dependencies if item.if_section in expected and item.affects in expected]
+            return plan
         except (json.JSONDecodeError, ValueError) as e:
             log.warning("PlanningAgent: parse failed — %s", e)
-            return _default_plan(funder_vocab)
+            return _default_plan(funder_vocab, sections)

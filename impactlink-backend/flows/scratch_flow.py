@@ -29,6 +29,7 @@ from agents.planning_agent import (
     summarize_prior_sections,
 )
 from agents.prompts import SECTIONS
+from services.application import section_definitions, spec_for, annotate_sections, constraint_prompt, section_for, merge_checklist
 from agents.coherence_agent import CoherenceAgent
 from agents.rewriter_agent import targeted_retry_rewrite
 from flows.section_subgraph import run_section_subgraph
@@ -186,19 +187,21 @@ def node_draft_sections(state: ProposalState) -> dict:
         vocab = state["funder_vocab"]
         drafting_plan = state.get("drafting_plan")
 
-        sections_by_key = {s["key"]: s for s in SECTIONS}
+        sections_by_key = {s["key"]: s for s in section_definitions(grant)}
+        spec = spec_for(grant)
+        waves = [list(sections_by_key)] if spec and (spec.sections or spec.stage != "full_proposal") else DRAFTING_WAVES
         new_sections: dict = {}
         new_retry_counts = dict(state["retry_counts"])
         new_flagged = list(state["flagged_sections"])
         trace = list(state.get("agent_trace") or [])
 
-        for wave_idx, wave_keys in enumerate(DRAFTING_WAVES, start=1):
+        for wave_idx, wave_keys in enumerate(waves, start=1):
             wave_sections = [sections_by_key[k] for k in wave_keys if k in sections_by_key]
             prior_context = summarize_prior_sections(new_sections)
 
             log.info(
                 "[%s] draft wave %d/%d: %s",
-                sid, wave_idx, len(DRAFTING_WAVES), wave_keys,
+                sid, wave_idx, len(waves), wave_keys,
             )
             trace = append_agent_trace(
                 trace,
@@ -231,7 +234,7 @@ def node_draft_sections(state: ProposalState) -> dict:
                         key, result = future.result()
                         new_sections[key] = result
                         writer({"type": "section_complete", "section_key": key, "section": result})
-                        writer({"type": "progress", "message": f"Drafted {len(new_sections)} of {len(SECTIONS)} sections."})
+                        writer({"type": "progress", "message": f"Drafted {len(new_sections)} of {len(sections_by_key)} sections."})
                         new_retry_counts[key] = result["retries"]
                         if result["flagged"] and key not in new_flagged:
                             new_flagged.append(key)
@@ -242,12 +245,12 @@ def node_draft_sections(state: ProposalState) -> dict:
                         )
 
         node_meta["sections_drafted"] = len(new_sections)
-        node_meta["drafting_waves"] = len(DRAFTING_WAVES)
+        node_meta["drafting_waves"] = len(waves)
         node_meta["max_workers"] = MAX_WORKERS
 
     return {
         "profile":          profile,
-        "sections":         new_sections,
+        "sections":         annotate_sections(new_sections, grant, order=True),
         "retry_counts":     new_retry_counts,
         "flagged_sections": new_flagged,
         "agent_trace":      trace,
@@ -294,7 +297,7 @@ def node_coherence_check(state: ProposalState) -> dict:
                 sec.get("title", key),
                 sec.get("content", ""),
                 [issue.model_dump()],
-                f"Coherence issue: {issue.issue}",
+                f"Coherence issue: {issue.issue}\n" + constraint_prompt(section_for(state["grant"], key)),
                 vocab,
             )
             updated[key] = {**sec, "content": new_content}
@@ -305,7 +308,7 @@ def node_coherence_check(state: ProposalState) -> dict:
             )
 
     return {
-        "sections": updated,
+        "sections": annotate_sections(updated, state["grant"], order=True),
         "agent_trace": trace,
         "gate": "draft_review",
     }
@@ -316,6 +319,7 @@ def node_draft_review(state: ProposalState) -> dict:
     user_input = interrupt({
         "gate":             "draft_review",
         "sections":         state["sections"],
+        "application_spec": state["grant"].get("application_spec"),
         "flagged_sections": state["flagged_sections"],
         "drafting_plan":    state.get("drafting_plan"),
         "agent_trace":      state.get("agent_trace", []),
@@ -329,17 +333,18 @@ def node_draft_review(state: ProposalState) -> dict:
     for key, text in user_input.get("sections", {}).items():
         if key in updated_sections:
             updated_sections[key]["content"] = text
-    return {"sections": updated_sections}
+    return {"sections": annotate_sections(updated_sections, state["grant"], order=True), "grant": merge_checklist(state["grant"], user_input)}
 
 
 def node_final_save(state: ProposalState) -> dict:
     log.info("[%s] node: final_save (interrupting)", state["session_id"])
-    interrupt({
+    user_input = interrupt({
         "gate":         "final_save",
+        "application_spec": state["grant"].get("application_spec"),
         "sections":     state["sections"],
         "instructions": "Your proposal is ready. Confirm to download.",
     })
-    return {"gate": "complete"}
+    return {"gate": "complete", "grant": merge_checklist(state["grant"], user_input)}
 
 
 def node_complete(state: ProposalState) -> dict:
