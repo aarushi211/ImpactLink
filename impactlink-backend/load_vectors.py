@@ -107,7 +107,15 @@ def load_grants_to_pgvector():
                 description     TEXT,
                 eligibility     JSONB,
                 document        TEXT,
-                embedding       vector(384)
+                embedding       vector(384),
+                eligible_geographies TEXT,
+                eligibility_rules JSONB NOT NULL DEFAULT '{}',
+                source TEXT,
+                source_id TEXT,
+                source_url TEXT,
+                source_updated_at TEXT,
+                last_verified_at TIMESTAMPTZ,
+                content_hash TEXT
             )
         """)
 
@@ -147,12 +155,12 @@ def load_grants_to_pgvector():
                     grant_id, title, agency, award_floor, award_ceiling,
                     application_url, portal_url, close_date, focus_areas,
                     contact_email, contact_name, funding_method, estimated_total,
-                    description, eligibility, document, embedding
+                    description, eligibility, document, embedding, eligible_geographies, eligibility_rules
                 ) VALUES (
                     %s,%s,%s,%s,%s,
                     %s,%s,%s,%s,
                     %s,%s,%s,%s,
-                    %s,%s,%s,%s::vector
+                    %s,%s,%s,%s::vector,%s,%s
                 )
                 ON CONFLICT (grant_id) DO UPDATE SET
                     title           = EXCLUDED.title,
@@ -170,7 +178,9 @@ def load_grants_to_pgvector():
                     description     = EXCLUDED.description,
                     eligibility     = EXCLUDED.eligibility,
                     document        = EXCLUDED.document,
-                    embedding       = EXCLUDED.embedding
+                    embedding       = EXCLUDED.embedding,
+                    eligible_geographies = EXCLUDED.eligible_geographies,
+                    eligibility_rules = EXCLUDED.eligibility_rules
             """, (
                 grant_id,
                 grant.get("title", ""),
@@ -189,6 +199,8 @@ def load_grants_to_pgvector():
                 json.dumps(eligibility),
                 doc,
                 vec_str,
+                ", ".join(grant["eligible_geographies"]) if isinstance(grant.get("eligible_geographies"), list) else grant.get("eligible_geographies"),
+                json.dumps(grant.get("eligibility_rules") or {}),
             ))
             inserted += 1
             if inserted % 50 == 0:

@@ -38,6 +38,20 @@ function ViewToggle({ view, onChange }) {
 export default function GrantsList() {
   const { grants, proposal, hasRealData, loading: grantsLoading } = useGrants();
   const { profile } = useAuth();
+  const [applicantType, setApplicantType] = useState(profile?.applicant_type || "");
+  const [projectStates, setProjectStates] = useState((profile?.project_states || []).join(", "));
+  const criteriaOverrides = useRef({});
+  const profileApplicantType = profile?.applicant_type || "";
+  const profileProjectStates = (profile?.project_states || []).join(", ");
+  useEffect(() => {
+    if (!("applicant_type" in criteriaOverrides.current)) setApplicantType(profileApplicantType);
+    if (!("project_states" in criteriaOverrides.current)) setProjectStates(profileProjectStates);
+  }, [profileApplicantType, profileProjectStates]);
+  const eligibilityCriteria = (base = {}) => ({
+    applicant_type: profile?.applicant_type || base.applicant_type || applicantType,
+    project_states: base.project_states || profile?.project_states || [],
+    ...criteriaOverrides.current,
+  });
   const { proposals: savedProposals, loading: workLoading, refresh: refreshWorkStore } = useWorkStore();
   const [searchParams] = useSearchParams();
   const requestedProposalId = searchParams.get("proposal");
@@ -74,6 +88,9 @@ export default function GrantsList() {
     lastMatchItem.current = item;
     const request = ++matchRequest.current;
     const context = proposalContext(item, profile || {});
+    context.eligibility_context = eligibilityCriteria(context.eligibility_context);
+    setApplicantType(context.eligibility_context.applicant_type || "");
+    setProjectStates((context.eligibility_context.project_states || []).join(", "));
     setSelectedProposalId(item.id || null);
     setUploadedProposalName(item.title || context.project_title);
     setRematchError(null);
@@ -199,6 +216,33 @@ export default function GrantsList() {
   });
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError,   setAiError]   = useState(null);
+  const auditedCache = useRef(null);
+  useEffect(() => {
+    if (requestedProposalId || autoMatchStarted.current || grantsLoading || (!grants.length && !aiResults?.length) || sessionStorage.getItem("grant_match_request")) return;
+    const ids = [...new Set([...grants, ...(aiResults || [])].map(grant => String(grant.grant_id)))].slice(0, 200);
+    const criteria = eligibilityCriteria(proposal?.eligibility_context || {});
+    const key = JSON.stringify([ids, criteria]);
+    if (auditedCache.current === key) return;
+    auditedCache.current = key;
+    const request = ++matchRequest.current;
+    setRematchLoading(true);
+    setRematchGrants([]);
+    api.post("/api/grants/eligibility/check", { grant_ids: ids, eligibility_context: criteria }).then(response => {
+      if (request !== matchRequest.current) return;
+      const checks = response.data.checks || {};
+      const filter = rows => rows.filter(grant => checks[String(grant.grant_id)]?.status !== "ineligible")
+        .map(grant => ({ ...grant, eligibility_check: checks[String(grant.grant_id)] || { status: "unverified", checks: [] } }));
+      setRematchGrants(filter(grants));
+      if (aiResults) setAiResults(filter(aiResults));
+    }).catch(() => {
+      if (request === matchRequest.current) {
+        setRematchError("Could not refresh eligibility for cached matches. Run matching again.");
+        if (aiResults) setAiResults([]);
+      }
+    }).finally(() => { if (request === matchRequest.current) setRematchLoading(false); });
+    // New searches are checked by the backend. This refreshes only cached results.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedProposalId, grantsLoading, grants, profile]);
 
   useEffect(() => {
     if (view !== "collabs" || collabFetched || !proposal) return;
@@ -261,7 +305,7 @@ export default function GrantsList() {
     setAiLoading(true);
     setAiError(null);
     setAiResults(null);
-    api.post("/api/grants/search", { query: aiQuery, top_k: 10 })
+    api.post("/api/grants/search", { query: aiQuery, top_k: 10, eligibility_context: eligibilityCriteria() })
       .then(function(res) {
         var results = removeDemoGrants(res.data.grants || []);
         setAiResults(results);
@@ -289,6 +333,36 @@ export default function GrantsList() {
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Nav />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px" }}>
+        {isGrants && <section aria-label="Eligibility filters" style={{ padding: 16, marginBottom: 20, border: "1px solid var(--border)", borderRadius: 10 }}>
+          <h3 style={{ margin: "0 0 8px", fontSize: 14 }}>Eligibility filters</h3>
+          <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Closed opportunities and confirmed eligibility conflicts are excluded before ranking. Missing or ambiguous requirements remain visible as unverified. These are basic checks, not a funder eligibility decision.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "end", gap: 12 }}>
+            <label style={{ fontSize: 12 }}>Applicant type<br />
+              <select aria-label="Applicant type" value={applicantType} onChange={event => {
+                criteriaOverrides.current.applicant_type = event.target.value;
+                setApplicantType(event.target.value);
+              }} style={{ padding: 8, marginTop: 6 }}>
+                <option value="">Not specified</option>
+                <option value="nonprofit">Nonprofit</option><option value="public_agency">Public agency</option>
+                <option value="tribal_government">Tribal government</option><option value="business">Business</option>
+                <option value="individual">Individual</option><option value="other_legal_entity">Other legal entity</option>
+              </select>
+            </label>
+            <label style={{ fontSize: 12 }}>Project U.S. states<br />
+              <input aria-label="Project U.S. states" placeholder="CA, NY; blank if unknown" value={projectStates} onChange={event => {
+                criteriaOverrides.current.project_states = event.target.value.split(/[,;|]/).map(value => value.trim()).filter(Boolean);
+                setProjectStates(event.target.value);
+              }} style={{ padding: 8, marginTop: 6 }} />
+            </label>
+            <button disabled={rematchLoading || aiLoading || (!lastMatchItem.current && !proposal && !aiQuery.trim())} onClick={() => {
+              if (searchMode === "ai" && aiQuery.trim()) runAiSearch();
+              else {
+                const item = lastMatchItem.current || selectedSavedProposal || { title: proposal?.project_title || "Current proposal", proposal_context: proposal || {} };
+                handleSelectSavedProposal(item);
+              }
+            }} style={{ padding: 9, cursor: "pointer" }}>Apply eligibility filters</button>
+          </div>
+        </section>}
 
         <SectionHeader
           label="Grant Intelligence"

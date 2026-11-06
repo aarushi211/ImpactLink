@@ -8,6 +8,11 @@ export function proposalContext(item, profile = {}) {
   ]));
   return {
     ...base,
+    eligibility_context: {
+      ...(base.eligibility_context || {}),
+      applicant_type: profile.applicant_type || base.eligibility_context?.applicant_type || "",
+      project_states: base.eligibility_context?.project_states || profile.project_states || [],
+    },
     organization_name: base.organization_name || item.org_name || profile.org_name || "",
     project_title: item.title || base.project_title || "Grant Proposal",
     primary_mission: base.primary_mission || base.mission || profile.mission || "",

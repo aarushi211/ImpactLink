@@ -66,6 +66,8 @@ export default function Profile() {
   const [website,    setWebsite]    = useState(profile?.website    || "");
   const [teamSize,   setTeamSize]   = useState(profile?.team_size  || "");
   const [geoFocus,   setGeoFocus]   = useState((profile?.geographic_focus || [])[0] || "");
+  const [applicantType, setApplicantType] = useState(profile?.applicant_type || "");
+  const [projectStates, setProjectStates] = useState((profile?.project_states || []).join(", "));
   const [selSDGs,    setSelSDGs]    = useState(profile?.sdgs || []);
   const [collabOpen, setCollabOpen] = useState(profile?.collab_open ?? true);
   const [collabInts, setCollabInts] = useState((profile?.collab_interests || []).join(", "));
@@ -87,6 +89,8 @@ export default function Profile() {
         website,
         team_size:        teamSize,
         geographic_focus: geoFocus ? [geoFocus] : [],
+        applicant_type: applicantType,
+        project_states: projectStates.split(/[,;|]/).map(value => value.trim()).filter(Boolean),
         sdgs:             selSDGs,
         collab_open:      collabOpen,
         collab_interests: collabInts.split(",").map(s => s.trim()).filter(Boolean),
@@ -239,6 +243,23 @@ export default function Profile() {
               </Field>
             </Section>
 
+            <Section title="Grant Eligibility">
+              <Field label="Applicant type for grant eligibility">
+                <select aria-label="Applicant type" style={inputStyle} value={applicantType} onChange={event => setApplicantType(event.target.value)}>
+                  <option value="">Not specified</option>
+                  <option value="nonprofit">Nonprofit</option>
+                  <option value="public_agency">Public agency</option>
+                  <option value="tribal_government">Tribal government</option>
+                  <option value="business">Business</option>
+                  <option value="individual">Individual</option>
+                  <option value="other_legal_entity">Other legal entity</option>
+                </select>
+              </Field>
+              <Field label="Default project U.S. states">
+                <input aria-label="Project U.S. states" style={inputStyle} value={projectStates} onChange={event => setProjectStates(event.target.value)} placeholder="CA, NY — leave blank if unknown or outside the U.S." />
+                <p style={{ color: "#888", fontSize: 12 }}>Where the funded project will operate, rather than your office address. You can override these states when matching a proposal.</p>
+              </Field>
+            </Section>
             <Section title="Key Activities">
               <p style={{ color: "#444", fontSize: 12, margin: "0 0 10px" }}>
                 One activity per line — used to improve grant matching and proposal drafting.

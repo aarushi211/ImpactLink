@@ -28,14 +28,15 @@ else:
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import asyncio
 
 from services.parser import parse_proposal
-from services.vector_store import find_similar_grants, topic_search_grants, get_grant_by_id
+from services.vector_store import find_similar_grants, topic_search_grants, get_grant_by_id, check_grant_eligibility
 from services.work_store import list_work, save_work, update_work, delete_work
 from services.budget import generate_budget
+from services.budget.costing import CostPlan
 from services.budget_chatbot import refine_budget
 from services.ngo_store import register, get_profile, update_profile, list_collab_profiles
 from services.ngo_collab import find_similar_ngos
@@ -95,8 +96,9 @@ app.add_middleware(
 
 class ProposalRequest(BaseModel):
     proposal: dict
-    top_k: int = 5
+    top_k: int = Field(default=5, ge=1, le=50)
     grant_id: Optional[str] = None
+    eligibility_context: Optional[dict] = None
 
 class DraftRequest(BaseModel):
     proposal: dict
@@ -104,7 +106,8 @@ class DraftRequest(BaseModel):
 
 class BudgetGenerateRequest(BaseModel):
     proposal: dict
-    max_budget: int
+    max_budget: int = Field(gt=0, le=1000000000000)
+    cost_inputs: Optional[CostPlan] = None
 
 class BudgetRefineRequest(BaseModel):
     current_budget: dict
@@ -121,7 +124,13 @@ class ProfileUpdateRequest(BaseModel):
 
 class TopicSearchRequest(BaseModel):
     query:   str
-    top_k:   int = 10
+    top_k:   int = Field(default=10, ge=1, le=50)
+    eligibility_context: dict = Field(default_factory=dict)
+
+
+class EligibilityCheckRequest(BaseModel):
+    grant_ids: list[str] = Field(default_factory=list, max_length=200)
+    eligibility_context: dict = Field(default_factory=dict)
 
 class CollabMatchRequest(BaseModel):
     proposal:    dict
@@ -259,6 +268,14 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
             422,
             "Unable to extract proposal text. Please verify the file is a valid PDF or DOCX.",
         )
+    try:
+        applicant_profile = get_profile(uid)
+    except ValueError:
+        applicant_profile = {}
+    proposal["eligibility_context"] = {
+        "applicant_type": applicant_profile.get("applicant_type", ""),
+        "project_states": applicant_profile.get("project_states", []),
+    }
     matches = await asyncio.to_thread(find_similar_grants, proposal, 5)
     return {"proposal": proposal, "matches": matches}
 
@@ -266,7 +283,8 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_token))
 def match(req: ProposalRequest):
     return {
         "matches": find_similar_grants(
-            req.proposal, req.top_k, include_grant_id=req.grant_id
+            req.proposal, req.top_k, include_grant_id=req.grant_id,
+            eligibility_context=req.eligibility_context,
         )
     }
 
@@ -275,9 +293,9 @@ def match(req: ProposalRequest):
 
 @app.post("/api/budget/generate")
 async def budget_generate(req: BudgetGenerateRequest):
-    result = await asyncio.to_thread(generate_budget, req.proposal, req.max_budget)
+    result = await asyncio.to_thread(generate_budget, req.proposal, req.max_budget, None, req.cost_inputs)
     if "error" in result:
-        raise HTTPException(500, result.get("details", "Budget generation failed"))
+        raise HTTPException(422, result.get("details", "Budget generation failed"))
     return result
 
 @app.post("/api/budget/refine")
@@ -339,7 +357,7 @@ async def collab_match(req: CollabMatchRequest, uid: str = Depends(verify_token)
 
 @app.post("/api/grants/search")
 async def grants_topic_search(req: TopicSearchRequest):
-    results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k)
+    results = await asyncio.to_thread(topic_search_grants, req.query, req.top_k, req.eligibility_context)
     return {"grants": results, "query": req.query}
 
 # ── Work Store (Drafts, Builds, Budgets) ───────────────────────────────────
@@ -357,6 +375,11 @@ def grant_details(grant_id: str):
     if not grant:
         raise HTTPException(404, "Grant not found")
     return grant
+
+
+@app.post("/api/grants/eligibility/check")
+def check_cached_grants(req: EligibilityCheckRequest):
+    return {"checks": check_grant_eligibility(req.grant_ids, req.eligibility_context)}
 
 @app.post("/api/work/{work_type}")
 def create_user_work(work_type: str, req: dict, uid: str = Depends(verify_token)):

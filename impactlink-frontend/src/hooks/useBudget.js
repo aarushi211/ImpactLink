@@ -13,7 +13,7 @@ export default function useBudget() {
   const [loading, setLoading] = useState(null); // "generating" | "refining" | null
   const [error,   setError]   = useState(null);
 
-  const generate = useCallback(async (proposal, maxBudget) => {
+  const generate = useCallback(async (proposal, maxBudget, costInputs) => {
     setLoading("generating");
     setError(null);
     setBudget(null);
@@ -21,10 +21,12 @@ export default function useBudget() {
       const { data } = await api.post("/api/budget/generate", {
         proposal,
         max_budget: maxBudget,
+        cost_inputs: costInputs,
       });
       setBudget(data);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Failed to generate budget.");
+      const detail = e?.response?.data?.detail;
+      setError(Array.isArray(detail) ? detail.map(item => `${item.loc?.slice(1).join(" · ")}: ${item.msg}`).join("; ") : detail || "Failed to generate budget.");
     } finally {
       setLoading(null);
     }

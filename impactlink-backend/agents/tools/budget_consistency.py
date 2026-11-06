@@ -88,7 +88,8 @@ def check_budget_consistency(
     """
     budget_data = _load_budget(profile, grant)
     if not budget_data:
-        return {"consistent": True, "issues": [], "budget_total": 0}
+        return {"consistent": None, "verified": False, "issues": [], "budget_total": 0,
+                "review_required": "No verified cost inputs are available. Use budget placeholders and request salary, FTE, duration, fringe and direct-cost details."}
 
     items = budget_data.get("items", [])
     budget_total = int(budget_data.get("total_requested", 0) or 0)
@@ -116,7 +117,7 @@ def check_budget_consistency(
     ]
     if personnel_items and _extract_personnel_counts(section_content):
         budget_roles = sum(
-            1 for i in personnel_items
+            int(i.get("headcount") or i.get("quantity") or 1) for i in personnel_items
             if int(i.get("quantity", 1) or 1) > 0
         )
         for count in _extract_personnel_counts(section_content):
@@ -137,7 +138,10 @@ def check_budget_consistency(
             continue
 
     item_amounts = {int(i.get("amount", 0) or 0) for i in items}
+    annual_salary_references = {int(i["annual_salary"]) for i in personnel_items if i.get("annual_salary")}
     for amt in large_amounts:
+        if amt in annual_salary_references:
+            continue
         if budget_total and amt > budget_total * 1.1:
             issues.append({
                 "claim": f"Narrative mentions ${amt:,}",
@@ -163,6 +167,8 @@ def check_budget_consistency(
 
 def format_consistency_issues(result: dict) -> str:
     """Format tool output for injection into rewrite feedback."""
+    if result.get("review_required"):
+        return result["review_required"]
     if result.get("consistent"):
         return ""
     lines = ["Budget consistency tool found these mismatches:"]

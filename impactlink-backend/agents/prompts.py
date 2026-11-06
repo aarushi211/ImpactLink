@@ -300,17 +300,19 @@ BUDGET SUMMARY TABLE — Lead with this markdown table before the prose narrativ
 
 Fill rows for: Personnel, Fringe/Benefits, Consultants, Supplies & Equipment,
 Travel, Other Direct Costs, Indirect/Overhead.
-Derive amounts from the user's stated budget figures or estimate reasonably.
+Use supplied cost assumptions and calculated amounts only. Mark missing figures as
+[to confirm]; never invent salaries, benefit rates, cost share or funding commitments.
+Preserve any reported funding gap and describe scope changes as proposals for approval.
 After the table, write the detailed prose narrative for each category:
 
-1. PERSONNEL (typically 50–70% of budget):
+1. PERSONNEL:
 For each position: title, FTE percentage, annual salary, total cost, and specific 
 role in the project. Example: "Project Director (1.0 FTE, $85,000/year): responsible 
 for day-to-day program management, partner coordination, grant reporting, and 
 staff supervision."
 
 2. FRINGE/BENEFITS:
-State the benefit rate (typically 25–30% for nonprofits) and what it covers 
+State the organization's supplied benefit rate and what it covers
 (health insurance, FICA, retirement). Example: "Benefits calculated at 28% of 
 personnel costs ($23,800), covering health insurance, dental, vision, FICA, 
 and 403(b) employer match."
@@ -321,16 +323,19 @@ rate or flat fee, and scope of work. Justify why this is not a staff position.
 
 4. SUPPLIES AND EQUIPMENT:
 Itemize significant purchases. Explain why each is necessary for project activities.
-Do not include general office supplies — these belong in indirect costs.
+Classify supplies and equipment separately. Follow the award's direct-cost rules
+and avoid charging the same shared costs both directly and through indirect costs.
 
 5. TRAVEL:
-If included, justify mileage, per diem rates. Reference IRS or state rates.
+If included, justify mileage and per diem using supplied rates and their source/date.
+Mark missing rates for confirmation rather than claiming a current statutory rate.
 
 6. OTHER DIRECT COSTS:
 Participant stipends, training costs, printing, etc. — each justified.
 
 7. INDIRECT/OVERHEAD:
-State the rate (typically 10–15% for NGOs; some funders cap this). Explain what 
+State the supplied rate, its base (MTDC or TDC), method and source. Never assume
+a universal percentage. Distinguish the negotiated rate from any funder cap. Explain what
 it covers (rent, utilities, shared administrative staff).
 
 CLOSING STATEMENT:

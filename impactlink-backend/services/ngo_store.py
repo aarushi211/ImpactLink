@@ -8,6 +8,7 @@
 '''
 from firebase_admin import firestore
 from datetime import datetime
+from services.eligibility import STATES, TYPES
 
 def _get_db():
     """Helper function to return the Firestore client lazily."""
@@ -35,6 +36,8 @@ def register(uid: str, email: str, org_name: str) -> dict:
         "team_size":        "",
         "key_activities":   [],
         "geographic_focus": [],
+        "applicant_type":   "",
+        "project_states":   [],
         "collab_open":      True,
         "collab_interests": [],
         "total_applied":    0,
@@ -68,6 +71,13 @@ def update_profile(ngo_id: str, updates: dict) -> dict:
         raise ValueError("Profile not found.")
 
     safe_updates = {k: v for k, v in updates.items() if k not in PROTECTED}
+    if "applicant_type" in safe_updates and (not isinstance(safe_updates["applicant_type"], str) or safe_updates["applicant_type"] not in {"", *TYPES.values()}):
+        raise ValueError("Choose a supported applicant type or leave it unspecified.")
+    if "project_states" in safe_updates:
+        states = safe_updates["project_states"]
+        if not isinstance(states, list) or any(not isinstance(state, str) or state.strip().casefold() not in STATES for state in states):
+            raise ValueError("Project states must be U.S. state names or codes, such as California or CA. Leave the list empty if unknown or outside the U.S.")
+        safe_updates["project_states"] = sorted({STATES[state.strip().casefold()] for state in states})
     safe_updates["updated_at"] = datetime.now().isoformat()
     
     doc_ref.update(safe_updates)

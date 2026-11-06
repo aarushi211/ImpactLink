@@ -1,368 +1,81 @@
-"""
-services/budget_chatbot.py — Python-Controlled Budget Refinement Engine
-"""
+"""Parse explicit edits, then recalculate salary, fringe and indirect costs in Python."""
 
-from __future__ import annotations
-
-import copy
 import json
-from typing import List, Literal, Optional, Tuple
+from decimal import Decimal
+from typing import Literal
 
-from dotenv import load_dotenv
-load_dotenv()
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel
 
 from utils.llm import get_chat_model
-from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
-
-from services.budget.models import BudgetLineItem, CategoryType
-from services.budget.constants import PERSONNEL_CATEGORIES
-from services.budget.utils import get_minimum_wage
-
-HOURS_PER_FTE_YEAR       = 2080
-DEFAULT_INDIRECT_CAP_PCT = 15.0
+from services.budget.costing import CostPlan, calculate_budget
 
 
-def _get_llm():
-    return get_chat_model()
+class CostEdit(BaseModel):
+    line_id: str | None = None
+    field: Literal["headcount", "annual_salary", "fte_per_person", "months", "fringe_rate_pct", "quantity", "unit_cost", "rate_pct"] | None = None
+    value: Decimal | None = None
+    remove_line: bool = False
+    clarification: str | None = None
 
 
-# ── Stage 1: Structured edit command ──────────────────────────────────────────
-
-class BudgetEditCommand(BaseModel):
-    action: Literal["increase", "decrease", "set", "move", "add_category", "remove_category"] = Field(
-        description="What the user wants to do"
-    )
-    target_category: str = Field(
-        description="The CategoryType value being modified (e.g. 'Equipment & Supplies')"
-    )
-    amount_delta: Optional[int] = Field(
-        default=None,
-        description="Dollar change for increase/decrease (always positive — sign set by action)"
-    )
-    target_amount: Optional[int] = Field(
-        default=None,
-        description="Absolute target dollar amount for 'set'"
-    )
-    offset_from: Optional[str] = Field(
-        default=None,
-        description=(
-            "CategoryType value to take money from (for increase/move). "
-            "Use null/'auto' to let Python distribute evenly from other categories."
-        )
-    )
-    clarification_needed: Optional[str] = Field(
-        default=None,
-        description="Non-null if the request is ambiguous and needs clarification"
-    )
-
-
-INTENT_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a budget parsing assistant.
-Parse the user's budget edit request into a structured command.
-
-CATEGORY NAMES (use these exact values):
-{category_list}
-
-RULES:
-- amount_delta must always be positive (the action field carries the sign).
-- If the user says "move $X from A to B", use action=move, target_category=B, offset_from=A.
-- If the user says "cut X in half", compute amount_delta as current_X_amount / 2.
-- If you cannot determine what the user wants, set clarification_needed.
-"""),
-    ("user", """\
-Current budget line items:
-{budget_summary}
-
-User request: "{user_request}"
-""")
-])
-
-EXPLAIN_PROMPT = ChatPromptTemplate.from_messages([
-    ("system", """You are a friendly NGO Financial Consultant.
-Explain the budget changes that were just made in clear, non-technical language.
-Be concise (2-4 sentences max). Refer to dollar amounts. If corrections were made, explain WHY they were necessary (e.g., wage law, grant cap).
-Use a warm, professional tone. Start with what was done, then explain any constraints.
-"""),
-    ("user", """\
-User asked: "{user_request}"
-
-Changes applied:
-{changes}
-
-Compliance corrections made (if any):
-{corrections}
-
-Final budget summary:
-{final_summary}
-""")
+EDIT_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", """Parse one explicit change to these budget assumptions. Return exact line IDs.
+Do not invent salaries, staffing levels, duration, rates or offsets. A headcount is an integer; FTE per person is 0..1.
+If the user asks for an amount transfer without specifying a change in headcount, salary, FTE, months, unit cost or quantity, ask for clarification.
+Only remove a line when explicitly asked. Edit global indirect rate using line_id='indirect', field='rate_pct'.
+For multiple changes or unclear targets/values ask for clarification. Do not change unrelated lines.
+An edit changes project costs; do not force the result to equal the grant ceiling."""),
+    ("user", "Current assumptions:\n{inputs}\nRequest: {request}"),
 ])
 
 
-# ── Stage 2: Python edit engine ────────────────────────────────────────────────
-
-def _items_from_budget(budget: dict) -> List[BudgetLineItem]:
-    items = []
-    for raw in budget.get("items", []):
-        try:
-            items.append(BudgetLineItem(**raw))
-        except Exception:
-            pass
-    return items
+def unchanged(budget, message):
+    return {**budget, "chat_response": message, "clarification": message, "_edit_log": {"applied": False}}
 
 
-def _find_item(items: List[BudgetLineItem], category_value: str) -> Optional[BudgetLineItem]:
-    for item in items:
-        if item.category.value.lower() == category_value.lower():
-            return item
-    return None
-
-
-def _auto_offset_items(
-    items: List[BudgetLineItem],
-    exclude_category: str,
-    delta: int,
-) -> List[Tuple[BudgetLineItem, int]]:
-    candidates  = [i for i in items if i.category.value.lower() != exclude_category.lower()]
-    if not candidates:
-        return []
-    total_others = sum(c.amount for c in candidates)
-    if total_others <= 0:
-        return []
-    return [(c, int(delta * (c.amount / total_others))) for c in candidates]
-
-
-def _apply_edit(
-    items: List[BudgetLineItem],
-    cmd: BudgetEditCommand,
-    total_budget: int,
-) -> Tuple[List[BudgetLineItem], List[str]]:
-    changes: List[str] = []
-    target = _find_item(items, cmd.target_category)
-
-    if cmd.action == "add_category":
-        if target:
-            changes.append(f"Category '{cmd.target_category}' already exists.")
-            return items, changes
-        amount  = cmd.target_amount or cmd.amount_delta or 0
-        new_item = BudgetLineItem(
-            category=CategoryType(cmd.target_category),
-            description="Added via chatbot",
-            amount=amount,
-        )
-        items.append(new_item)
-        for item, trim in _auto_offset_items(items, cmd.target_category, amount):
-            item.amount = max(0, item.amount - trim)
-            changes.append(f"Reduced '{item.category.value}' by ${trim:,} to fund new category")
-        changes.append(f"Added '{cmd.target_category}': ${amount:,}")
-        return items, changes
-
-    if cmd.action == "remove_category":
-        if not target:
-            changes.append(f"Category '{cmd.target_category}' not found.")
-            return items, changes
-        freed = target.amount
-        items.remove(target)
-        non_personnel = [i for i in items if i.category not in PERSONNEL_CATEGORIES]
-        if non_personnel:
-            largest = max(non_personnel, key=lambda i: i.amount)
-            largest.amount += freed
-            changes.append(f"Removed '{cmd.target_category}' (${freed:,}) → redistributed to '{largest.category.value}'")
-        changes.append(f"Removed '{cmd.target_category}'")
-        return items, changes
-
-    if not target:
-        changes.append(f"Could not find category '{cmd.target_category}' in budget.")
-        return items, changes
-
-    original_amount = target.amount
-
-    if cmd.action == "set":
-        delta = (cmd.target_amount or 0) - target.amount
-    elif cmd.action in ("increase", "move"):
-        delta = cmd.amount_delta or 0
-    elif cmd.action == "decrease":
-        delta = -(cmd.amount_delta or 0)
+def apply_cost_edit(budget, edit):
+    plan = CostPlan.model_validate(budget["cost_inputs"]).model_dump(mode="json")
+    if edit.clarification:
+        return unchanged(budget, edit.clarification)
+    target, bucket = None, None
+    if edit.line_id == "indirect":
+        target, bucket = plan["indirect"], "indirect"
     else:
-        delta = 0
-
-    target.amount  = max(0, target.amount + delta)
-    actual_delta   = target.amount - original_amount
-
-    if actual_delta >= 0:
-        changes.append(f"Increased '{cmd.target_category}' by ${actual_delta:,}")
-    else:
-        changes.append(f"Decreased '{cmd.target_category}' by ${abs(actual_delta):,}")
-
-    if actual_delta != 0:
-        if cmd.offset_from and cmd.offset_from.lower() not in ("auto", "null", "none", ""):
-            offset_item = _find_item(items, cmd.offset_from)
-            if offset_item:
-                offset_item.amount = max(0, offset_item.amount - actual_delta)
-                diff = actual_delta
-                if diff >= 0:
-                    changes.append(f"Reduced '{cmd.offset_from}' by ${diff:,}")
-                else:
-                    changes.append(f"Increased '{cmd.offset_from}' by ${abs(diff):,}")
-            else:
-                for item, trim in _auto_offset_items(items, cmd.target_category, actual_delta):
-                    item.amount = max(0, item.amount - trim)
+        for name in ("staff", "direct_costs"):
+            for line in plan[name]:
+                if line["id"] == edit.line_id:
+                    target, bucket = line, name
+    if target is None:
+        return unchanged(budget, "Specify the staff role or direct-cost line to change.")
+    allowed = {"staff": {"headcount", "annual_salary", "fte_per_person", "months", "fringe_rate_pct"}, "direct_costs": {"quantity", "unit_cost"}, "indirect": {"rate_pct"}}
+    if edit.remove_line and bucket != "indirect" and edit.field is None and edit.value is None:
+        plan[bucket].remove(target)
+    elif not edit.remove_line and edit.field in allowed[bucket] and edit.value is not None:
+        if edit.field == "headcount":
+            if edit.value != edit.value.to_integral_value():
+                return unchanged(budget, "Headcount must be a whole number. Use FTE per person for part-time effort.")
+            target[edit.field] = int(edit.value)
         else:
-            for item, trim in _auto_offset_items(items, cmd.target_category, actual_delta):
-                actual_trim = min(item.amount, trim)
-                item.amount -= actual_trim
-                if actual_trim > 0:
-                    changes.append(f"Auto-reduced '{item.category.value}' by ${actual_trim:,}")
-
-    return items, changes
-
-
-# ── Stage 3: Validation & Auto-Correction ─────────────────────────────────────
-
-def _validate_and_correct(
-    items: List[BudgetLineItem],
-    total_budget: int,
-    min_wage_hourly: float,
-) -> Tuple[List[BudgetLineItem], List[str]]:
-    corrections: List[str] = []
-
-    for item in items:
-        if item.category not in PERSONNEL_CATEGORIES:
-            continue
-        fte = item.fte_count or 0
-        if fte <= 0:
-            continue
-        min_annual = min_wage_hourly * HOURS_PER_FTE_YEAR * fte
-        if item.amount < min_annual:
-            old = item.amount
-            item.amount = int(min_annual)
-            corrections.append(
-                f"Increased '{item.category.value}' from ${old:,} → ${item.amount:,} "
-                f"to meet ${min_wage_hourly:.2f}/hr minimum wage for {fte:.1f} FTE"
-            )
-
-    indirect_total = sum(
-        i.amount for i in items
-        if i.category.value in {"Indirect Costs / Overhead", "Facilities & Rent", "IT & Communications"}
-    )
-    indirect_cap = int(total_budget * DEFAULT_INDIRECT_CAP_PCT / 100)
-    if indirect_total > indirect_cap:
-        excess = indirect_total - indirect_cap
-        for ix in [i for i in items if i.category.value in {"Indirect Costs / Overhead", "Facilities & Rent", "IT & Communications"}]:
-            trim = min(ix.amount, excess)
-            ix.amount -= trim
-            excess    -= trim
-            corrections.append(
-                f"Trimmed '{ix.category.value}' by ${trim:,} to respect the {DEFAULT_INDIRECT_CAP_PCT}% indirect cap"
-            )
-            if excess <= 0:
-                break
-
-    current_total = sum(i.amount for i in items)
-    gap = total_budget - current_total
-    if gap != 0 and items:
-        safe   = [i for i in items if i.category not in PERSONNEL_CATEGORIES]
-        target = max(safe, key=lambda i: i.amount) if safe else max(items, key=lambda i: i.amount)
-        target.amount += gap
-        if abs(gap) > 0:
-            corrections.append(
-                f"Adjusted '{target.category.value}' by ${gap:+,} to maintain total of ${total_budget:,}"
-            )
-
-    return items, corrections
-
-
-def _format_budget_summary(items: List[BudgetLineItem], total: int) -> str:
-    lines = [f"  Total: ${total:,}"]
-    for i in items:
-        fte_str = f" ({i.fte_count:.1f} FTE)" if i.fte_count else ""
-        lines.append(f"  • {i.category.value}{fte_str}: ${i.amount:,}")
-    return "\n".join(lines)
-
-
-# ── Main entry point ───────────────────────────────────────────────────────────
-
-def refine_budget(current_budget: dict, user_request: str) -> dict:
-    print(f"💬 Budget chat: {user_request}")
-
-    total_budget: int = current_budget.get("total_requested", 0)
-    if total_budget == 0:
-        return {"error": "Invalid budget", "details": "total_requested is 0 or missing."}
-
-    items = _items_from_budget(current_budget)
-    if not items:
-        return {"error": "Invalid budget", "details": "No line items found."}
-
-    location = "default"
-    min_wage_hourly = get_minimum_wage(location)
-    for check in current_budget.get("compliance_summary", {}).get("wage_checks", []):
-        if isinstance(check, dict) and check.get("min_wage_hourly"):
-            min_wage_hourly = float(check["min_wage_hourly"])
-            break
-
-    budget_summary = _format_budget_summary(items, total_budget)
-    category_list  = [c.value for c in CategoryType]
-
-    # ── Stage 1: Parse intent — fresh LLM so client initialises with a valid key ──
-    llm          = _get_llm()
-    intent_chain = INTENT_PROMPT | llm.with_structured_output(BudgetEditCommand)
+            target[edit.field] = str(edit.value)
+    else:
+        return unchanged(budget, "Specify one new staffing or unit-cost assumption. Salary, fringe and indirect totals are calculated from those inputs.")
     try:
-        cmd: BudgetEditCommand = intent_chain.invoke({
-            "category_list":  ", ".join(category_list),
-            "budget_summary": budget_summary,
-            "user_request":   user_request,
-        })
-    except Exception as e:
-        return {"error": "Intent parsing failed", "details": str(e)}
+        result = calculate_budget(plan, budget["max_budget"])
+    except ValueError as exc:
+        return unchanged(budget, f"That change needs review: {exc}")
+    result["chat_response"] = f"Updated the requested assumption and recalculated salary, fringe and indirect costs. Total requested: ${result['total_requested']:,.2f}." + (f" The plan exceeds the ceiling by ${result['funding_gap']:,.2f}; review the scope options." if result["funding_gap"] else "")
+    result["_edit_log"] = {"applied": True, "parsed_intent": edit.model_dump(mode="json")}
+    return result
 
-    if cmd.clarification_needed:
-        return {
-            "clarification":       cmd.clarification_needed,
-            "items":               current_budget.get("items", []),
-            "total_requested":     total_budget,
-            "locality_explanation": current_budget.get("locality_explanation", ""),
-            "compliance_summary":  current_budget.get("compliance_summary", {}),
-            "chat_response":       f"I need a bit more info: {cmd.clarification_needed}",
-        }
 
-    print(f"   📋 Intent: {cmd.action} '{cmd.target_category}' Δ={cmd.amount_delta} from '{cmd.offset_from}'")
-
-    # ── Stage 2: Apply edit ───────────────────────────────────────────────────
-    items_copy        = copy.deepcopy(items)
-    items_copy, changes = _apply_edit(items_copy, cmd, total_budget)
-
-    # ── Stage 3: Validate & auto-correct ─────────────────────────────────────
-    items_copy, corrections = _validate_and_correct(items_copy, total_budget, min_wage_hourly)
-
-    # ── Stage 4: Explain — fresh LLM instance ────────────────────────────────
-    final_summary = _format_budget_summary(items_copy, total_budget)
-    explain_llm   = _get_llm()
-    explain_chain = EXPLAIN_PROMPT | explain_llm
-
+def refine_budget(current_budget, user_request):
+    if current_budget.get("model_version") != 2 or not current_budget.get("cost_inputs"):
+        return unchanged(current_budget, "This saved budget uses the earlier model. Enter its staff and direct-cost assumptions in Budget Setup and rebuild it to use FTE, fringe and indirect-base calculations.")
     try:
-        explanation  = explain_chain.invoke({
-            "user_request": user_request,
-            "changes":      "\n".join(changes) if changes else "No changes were needed.",
-            "corrections":  "\n".join(corrections) if corrections else "None — all rules satisfied.",
-            "final_summary": final_summary,
-        })
-        chat_response = explanation.content.strip()
+        CostPlan.model_validate(current_budget["cost_inputs"])
+        llm = get_chat_model()
+        edit = (EDIT_PROMPT | llm.with_structured_output(CostEdit)).invoke({"inputs": json.dumps(current_budget["cost_inputs"]), "request": user_request})
+        return apply_cost_edit(current_budget, edit)
     except Exception:
-        parts = ["Here's what I did:"] + changes
-        if corrections:
-            parts.append("Compliance corrections:")
-            parts.extend(f"  • {c}" for c in corrections)
-        chat_response = "\n".join(parts)
-
-    return {
-        "items":               [i.model_dump() for i in items_copy],
-        "total_requested":     total_budget,
-        "locality_explanation": current_budget.get("locality_explanation", ""),
-        "compliance_summary":  current_budget.get("compliance_summary", {}),
-        "chat_response":       chat_response,
-        "_edit_log": {
-            "parsed_intent": cmd.model_dump(),
-            "changes":       changes,
-            "corrections":   corrections,
-        },
-    }
+        return unchanged(current_budget, "Could not apply that edit. Change the staffing or unit-cost inputs in Budget Setup and rebuild, or specify one clear change in chat.")

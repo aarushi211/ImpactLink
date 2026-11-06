@@ -41,6 +41,7 @@ from typing import List, Literal
 from sentence_transformers import SentenceTransformer
 from utils.llm import get_chat_model
 from langchain_core.prompts import ChatPromptTemplate
+from services.eligibility import evaluate_eligibility
 
 log = logging.getLogger(__name__)
 
@@ -85,7 +86,8 @@ def get_grant_by_id(grant_id: str):
                 SELECT grant_id, title, agency, award_floor, award_ceiling,
                        application_url, portal_url, close_date, focus_areas,
                        description, eligibility, contact_email, contact_name,
-                       funding_method, estimated_total
+                       funding_method, estimated_total, eligible_geographies, eligibility_rules,
+                       source, source_url, source_updated_at, last_verified_at
                 FROM grants WHERE grant_id = %s
             """, (grant_id,))
             row = cur.fetchone()
@@ -97,6 +99,7 @@ def get_grant_by_id(grant_id: str):
             result["eligibility"] = json.loads(result["eligibility"])
         except (ValueError, TypeError):
             result["eligibility"] = [result["eligibility"]]
+    result["eligibility_check"] = evaluate_eligibility(result)
     return result
 
 
@@ -155,7 +158,30 @@ def _location_boost_grant(proposal_geo: list, grant: dict) -> int:
     return 0
 
 
-def _vector_search(embedding: list, n_results: int) -> list[dict]:
+def _eligibility_candidates(applicant: dict, grant_ids=None):
+    with _get_pool().connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cur:
+            cur.execute("""SELECT grant_id, eligibility, close_date, eligible_geographies, eligibility_rules
+                           FROM grants WHERE (%s::text[] IS NULL OR grant_id = ANY(%s::text[]))""", (grant_ids, grant_ids))
+            checks = {str(row["grant_id"]): evaluate_eligibility(row, applicant) for row in cur.fetchall()}
+    allowed = [identifier for identifier, result in checks.items() if result["status"] != "ineligible"]
+    return allowed, checks
+
+
+def check_grant_eligibility(grant_ids, applicant):
+    if not grant_ids:
+        return {}
+    _, checks = _eligibility_candidates(applicant, grant_ids)
+    for identifier in grant_ids:
+        if identifier not in checks:
+            checks[identifier] = {
+                "status": "unverified",
+                "checks": [{"criterion": "source", "status": "unknown", "message": "The current grant record could not be found; verify it with the funder."}],
+            }
+    return checks
+
+
+def _vector_search(embedding: list, n_results: int, allowed_grant_ids=None) -> list[dict]:
     """Run cosine ANN search — returns rows ordered by similarity desc."""
     pool = _get_pool()
     vec_str = "[" + ",".join(str(v) for v in embedding) + "]"
@@ -166,12 +192,13 @@ def _vector_search(embedding: list, n_results: int) -> list[dict]:
                     grant_id, title, agency, award_floor, award_ceiling,
                     application_url, portal_url, close_date, focus_areas,
                     contact_email, contact_name, funding_method, estimated_total,
-                    description, eligibility,
+                    description, eligibility, eligible_geographies, source, source_url, source_updated_at, last_verified_at,
                     1 - (embedding <=> %s::vector) AS similarity
                 FROM grants
+                WHERE (%s::text[] IS NULL OR grant_id = ANY(%s::text[]))
                 ORDER BY embedding <=> %s::vector
                 LIMIT %s
-            """, (vec_str, vec_str, n_results))
+            """, (vec_str, allowed_grant_ids, allowed_grant_ids, vec_str, n_results))
             return cur.fetchall()
 
 
@@ -186,7 +213,7 @@ def _vector_search_grant(embedding: list, grant_id: str) -> dict | None:
                     grant_id, title, agency, award_floor, award_ceiling,
                     application_url, portal_url, close_date, focus_areas,
                     contact_email, contact_name, funding_method, estimated_total,
-                    description, eligibility,
+                    description, eligibility, eligible_geographies, source, source_url, source_updated_at, last_verified_at,
                     1 - (embedding <=> %s::vector) AS similarity
                 FROM grants
                 WHERE grant_id = %s
@@ -223,6 +250,8 @@ class GrantMatchInsightsList(BaseModel):
 
 RERANK_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a Senior Grant Consultant.
+Basic eligibility is checked separately. Rank project fit, and never claim that
+tax status, legal eligibility, or geographic requirements have been verified.
 Your job is to RE-RANK potential grants based on STRICT ELIGIBILITY and LOGIC.
 Keyword matches (Stage 1) are often misleading. You must look for:
 - Geographic hard-stops (If the NGO is in LA but the grant is for NY, it's a 'weak' fit).
@@ -257,17 +286,22 @@ Return JSON array now:""")
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def find_similar_grants(
-    proposal: dict, top_k: int = 5, include_grant_id: str | None = None
+    proposal: dict, top_k: int = 5, include_grant_id: str | None = None,
+    eligibility_context: dict | None = None,
 ) -> list:
     """
     Full proposal → vector search → LLM re-rank → top_k results.
     Replaces the ChromaDB-backed version; no local file dependency.
     """
+    applicant = eligibility_context if eligibility_context is not None else proposal.get("eligibility_context") or {}
+    allowed, eligibility_checks = _eligibility_candidates(applicant)
+    if not allowed:
+        return []
     model = _get_model()
     proposal_embedding = model.encode(proposal_to_text(proposal)).tolist()
 
-    rows = _vector_search(proposal_embedding, n_results=20)
-    if include_grant_id and all(
+    rows = _vector_search(proposal_embedding, n_results=max(20, top_k * 2), allowed_grant_ids=allowed)
+    if include_grant_id and str(include_grant_id) in allowed and all(
         str(row["grant_id"]) != str(include_grant_id) for row in rows
     ):
         requested_grant = _vector_search_grant(proposal_embedding, include_grant_id)
@@ -340,6 +374,11 @@ def find_similar_grants(
             "contact_email":      row.get("contact_email") or "",
             "description":        clean_html(row.get("description") or ""),
             "eligibility":        eligibility,
+            "eligible_geographies": row.get("eligible_geographies"),
+            "eligibility_check":  eligibility_checks.get(str(grant["grant_id"])),
+            "source":             row.get("source"),
+            "source_url":         row.get("source_url"),
+            "last_verified_at":   row.get("last_verified_at"),
             "similarity_score":   score,
             "match_explanation":  llm_insight.match_explanation if llm_insight else "Semantic similarity match.",
             "fit_level":          llm_insight.fit_level if llm_insight else "unknown",
@@ -352,14 +391,17 @@ def find_similar_grants(
     return final[:top_k]
 
 
-def topic_search_grants(query: str, top_k: int = 10) -> list:
+def topic_search_grants(query: str, top_k: int = 10, eligibility_context: dict | None = None) -> list:
     """
     Plain-text query → vector search → LLM topical relevance scoring → top_k.
     """
+    allowed, eligibility_checks = _eligibility_candidates(eligibility_context or {})
+    if not allowed:
+        return []
     model = _get_model()
     query_embedding = model.encode(query).tolist()
 
-    rows = _vector_search(query_embedding, n_results=20)
+    rows = _vector_search(query_embedding, n_results=max(20, top_k * 2), allowed_grant_ids=allowed)
     if not rows:
         return []
 
@@ -422,6 +464,11 @@ def topic_search_grants(query: str, top_k: int = 10) -> list:
             "application_url":   row.get("application_url") or row.get("portal_url") or "",
             "description":       clean_html(row.get("description") or ""),
             "eligibility":       eligibility,
+            "eligible_geographies": row.get("eligible_geographies"),
+            "eligibility_check": eligibility_checks.get(str(g["grant_id"])),
+            "source":            row.get("source"),
+            "source_url":        row.get("source_url"),
+            "last_verified_at":  row.get("last_verified_at"),
             "similarity_score":  relevance,
             "match_explanation": insight.get("match_reason", "Semantic similarity match."),
             "fit_level":         "strong" if relevance >= 70 else "moderate" if relevance >= 45 else "weak",

@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import EligibilityStatus from "../components/EligibilityStatus";
+import GrantFreshness from "../components/GrantFreshness";
 import { Nav, FitBadge, ScoreRing } from "../components";
 import useGrants from "../hooks/useGrants";
 
@@ -10,11 +12,21 @@ export default function GrantDetail() {
   const { grants, loading } = useGrants();
   const [fetchedGrant, setFetchedGrant] = useState(null);
   const [fetching, setFetching] = useState(false);
+  const [currentEligibility, setCurrentEligibility] = useState(null);
   const cachedGrant = grants.find(g => String(g.grant_id) === String(id));
   const grant = cachedGrant || fetchedGrant;
   useEffect(() => {
-    if (loading || cachedGrant) return;
+    if (loading) return;
     let active = true;
+    setCurrentEligibility(null);
+    if (cachedGrant) {
+      let context = {};
+      try { context = JSON.parse(sessionStorage.getItem("proposal") || "null")?.eligibility_context || {}; } catch (_) {}
+      api.post("/api/grants/eligibility/check", { grant_ids: [String(id)], eligibility_context: context })
+        .then(response => { if (active) setCurrentEligibility(response.data.checks?.[String(id)] || null); })
+        .catch(() => { if (active) setCurrentEligibility({ status: "unverified", checks: [{ criterion: "source", message: "Could not refresh the current eligibility requirements." }] }); });
+      return () => { active = false; };
+    }
     setFetching(true);
     setFetchedGrant(null);
     api.get(`/api/grants/${encodeURIComponent(id)}`).then(response => {
@@ -72,6 +84,7 @@ export default function GrantDetail() {
             <p style={{ color: "var(--text-muted)", fontSize: 15, margin: 0 }}>
               {grant.agency} · {grant.top_agency}
             </p>
+            <GrantFreshness grant={grant} link />
           </div>
           <div style={{ flexShrink: 0 }}>
             {Number.isFinite(grant.similarity_score) && <ScoreRing score={grant.similarity_score} size={80} />}
@@ -107,6 +120,8 @@ export default function GrantDetail() {
             {/* Eligibility */}
             <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 24 }}>
               <h3 style={{ fontWeight: 700, color: "#fff", fontSize: 15, margin: "0 0 12px" }}>Eligibility</h3>
+              <EligibilityStatus result={currentEligibility || grant.eligibility_check} detailed />
+              {grant.eligible_geographies && <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.6 }}><strong>Geographic scope: </strong>{grant.eligible_geographies}</p>}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {(grant.eligibility || []).map((e, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>

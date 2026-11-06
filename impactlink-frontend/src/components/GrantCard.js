@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import FitBadge from "./FitBadge";
+import EligibilityStatus from "./EligibilityStatus";
+import GrantFreshness from "./GrantFreshness";
 
 export default function GrantCard({ grant, compact = false }) {
   const navigate = useNavigate();
@@ -40,6 +42,8 @@ export default function GrantCard({ grant, compact = false }) {
         <p style={{ fontWeight: 700, fontSize: 15, color: "#fff", margin: "0 0 3px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {grant.title}
         </p>
+        <EligibilityStatus result={grant.eligibility_check} />
+        <GrantFreshness grant={grant} />
         <p style={{ color: "var(--text-muted)", fontSize: 13, margin: "0 0 8px" }}>{grant.agency}</p>
 
         {!compact && (

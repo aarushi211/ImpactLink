@@ -4,6 +4,7 @@ import { Nav } from "../components";
 import useGrants from "../hooks/useGrants";
 import useBudget from "../hooks/useBudget";
 import useWorkStore from "../hooks/useWorkStore";
+import BudgetInputs, { emptyCostInputs } from "../components/BudgetInputs";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -182,6 +183,11 @@ export default function Budget() {
   const pendingBudgetSave = useRef(Promise.resolve());
   const [saveError, setSaveError] = useState(null);
   const [preloadedBudget, setPreloadedBudget] = useState(null);
+  const [costInputs, setCostInputs] = useState(emptyCostInputs);
+  useEffect(() => {
+    const inputs = budget?.cost_inputs || preloadedBudget?.cost_inputs;
+    if (inputs) setCostInputs(inputs);
+  }, [budget, preloadedBudget]);
 
   // saved proposal selector
   const [selectedProposalId, setSelectedProposalId] = useState(
@@ -248,32 +254,21 @@ export default function Budget() {
   // Reload a saved budget when navigated to from Dashboard
 
 
-  // pre-fill max_budget from selected grant ceiling (or floor as fallback)
+  // Only an explicit award ceiling can pre-fill the maximum request.
   useEffect(() => {
     // Only pre-fill if we have a grant selected AND it's in our grants list
     if (loadBudgetId) return;
     const grant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
     
     if (grant) {
-      // Priority: 1. award_ceiling (BigInt/Number), 2. award_floor, 3. estimated_total (String)
       const ceiling = grant.award_ceiling;
-      const floor   = grant.award_floor;
-      const total   = grant.estimated_total;
       
       let amount = 0;
       if (ceiling && Number(ceiling) > 0) {
         amount = Number(ceiling);
-      } else if (floor && Number(floor) > 0) {
-        amount = Number(floor);
-      } else if (total) {
-        // Parse "estimated_total" which might have $ or , (e.g. "$53,000,000")
-        const parsed = parseInt(String(total).replace(/[^0-9]/g, ""), 10);
-        if (!isNaN(parsed) && parsed > 0) amount = parsed;
       }
 
-      if (amount > 0) {
-        setMaxBudget(String(amount));
-      }
+      setMaxBudget(amount > 0 ? String(amount) : "");
     }
   }, [selectedGrantId, grants, loadBudgetId]);
 
@@ -285,25 +280,26 @@ export default function Budget() {
   // ── handlers ───────────────────────────────────────────
 
   const handleGenerate = async () => {
-    if (!resolvedProposal || !maxBudget) return;
+    if (!maxBudget) return;
     await pendingBudgetSave.current.catch(() => {});
     savedBudgetId.current = null;
     setPreloadedBudget(null);
     reset();
     setMessages([]);
     setChatReady(false);
-    await generate(resolvedProposal, Number(maxBudget));
+    await generate(resolvedProposal || {}, Number(maxBudget), costInputs);
   };
 
   // Persist each generated or refined budget, retaining the same saved ID.
   useEffect(() => {
     if (!budget) return;
     const payload = {
+      ...budget,
       title: selectedGrant?.title || preloadedBudget?.title || activeProposal?.title || "Budget",
       grant_title: selectedGrant?.title || preloadedBudget?.grant_title || "", grant_id: selectedGrantId || "",
-      max_budget: Number(maxBudget) || 0, proposal_id: activeProposal?.id || null,
+      max_budget: budget.max_budget || Number(maxBudget) || 0, proposal_id: activeProposal?.id || preloadedBudget?.proposal_id || null,
       proposal_type: activeProposal?._type || preloadedBudget?.proposal_type || null,
-      proposal_context: resolvedProposal,
+      proposal_context: budget.cost_inputs ? { ...(resolvedProposal || {}), budget_inputs: budget.cost_inputs } : resolvedProposal,
       items: budget.items, total_requested: budget.total_requested,
       locality_explanation: budget.locality_explanation,
     };
@@ -341,8 +337,8 @@ export default function Budget() {
     if (displayBudget && prevBudgetRef.current && displayBudget !== prevBudgetRef.current) {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: displayBudget.locality_explanation,
-        budgetUpdated: true,
+        content: displayBudget.chat_response || displayBudget.locality_explanation,
+        budgetUpdated: !displayBudget.clarification,
       }]);
     }
     prevBudgetRef.current = displayBudget;
@@ -357,7 +353,7 @@ export default function Budget() {
 
   // ── derived ────────────────────────────────────────────
 
-  const canGenerate = !!resolvedProposal && !!maxBudget && Number(maxBudget) > 0;
+  const canGenerate = (costInputs.staff.length > 0 || costInputs.direct_costs.length > 0) && !!maxBudget && Number(maxBudget) > 0;
   const isGenerating = loading === "generating";
   const isRefining   = loading === "refining";
 
@@ -421,6 +417,10 @@ export default function Budget() {
                 <select
                   value={selectedProposalId}
                   onChange={e => {
+                    reset();
+                    setPreloadedBudget(null);
+                    savedBudgetId.current = null;
+                    setCostInputs(emptyCostInputs());
                     setSelectedProposalId(e.target.value);
                     sessionStorage.setItem("upload_draft_id", e.target.value);
                   }}
@@ -506,6 +506,8 @@ export default function Budget() {
               </div>
             </div>
 
+            <BudgetInputs value={costInputs} onChange={setCostInputs} disabled={!!loading} />
+
             {/* Proposal context chips */}
             {resolvedProposal && (
               <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -542,7 +544,7 @@ export default function Budget() {
                 >
                   Choose or upload one in Grants
                 </span>{" "}
-                to get a localized budget.
+                to link a proposal to this budget, or enter cost assumptions below.
               </p>
             )}
           </div>
@@ -565,7 +567,7 @@ export default function Budget() {
                 Building your budget…
               </p>
               <p style={{ color: "#555", fontSize: 12, margin: 0 }}>
-                Applying locality index · Calculating labor cap · Allocating line items
+                Calculating salary and fringe · Applying the indirect cost base · Checking the ceiling
               </p>
             </div>
           )}
@@ -583,6 +585,22 @@ export default function Budget() {
           {/* Budget table */}
           {displayBudget && !isGenerating && (
             <>
+              {displayBudget.model_version === 2 && <div style={{ padding: 16, border: "1px solid var(--border)", borderRadius: 8, color: "#ddd", fontSize: 13 }}>
+                {displayBudget.funding_gap > 0
+                  ? <p role="alert">Costs exceed the grant ceiling by {fmt(displayBudget.funding_gap)}. Staffing and unit costs have been preserved. Choose a scope change or edit the inputs.</p>
+                  : <p>Costs are within the ceiling. Unrequested capacity: {fmt(displayBudget.unallocated_amount)}. Funder requirements still need review.</p>}
+                {(displayBudget.compliance_summary?.warnings || []).map((warning, index) => <p key={index} style={{ color: "#facc15" }}>{warning}</p>)}
+                {displayBudget.compliance_summary?.indirect && <p>Indirect base: {displayBudget.compliance_summary.indirect.base} {fmt(displayBudget.compliance_summary.indirect.base_amount)} × {displayBudget.compliance_summary.indirect.rate_pct}%. Charged indirect: {fmt(displayBudget.compliance_summary.indirect.calculated_amount)}.</p>}
+                {(displayBudget.scope_options || []).map((option, index) => <div key={index} style={{ borderTop: "1px solid var(--border)", paddingTop: 10, marginTop: 10 }}>
+                  <p>{option.label} Saves {fmt(option.savings)}; remaining funding gap {fmt(option.funding_gap)}.</p>
+                  <button disabled={!!loading} onClick={async () => {
+                    await pendingBudgetSave.current.catch(() => {});
+                    setCostInputs(option.cost_inputs);
+                    setMessages(previous => [...previous, { role: "user", content: `Apply scope change: ${option.label}` }]);
+                    await generate(resolvedProposal || {}, displayBudget.max_budget, option.cost_inputs);
+                  }}>Apply this scope change</button>
+                </div>)}
+              </div>}
               {/* Locality explanation banner */}
               <div style={{
                 background: "#0d1a2e", border: "1px solid #1e3a5f",

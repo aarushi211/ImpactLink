@@ -42,6 +42,8 @@ def get_budget_context(proposal: dict, grant: dict) -> str | None:
         budget_data = generate_budget(proposal, max_budget, grant_doc)
 
         if "error" in budget_data:
+            if budget_data["error"] == "budget_inputs_required":
+                return "No verified cost inputs have been supplied. Use clearly marked budget placeholders and request salary, FTE, duration, fringe, direct-cost and indirect-rate details. Do not describe estimated figures as a calculated or compliant budget."
             log.warning("budget_injector: budget service returned error — %s",
                         budget_data["error"])
             return None
@@ -52,6 +54,8 @@ def get_budget_context(proposal: dict, grant: dict) -> str | None:
             return None
 
         lines = [
+            "These costs are calculated from declared assumptions; funder allowability and salary reasonableness remain unverified.",
+            (f"The plan exceeds the ceiling by ${budget_data.get('funding_gap', 0):,.2f}. Do not present it as funded or silently reduce scope." if budget_data.get("funding_gap") else "The calculated request is within the entered ceiling."),
             "| Category | Amount (USD) | Notes |",
             "|---|---|---|",
         ]

@@ -1,0 +1,36 @@
+name: Refresh official grants
+
+on:
+  schedule:
+    - cron: '23 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-grants
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.GRANT_REFRESH_DATABASE_URL }}
+    defaults:
+      run:
+        working-directory: impactlink-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check database credential
+        run: python -c "import os; assert os.environ.get('DATABASE_URL'), 'Configure GRANT_REFRESH_DATABASE_URL in repository secrets'"
+      - name: Install refresh dependencies
+        run: pip install 'psycopg[binary]==3.3.3' 'python-dotenv==1.2.1' requests sentence-transformers --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Refresh California grants
+        run: python scripts/refresh_grants.py --source california --limit 100 --apply
+      - name: Refresh federal grants
+        run: python scripts/refresh_grants.py --source grants_gov --keyword nonprofit --limit 50 --apply

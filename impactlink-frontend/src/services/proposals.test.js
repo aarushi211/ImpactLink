@@ -2,6 +2,12 @@ import { proposalContext, stageProposalMatch, workItemPath } from "./proposals";
 
 beforeEach(() => sessionStorage.clear());
 
+test("explicit applicant and project-state facts survive proposal handoff", () => {
+  const context = proposalContext({ title: "Project" }, { org_name: "Demo", applicant_type: "nonprofit", project_states: ["CA"] });
+  expect(context.eligibility_context).toEqual({ applicant_type: "nonprofit", project_states: ["CA"] });
+  expect(proposalContext({ title: "Project" }, { org_name: "Nonprofit Demo" }).eligibility_context.applicant_type).toBe("");
+});
+
 test("matching uses the latest generated/revised sections instead of stale upload text", () => {
   const context = proposalContext({ title: "Restoration", proposal_context: { raw_text: "Old upload", sections: { summary: { content: "Old version" } } }, sections: { summary: { title: "Summary", content: "The latest restoration plan" } } });
   expect(context.sections.summary.content).toBe("The latest restoration plan");
