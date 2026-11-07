@@ -29,7 +29,7 @@ from agents.planning_agent import (
     summarize_prior_sections,
 )
 from agents.prompts import SECTIONS
-from services.application import section_definitions, spec_for, annotate_sections, constraint_prompt, section_for, merge_checklist
+from services.application import section_definitions, spec_for, annotate_sections, constraint_prompt, section_for, merge_checklist, validate_slot_confirmation
 from agents.coherence_agent import CoherenceAgent, CoherenceReport, review_metadata, current_review, _sections_digest
 from agents.rewriter_agent import targeted_retry_rewrite
 from flows.section_subgraph import run_section_subgraph
@@ -127,12 +127,13 @@ def node_slot_confirm(state: ProposalState) -> dict:
     })
 
     updated_slots = {k: dict(v) for k, v in state["slots"].items()}
+    validate_slot_confirmation(state, user_input)
     for key, value in user_input.get("slots", {}).items():
         if key in updated_slots:
             updated_slots[key]["value"]  = value
             updated_slots[key]["filled"] = bool(value and str(value).strip())
 
-    return {"slots": updated_slots}
+    return {"slots": updated_slots, "draft_instructions": user_input.get("draft_instructions", "").strip()}
 
 
 def node_plan_draft(state: ProposalState) -> dict:
@@ -143,6 +144,8 @@ def node_plan_draft(state: ProposalState) -> dict:
 
     with metrics_collector.timer("node", "plan_draft", session_id=sid):
         profile = slots_to_profile(state["slots"])
+        if state.get("draft_instructions"):
+            profile["draft_instructions"] = state["draft_instructions"]
         plan = PlanningAgent.create_plan(
             grant=state["grant"],
             profile=profile,

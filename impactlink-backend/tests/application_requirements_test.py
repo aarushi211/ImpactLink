@@ -106,10 +106,11 @@ class CustomFlowTests(unittest.TestCase):
         self.assertFalse(result["limits"]["within_limits"])
 
     def test_improve_creates_missing_application_answers_from_uploaded_context(self):
-        state = {"session_id": "test", "profile": {}, "grant": GRANT, "funder_vocab": [], "original_sections": {"proposal": "The uploaded project source"}, "analysis": {"sections_to_rewrite": [], "user_additions": ""}, "retry_counts": {}, "flagged_sections": []}
+        state = {"session_id": "test", "profile": {}, "grant": GRANT, "funder_vocab": [], "original_sections": {"proposal": "The uploaded project source"}, "analysis": {"sections_to_rewrite": ["need", "delivery"], "user_additions": ""}, "retry_counts": {}, "flagged_sections": []}
         with patch.object(improve_flow, "rewrite_section", return_value="Short answer") as rewrite, patch.object(improve_flow, "score_section", return_value={"score": 95, "feedback": "Good"}):
             result = improve_flow.node_rewrite_sections(state)
-        self.assertEqual(list(result["sections"]), ["need", "delivery"])
+        self.assertEqual(list(result["sections"]), ["proposal", "need", "delivery"])
+        self.assertEqual(result["sections"]["proposal"]["content"], "The uploaded project source")
         self.assertTrue(all(call.args[2] == "The uploaded project source" for call in rewrite.call_args_list))
 
 

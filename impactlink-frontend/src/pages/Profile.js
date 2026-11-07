@@ -3,377 +3,58 @@ import { useNavigate } from "react-router-dom";
 import { Nav } from "../components";
 import { useAuth } from "../context/AuthContext.js";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
-import StateSelect from "../components/StateSelect";
+import OrganizationFields, { OrganizationSection } from "../components/OrganizationFields";
+import { organizationForm, organizationUpdates, profileChecklist } from "../utils/organization";
+import "./Organization.css";
 
-const SDG_OPTIONS = [
-  "SDG 1: No Poverty", "SDG 2: Zero Hunger", "SDG 3: Good Health",
-  "SDG 4: Quality Education", "SDG 5: Gender Equality", "SDG 6: Clean Water",
-  "SDG 7: Clean Energy", "SDG 8: Decent Work", "SDG 10: Reduced Inequalities",
-  "SDG 11: Sustainable Cities", "SDG 13: Climate Action", "SDG 17: Partnerships",
-];
-const CAUSE_AREAS = [
-  "Education & Youth", "Health & Wellbeing", "Economic Empowerment",
-  "Environment & Climate", "Women & Gender", "Food Security",
-  "Humanitarian Aid", "Human Rights", "Community Development",
-  "Arts & Culture", "Technology & Innovation",
+const sections = [
+  ["basics", "Organization", "Your public identity and the mission behind your work."],
+  ["programs", "Programs & communities", "Give grant searches and proposal drafting a useful starting point."],
+  ["eligibility", "Grant eligibility", "Set defaults for future searches. You can adjust them for each project."],
+  ["collaboration", "Collaboration preferences", "Choose whether to make your profile available to potential partners."],
 ];
 
-const inputStyle = {
-  width: "100%", background: "#111120",
-  border: "1px solid #1e1e30", borderRadius: 8,
-  color: "#e0e0f0", padding: "9px 12px",
-  fontSize: 13, outline: "none", boxSizing: "border-box",
-};
-
-function Section({ title, children }) {
-  return (
-    <div style={{
-      background: "var(--bg-card)", border: "1px solid var(--border)",
-      borderRadius: 12, padding: "20px 24px", marginBottom: 16,
-    }}>
-      <p style={{ margin: "0 0 16px", fontWeight: 700, color: "#fff", fontSize: 14,
-        borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <label style={{ display: "block", color: "#555", fontSize: 11,
-        fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
-        marginBottom: 6 }}>
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+function ProfileEditor({ profile }) {
+  const navigate = useNavigate();
+  const { logout, updateProfile } = useAuth();
+  const [form, setForm] = useState(() => organizationForm(profile));
+  const [baseline, setBaseline] = useState(() => organizationForm(profile));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
+  const checklist = profileChecklist(form);
+  const count = checklist.filter(item => item.done).length;
+  const change = next => { setForm(next); setSaved(false); setError(""); };
+  const handleSave = async event => {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true); setSaved(false); setError("");
+    try {
+      const updates = organizationUpdates(form);
+      const result = await updateProfile(updates);
+      const next = organizationForm(result || updates);
+      setForm(next); setBaseline(next); setSaved(true);
+    } catch (err) { setError(err?.response?.data?.detail || err.message || "Could not save your changes. Please try again."); }
+    finally { setSaving(false); }
+  };
+  return <div className="org-page"><Nav /><main className="org-shell">
+    <p className="org-eyebrow">Organization profile</p>
+    <header className="org-hero"><div className="org-identity"><div className="org-avatar" aria-hidden="true">{(profile.org_name || "?").split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}</div><div><h1>{profile.org_name}</h1><p>{profile.email}</p></div></div><div className="org-actions"><button type="button" onClick={() => navigate("/dashboard")}>Back to dashboard</button><button type="button" onClick={logout}>Sign Out</button></div></header>
+    <div className="org-layout"><aside className="org-sidebar" aria-label="Profile overview">
+      <section className="org-card org-summary"><h2>Your profile at a glance</h2><p className="org-hint"><strong>{count} of {checklist.length}</strong> useful details added</p><progress value={count} max={checklist.length} aria-label="Profile details completed" /><ul>{checklist.map(item => <li key={item.label} data-done={item.done}>{item.done ? "✓" : "○"} {item.label}</li>)}</ul><p className="org-hint">Based on the form below. Save to apply changes.</p></section>
+      <nav aria-label="Profile sections">{sections.map(([id, title]) => <a key={id} href={`#${id}`}>{title}</a>)}<a href="#privacy">AI privacy settings</a></nav><p className="org-hint">Keep project-specific budgets, outcomes and timelines in your proposals. This profile describes your organization.</p>
+    </aside><form onSubmit={handleSave}><fieldset className="org-form-fieldset" disabled={saving}>
+      {sections.map(([id, title, description]) => <OrganizationSection key={id} id={id} title={title} description={description}><OrganizationFields section={id} value={form} onChange={change} /></OrganizationSection>)}
+      <OrganizationSection id="privacy" title="AI privacy settings" description="Add names or identifying phrases you want masked before content is sent to AI services."><div className="org-field"><label><span>Names and phrases to mask</span><textarea rows={4} maxLength={20100} value={form.privacy_redaction_terms} onChange={e => change({ ...form, privacy_redaction_terms: e.target.value })} placeholder="One name or identifying phrase per line" /></label><p className="org-hint">2–200 characters per entry, up to 100 entries. Matching ignores case and flexible spacing. Include alternate spellings. These terms are private and excluded from collaborator listings.</p></div></OrganizationSection>
+    </fieldset><div className="org-savebar"><div aria-live="polite">{error ? <p role="alert" className="org-error">{error}</p> : saved ? <p role="status" className="org-success">Profile saved.</p> : <p>{dirty ? "You have unsaved changes." : "Your organization details are up to date."}</p>}</div><div className="org-actions"><button type="button" disabled={!dirty || saving} onClick={() => { setForm(baseline); setSaved(false); setError(""); }}>Discard changes</button><button type="submit" className="org-primary" disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button></div></div></form></div>
+    <AiPrivacyNotice preview protectedTerms={form.privacy_redaction_terms.split("\n").map(value => value.trim()).filter(Boolean)} />
+  </main></div>;
 }
 
 export default function Profile() {
+  const { profile } = useAuth();
   const navigate = useNavigate();
-  const { profile, logout, updateProfile } = useAuth();
-
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
-  const [error,   setError]   = useState("");
-
-  // editable fields — seeded from profile
-  const [mission,    setMission]    = useState(profile?.mission    || "");
-  const [location,   setLocation]   = useState(profile?.location   || "");
-  const [causeArea,  setCauseArea]  = useState(profile?.cause_area || "");
-  const [website,    setWebsite]    = useState(profile?.website    || "");
-  const [teamSize,   setTeamSize]   = useState(profile?.team_size  || "");
-  const [geoFocus,   setGeoFocus]   = useState((profile?.geographic_focus || [])[0] || "");
-  const [applicantType, setApplicantType] = useState(profile?.applicant_type || "");
-  const [projectStates, setProjectStates] = useState((profile?.project_states || []).join(", "));
-  const [privateTerms, setPrivateTerms] = useState((profile?.privacy_redaction_terms || []).join("\n"));
-  const [selSDGs,    setSelSDGs]    = useState(profile?.sdgs || []);
-  const [collabOpen, setCollabOpen] = useState(profile?.collab_open ?? true);
-  const [collabInts, setCollabInts] = useState((profile?.collab_interests || []).join(", "));
-
-  const [activities, setActivities] = useState(
-    (profile?.key_activities || []).join("\n")
-  );
-
-  const toggleSDG = (s) =>
-    setSelSDGs(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-
-  const handleSave = async () => {
-    setSaving(true); setError(""); setSaved(false);
-    try {
-      await updateProfile({
-        mission,
-        location,
-        cause_area:       causeArea,
-        website,
-        team_size:        teamSize,
-        geographic_focus: geoFocus ? [geoFocus] : [],
-        applicant_type: applicantType,
-        project_states: projectStates.split(/[,;|]/).map(value => value.trim()).filter(Boolean),
-        privacy_redaction_terms: privateTerms.split("\n").map(value => value.trim()).filter(Boolean),
-        sdgs:             selSDGs,
-        collab_open:      collabOpen,
-        collab_interests: collabInts.split(",").map(s => s.trim()).filter(Boolean),
-        key_activities:   activities.split("\n").map(s => s.trim()).filter(Boolean),
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err) {
-      setError(err?.response?.data?.detail || "Save failed.");
-    } finally { setSaving(false); }
-  };
-
-  if (!profile) {
-    return (
-      <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex",
-        flexDirection: "column" }}>
-        <Nav />
-        <div style={{ flex: 1, display: "flex", alignItems: "center",
-          justifyContent: "center", flexDirection: "column", gap: 16 }}>
-          <p style={{ color: "#555", fontSize: 15 }}>You're not signed in.</p>
-          <button
-            onClick={() => navigate("/login")}
-            style={{ background: "var(--accent)", border: "none", color: "#fff",
-              padding: "10px 24px", borderRadius: 8, fontSize: 13,
-              fontWeight: 700, cursor: "pointer" }}
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex",
-      flexDirection: "column" }}>
-      <Nav />
-
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 40px 80px",
-        width: "100%" }}>
-        <Section title="Extra AI redaction">
-          <p style={{ color: "#aaa", fontSize: 12, lineHeight: 1.6 }}>Add one full name, address or identifying phrase per line (2–200 characters; up to 100 terms). Matching ignores case and flexible spacing; include alternate spellings. These private terms are hidden from collaborator listings. Save changes to apply them across AI features; preview can test your unsaved list.</p>
-          <textarea aria-label="Names and phrases to mask" value={privateTerms} maxLength={20100} onChange={event => setPrivateTerms(event.target.value)} style={{ ...inputStyle, minHeight: 95 }} />
-        </Section>
-
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-              background: "var(--accent-dim)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontWeight: 900, fontSize: 24, color: "#fff",
-            }}>
-              {(profile.org_name || "?")[0].toUpperCase()}
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#fff",
-                letterSpacing: "-0.02em" }}>
-                {profile.org_name}
-              </h1>
-              <p style={{ margin: 0, color: "#555", fontSize: 13 }}>{profile.email}</p>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => navigate("/dashboard")}
-              style={{ background: "transparent", border: "1px solid var(--border)",
-                color: "#888", padding: "9px 18px", borderRadius: 8,
-                fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-            >
-              ← Dashboard
-            </button>
-            <button
-              onClick={logout}
-              style={{ background: "transparent", border: "1px solid #2d0f0f",
-                color: "var(--red)", padding: "9px 18px", borderRadius: 8,
-                fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-
-        {/* Stats row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 12, marginBottom: 24 }}>
-          {[
-            { label: "Funding Secured", value: `$${((profile.funding_secured||0)/1000).toFixed(0)}K`, color: "var(--accent)" },
-            { label: "Grants Won",      value: profile.total_won || 0,                                 color: "var(--green)" },
-            { label: "Applied",         value: profile.total_applied || 0,                             color: "var(--yellow)" },
-            { label: "Since",           value: profile.created_at ? new Date(profile.created_at).getFullYear() : "—", color: "#888" },
-          ].map(s => (
-            <div key={s.label} style={{ background: "var(--bg-card)",
-              border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px" }}>
-              <p style={{ margin: "0 0 4px", color: "#444", fontSize: 10,
-                fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                {s.label}
-              </p>
-              <p style={{ margin: 0, color: s.color, fontWeight: 800, fontSize: 22 }}>
-                {s.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
-
-          {/* Left column */}
-          <div>
-            <Section title="Organization Profile">
-              <Field label="Mission Statement">
-                <textarea
-                  style={{ ...inputStyle, resize: "none", minHeight: 80 }}
-                  value={mission} onChange={e => setMission(e.target.value)}
-                  placeholder="What is your organization's core mission?"
-                />
-              </Field>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <Field label="Location">
-                  <input style={inputStyle} value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="Nairobi, Kenya" />
-                </Field>
-                <Field label="Team Size">
-                  <select style={{ ...inputStyle, cursor: "pointer" }}
-                    value={teamSize} onChange={e => setTeamSize(e.target.value)}>
-                    <option value="">Select…</option>
-                    {["1–5","6–15","16–50","51–200","200+"].map(s =>
-                      <option key={s} value={s}>{s} people</option>)}
-                  </select>
-                </Field>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <Field label="Cause Area">
-                  <select style={{ ...inputStyle, cursor: "pointer" }}
-                    value={causeArea} onChange={e => setCauseArea(e.target.value)}>
-                    <option value="">Select…</option>
-                    {CAUSE_AREAS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </Field>
-                <Field label="Primary Region">
-                  <input style={inputStyle} value={geoFocus}
-                    onChange={e => setGeoFocus(e.target.value)}
-                    placeholder="Sub-Saharan Africa" />
-                </Field>
-              </div>
-              <Field label="Website">
-                <input style={inputStyle} value={website}
-                  onChange={e => setWebsite(e.target.value)}
-                  placeholder="https://yourorg.org" />
-              </Field>
-            </Section>
-
-            <Section title="Grant Eligibility">
-              <Field label="Applicant type for grant eligibility">
-                <select aria-label="Applicant type" style={inputStyle} value={applicantType} onChange={event => setApplicantType(event.target.value)}>
-                  <option value="">Not specified</option>
-                  <option value="nonprofit">Nonprofit</option>
-                  <option value="public_agency">Public agency</option>
-                  <option value="tribal_government">Tribal government</option>
-                  <option value="business">Business</option>
-                  <option value="individual">Individual</option>
-                  <option value="other_legal_entity">Other legal entity</option>
-                </select>
-              </Field>
-              <Field label="Default project U.S. states">
-                <StateSelect value={projectStates} onChange={setProjectStates} />
-                <p style={{ color: "#888", fontSize: 12 }}>Where the funded project will operate, rather than your office address. You can override these states when matching a proposal.</p>
-              </Field>
-            </Section>
-            <Section title="Key Activities">
-              <p style={{ color: "#444", fontSize: 12, margin: "0 0 10px" }}>
-                One activity per line — used to improve grant matching and proposal drafting.
-              </p>
-              <textarea
-                style={{ ...inputStyle, resize: "vertical", minHeight: 110 }}
-                value={activities}
-                onChange={e => setActivities(e.target.value)}
-                placeholder={"Digital literacy workshops\nVocational training programs\nCommunity outreach"}
-              />
-            </Section>
-          </div>
-
-          {/* Right column */}
-          <div>
-            <Section title="SDG Alignment">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {SDG_OPTIONS.map(sdg => {
-                  const active = selSDGs.includes(sdg);
-                  return (
-                    <button key={sdg} type="button" onClick={() => toggleSDG(sdg)}
-                      style={{
-                        background: active ? "var(--accent)" : "#111120",
-                        border: `1px solid ${active ? "var(--accent)" : "#1e1e30"}`,
-                        color: active ? "#fff" : "#555",
-                        borderRadius: 20, padding: "5px 10px",
-                        fontSize: 11, cursor: "pointer", transition: "all 0.12s",
-                      }}>
-                      {sdg.split(":")[0]}
-                    </button>
-                  );
-                })}
-              </div>
-            </Section>
-
-            <Section title="NGO Collaboration">
-              <p style={{ color: "#444", fontSize: 12, margin: "0 0 12px", lineHeight: 1.6 }}>
-                Mark yourself as open to collaborating with other NGOs on joint proposals.
-              </p>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                marginBottom: 14 }}>
-                <span style={{ color: "#888", fontSize: 13 }}>Open to collaboration</span>
-                <div
-                  onClick={() => setCollabOpen(p => !p)}
-                  style={{
-                    width: 44, height: 24, borderRadius: 12, cursor: "pointer",
-                    background: collabOpen ? "var(--accent)" : "#1e1e30",
-                    position: "relative", transition: "background 0.2s",
-                    flexShrink: 0,
-                  }}
-                >
-                  <div style={{
-                    position: "absolute",
-                    top: 2, left: collabOpen ? 22 : 2,
-                    width: 20, height: 20, borderRadius: "50%",
-                    background: "#fff", transition: "left 0.2s",
-                  }} />
-                </div>
-              </div>
-
-              <Field label="Collab Interests" >
-                <input
-                  style={inputStyle}
-                  value={collabInts}
-                  onChange={e => setCollabInts(e.target.value)}
-                  placeholder="Climate, Education, Health equity…"
-                  disabled={!collabOpen}
-                />
-              </Field>
-
-              <div style={{ background: "#0d1a2e", borderRadius: 8, padding: "10px 12px",
-                marginTop: 4 }}>
-                <p style={{ margin: 0, color: "#7cb9f5", fontSize: 11, lineHeight: 1.6 }}>
-                  🤝 NGO matching is coming soon. When enabled, your profile will appear
-                  to similar organizations for potential joint proposals.
-                </p>
-              </div>
-            </Section>
-          </div>
-        </div>
-
-        {/* Save bar */}
-        <div style={{
-          position: "sticky", bottom: 0, background: "var(--bg-nav)",
-          borderTop: "1px solid var(--border)",
-          padding: "14px 0", marginTop: 4,
-          display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12,
-        }}>
-          {error  && <p style={{ color: "var(--red)",   fontSize: 12, margin: 0 }}>⚠ {error}</p>}
-          {saved  && <p style={{ color: "var(--green)", fontSize: 12, margin: 0 }}>✓ Saved</p>}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              background: saving ? "#1a1a28" : "var(--accent)",
-              border: "none", borderRadius: 9, color: saving ? "#333" : "#fff",
-              padding: "11px 28px", fontSize: 13, fontWeight: 700,
-              cursor: saving ? "wait" : "pointer",
-            }}
-          >
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
-        </div>
-          <AiPrivacyNotice preview protectedTerms={privateTerms.split("\n").map(value => value.trim()).filter(Boolean)} />
-      </div>
-    </div>
-  );
+  if (!profile) return <div className="org-page"><Nav /><main className="org-shell"><h1>Sign in to manage your organization</h1><button onClick={() => navigate("/login")}>Sign In</button></main></div>;
+  return <ProfileEditor key={profile.id || profile.email} profile={profile} />;
 }

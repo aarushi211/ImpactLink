@@ -10,8 +10,8 @@ from agents.gap_analysis_agent import (
     validate_user_additions,
 )
 from agents.rewriter_agent import rewrite_section, retry_rewrite
-from agents.scoring_agent import score_section, needs_retry, is_flagged, MAX_RETRIES
-from utils.diff import diff_sections, normalize_section_headings
+from agents.scoring_agent import score_section, needs_retry, MAX_RETRIES, SCORE_THRESHOLD
+from utils.diff import diff_sections
 import concurrent.futures
 import contextvars
 import logging
@@ -42,6 +42,7 @@ def node_analyze_gaps(state: ProposalState) -> dict:
             existing_sections=state["original_sections"],
             grant=state["grant"],
             funder_vocab=state["funder_vocab"],
+            user_instructions=state["grant"].get("revision_context", {}).get("instructions", ""),
         )
     spec = spec_for(state["grant"])
     if spec and (spec.sections or spec.stage != "full_proposal"):
@@ -50,6 +51,12 @@ def node_analyze_gaps(state: ProposalState) -> dict:
                 analysis.setdefault("missing_sections", []).append({"section": section["key"], "description": f"Application question: {section['title']}", "severity": "high"})
                 if section["key"] not in analysis.setdefault("sections_to_rewrite", []):
                     analysis["sections_to_rewrite"].append(section["key"])
+            elif state["original_sections"].get(section["key"], "").strip():
+                limits = length_check(state["original_sections"][section["key"]], section)
+                if not limits["within_limits"]:
+                    analysis.setdefault("missing_content", []).append({"section": section["key"], "description": "Recorded answer limits: " + "; ".join(limits["violations"]), "severity": "high"})
+                    if section["key"] not in analysis.setdefault("sections_to_rewrite", []):
+                        analysis["sections_to_rewrite"].append(section["key"])
     return {"analysis": analysis, "gate": "gap_review"}
 
 
@@ -103,14 +110,12 @@ def node_rewrite_sections(state: ProposalState) -> dict:
         spec = spec_for(grant)
         custom = bool(spec and (spec.sections or spec.stage != "full_proposal"))
         definitions = {item["key"]: item for item in section_definitions(grant)}
-        if custom:
-            sections_to_rewrite = list(dict.fromkeys([key for key in sections_to_rewrite if key in definitions] + [key for key in definitions if not original_text.get(key, "").strip()]))
+        valid_keys = set(original_text) | (set(definitions) if custom else set())
+        sections_to_rewrite = list(dict.fromkeys(key for key in sections_to_rewrite if key in valid_keys))
 
         # Preserve unrewritten sections
         new_sections = {}
         for key, text in original_text.items():
-            if custom and key not in definitions:
-                continue
             new_sections[key] = {
                 "title": key.replace("_", " ").title(),
                 "content": text, "score": 0, "retries": 0, "flagged": False,
@@ -126,13 +131,14 @@ def node_rewrite_sections(state: ProposalState) -> dict:
             from agents.rewriter_agent import gaps_for_section as gfs
             definition    = definitions.get(section_key, {})
             title         = definition.get("title", section_key.replace("_", " ").title())
-            original      = original_text.get(section_key, "") or ("\n\n".join(original_text.values())[:20000] if custom else "")
+            original      = original_text.get(section_key, "") or ("\n\n".join(original_text.values()) if custom else "")
             relevant_gaps = gfs(analysis, section_key)
-            if custom:
+            if custom and definition:
                 relevant_gaps = [*relevant_gaps, {"severity": "high", "description": definition.get("instructions", "") + "\n" + constraint_prompt(definition)}]
+            new_answer = custom and not original_text.get(section_key, "").strip()
 
             content     = rewrite_section(section_key, title, original,
-                                          relevant_gaps, funder_vocab, grant, profile,
+                                          relevant_gaps, funder_vocab, {**grant, "_new_application_answer": new_answer}, profile,
                                           user_additions)
             retry_count = new_retry_counts.get(section_key, 0)
             last_score  = 0
@@ -143,10 +149,14 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 last_score = result["score"]
                 feedback   = result["feedback"]
                 limits = length_check(content, definition)
-                if not needs_retry(last_score, retry_count) and (limits["within_limits"] or retry_count >= MAX_RETRIES):
+                score_retry = new_answer and needs_retry(last_score, retry_count)
+                length_retry = not limits["within_limits"] and retry_count < MAX_RETRIES
+                if not score_retry and not length_retry:
                     break
+                retry_feedback = feedback if new_answer else "Fix only the recorded hard length limit. Preserve all other facts and formatting."
                 content     = retry_rewrite(
-                    title, content, feedback + "\n" + constraint_prompt(definition) + "\n" + "; ".join(limits["violations"]), funder_vocab, user_additions
+                    title, content, retry_feedback + "\n" + constraint_prompt(definition) + "\n" + "; ".join(limits["violations"]), funder_vocab, user_additions,
+                    minimal_edits=not new_answer,
                 )
                 retry_count += 1
 
@@ -159,7 +169,7 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 metadata={"score": last_score, "retries": retry_count},
             )
 
-            flagged = is_flagged(last_score, retry_count)
+            flagged = last_score < SCORE_THRESHOLD or not limits["within_limits"]
             return section_key, {
                 "title": title, "content": content,
                 "score": last_score, "retries": retry_count, "flagged": flagged,
@@ -177,7 +187,8 @@ def node_rewrite_sections(state: ProposalState) -> dict:
                 if result["flagged"] and key not in new_flagged:
                     new_flagged.append(key)
 
-        new_sections = annotate_sections(new_sections if custom else normalize_section_headings(new_sections), grant, order=custom)
+        ordered_keys = list(original_text) + [key for key in sections_to_rewrite if key not in original_text]
+        new_sections = annotate_sections({key: new_sections[key] for key in ordered_keys}, grant)
 
         revised_text = {k: v["content"] for k, v in new_sections.items()}
         diffs = diff_sections(original_text, revised_text)
@@ -205,6 +216,7 @@ def node_draft_review(state: ProposalState) -> dict:
         "sections":         state["sections"],
         "application_spec": state["grant"].get("application_spec"),
         "diffs":            state["diffs"],
+        "analysis":         state["analysis"],
         "flagged_sections": state["flagged_sections"],
         "instructions":     (
             "Review the rewritten sections below. "
@@ -232,6 +244,7 @@ def node_final_save(state: ProposalState) -> dict:
         "gate":         "final_save",
         "application_spec": state["grant"].get("application_spec"),
         "sections":     state["sections"],
+        "analysis":     state["analysis"],
         "instructions": "Your proposal is ready. Confirm to download.",
     })
 

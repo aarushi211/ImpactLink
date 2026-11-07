@@ -11,7 +11,20 @@ import { ApplicationRequirementsEditor, ApplicationReview } from "../components/
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
 import { createProposalPdf } from "../utils/proposalPdf";
 import "./Draft.css";
-import { applicationCheck, aiPolicyCheck, starterSections, emptyApplicationSpec } from "../utils/application";
+import { applicationCheck, aiPolicyCheck, emptyApplicationSpec } from "../utils/application";
+import { matchFingerprint } from "../utils/matchAssessment";
+
+const GAP_GROUPS = { missing_content: "Missing content", weak_evidence: "Evidence to strengthen", wrong_vocabulary: "Terminology", misalignment: "Funder alignment", missing_sections: "Missing application answers", requested_changes: "Requested changes" };
+
+function GapSummary({ analysis }) {
+  if (!analysis) return <section className="draft-card" aria-label="Gap analysis"><h2>Gap analysis</h2><p>No gap analysis was saved with this revision.</p></section>;
+  const groups = Object.entries(GAP_GROUPS).filter(([key]) => analysis[key]?.length);
+  return <section className="draft-card" aria-label="Gap analysis"><h2>Review the gaps</h2>
+    <p>Review these findings, choose the areas to change, then click Draft. Other sections are preserved.</p>
+    {!groups.length && <p>{analysis.status === "unavailable" ? "Gap analysis could not be completed. Return to setup and try again." : "No specific gaps were recorded."}</p>}
+    {groups.map(([key, label]) => <div key={key}><h3 style={{ fontSize: 13, margin: "14px 0 6px" }}>{label}</h3><ul style={{ paddingLeft: 20 }}>{analysis[key].map((gap, i) => <li key={i} style={{ marginBottom: 8, fontSize: 13, lineHeight: 1.7 }}><strong>{getSectionTitle(gap.section || "proposal")}</strong>{gap.severity && ` · ${gap.severity}`} — {gap.description}</li>)}</ul></div>)}
+  </section>;
+}
 
 // Loads jsPDF from CDN once via a script tag
 function loadJsPDF() {
@@ -234,58 +247,6 @@ function sliceDiffSegments(segments, start, end) {
     }
     offset = segmentEnd;
     if (offset >= end) break;
-  }
-  return result;
-}
-
-function composeRevisedDiffTokens(draftedTokens, editTokens, draftedText, revisedText) {
-  const sourceTokens = Array.isArray(draftedTokens)
-    ? draftedTokens.filter(token => token.type === "equal" || token.type === "add")
-    : [];
-  const validSource = sourceTokens.map(token => token.text).join("") === draftedText
-    ? sourceTokens
-    : (draftedText ? [{ type: "equal", text: draftedText }] : []);
-  const result = [];
-  const append = (type, text) => {
-    if (!text) return;
-    const previous = result[result.length - 1];
-    if (previous?.type === type) previous.text += text;
-    else result.push({ type, text });
-  };
-  let sourceIndex = 0;
-  let sourceOffset = 0;
-
-  const advanceSourceRange = (length, render = true) => {
-    let remaining = length;
-    while (remaining > 0 && sourceIndex < validSource.length) {
-      const source = validSource[sourceIndex];
-      const available = source.text.length - sourceOffset;
-      const count = Math.min(remaining, available);
-      if (render) {
-        append(source.type, source.text.slice(sourceOffset, sourceOffset + count));
-      }
-      sourceOffset += count;
-      remaining -= count;
-      if (sourceOffset === source.text.length) {
-        sourceIndex += 1;
-        sourceOffset = 0;
-      }
-    }
-  };
-
-  for (const token of editTokens) {
-    if (token.type === "equal") {
-      advanceSourceRange(token.text.length);
-    } else if (token.type === "remove") {
-      append("remove", token.text);
-      advanceSourceRange(token.text.length, false);
-    } else if (token.type === "add") {
-      append("add", token.text);
-    }
-  }
-
-  if (result.filter(token => token.type !== "remove").map(token => token.text).join("") !== revisedText) {
-    return revisedText ? [{ type: "equal", text: revisedText }] : [];
   }
   return result;
 }
@@ -549,6 +510,7 @@ function CompareEditableSection({
         {visibleTokens.map((token, index) => (
           <span
             key={`editor-${token.type}-${index}`}
+            data-change={token.type === "add" ? "add" : undefined}
             style={token.type === "add"
               ? { background: "#dcfce7", color: "#166534", borderRadius: 3 }
               : undefined}
@@ -600,10 +562,28 @@ export default function Draft() {
   const [streamed, setStreamed] = useState({});
   const [streamOrder, setStreamOrder] = useState([]);
   const [compare, setCompare] = useState(false);
+  const [editingDraft, setEditingDraft] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState([]);
+  const [draftStarting, setDraftStarting] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [saveError, setSaveError] = useState("");
   const [pdfLoading, setPdfLoading] = useState(false);
   const [launching, setLaunching] = useState(false);
+  const [matchAssessment, setMatchAssessment] = useState(null);
+  const [matching, setMatching] = useState(false);
+  const [matchError, setMatchError] = useState("");
+  const [originalAssessment, setOriginalAssessment] = useState(null);
+  const [originalMatching, setOriginalMatching] = useState(false);
+  const [originalMatchError, setOriginalMatchError] = useState("");
+  const originalAssessmentRef = useRef(null);
+  const originalMatchRequest = useRef(0);
+  const originalAutoMatch = useRef(null);
+  const originalSavedKey = useRef(null);
+  const latestOriginalKey = useRef(null);
+  const matchAssessmentRef = useRef(null);
+  const matchRequest = useRef(0);
+  const autoMatch = useRef(null);
+  const latestMatchKey = useRef(null);
   const [activeTab, setActiveTab] = useState(null);
   const textareaRefs = useRef({});
   const prefillRequest = useRef(0);
@@ -611,7 +591,7 @@ export default function Draft() {
   const revisionId = useRef(null);
   const saveQueue = useRef(Promise.resolve());
   const autosaved = useRef(null);
-  const startedStreams = useRef(new Set());
+  const reviewSelection = useRef(null);
   const restored = useRef(null);
   const loaded = useRef(null);
   const sections = normalizeSectionMap(session.data.sections);
@@ -626,6 +606,24 @@ export default function Draft() {
   const title = sourceSnapshot.current?.title || revisionName || defaultName;
   const currentSections = Object.fromEntries(Object.entries(sections).map(([key, item]) => [key, { ...item, content: edited[key] ?? item.content ?? "" }]));
   const check = applicationCheck(spec, currentSections);
+  const analysisUnavailable = session.data.analysis?.status === "unavailable";
+  const matchGrantId = effectiveGrant?.grant_id || grantId;
+  const matchProposal = sourceSnapshot.current && ready ? proposalContext({
+    title: sourceSnapshot.current.source_title,
+    proposal_context: sourceSnapshot.current.context, application_spec: spec, sections: currentSections,
+  }, profile || {}) : null;
+  const matchKey = matchProposal && matchGrantId ? matchFingerprint(matchGrantId, matchProposal) : null;
+  latestMatchKey.current = matchKey;
+  const freshMatch = Boolean(matchAssessment && matchAssessment.fingerprint === matchKey);
+  const originalProposal = sourceSnapshot.current ? proposalContext({
+    title: sourceSnapshot.current.source_title, proposal_context: sourceSnapshot.current.context,
+    application_spec: spec, sections: sourceSnapshot.current.originals,
+  }, profile || {}) : null;
+  const originalKey = originalProposal && matchGrantId ? matchFingerprint(matchGrantId, originalProposal) : null;
+  latestOriginalKey.current = originalKey;
+  const freshOriginalMatch = Boolean(originalAssessment && originalAssessment.fingerprint === originalKey);
+
+  useEffect(() => () => { matchRequest.current += 1; originalMatchRequest.current += 1; }, []);
 
   useEffect(() => {
     if (!proposalId && proposals.length) {
@@ -694,6 +692,11 @@ export default function Draft() {
     setProposalId(loadedDraft.source_proposal_id || loadedDraft.id);
     if (!loadedDraft.grant_id) return;
     revisionId.current = loadedDraft.id;
+    matchAssessmentRef.current = loadedDraft.match_assessment || null;
+    setMatchAssessment(matchAssessmentRef.current);
+    originalAssessmentRef.current = loadedDraft.original_match_assessment || null;
+    originalSavedKey.current = originalAssessmentRef.current?.fingerprint || null;
+    setOriginalAssessment(originalAssessmentRef.current);
     setGrantId(String(loadedDraft.grant_id));
     setGrant(loadedDraft.grant || { grant_id: loadedDraft.grant_id, title: loadedDraft.grant_title });
     setSpec(loadedDraft.application_spec || emptyApplicationSpec());
@@ -702,7 +705,7 @@ export default function Draft() {
       source_proposal_id: loadedDraft.source_proposal_id || null,
       originals: normalizeSectionMap(loadedDraft.original_sections), context: loadedDraft.proposal_context || {},
     };
-    session.setData({ sections: loadedDraft.sections || {}, diffs: loadedDraft.diffs || {}, grant: loadedDraft.grant });
+    session.setData({ sections: loadedDraft.sections || {}, diffs: loadedDraft.diffs || {}, grant: loadedDraft.grant, analysis: loadedDraft.analysis || null });
     session.setGate("complete");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadId, loadedDraft]);
@@ -713,7 +716,7 @@ export default function Draft() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.data.sections, ready]);
 
-  const saveRevision = (checklistSpec = spec) => {
+  const saveRevision = (checklistSpec = spec, assessmentOverride = matchAssessmentRef.current) => {
     const snapshot = sourceSnapshot.current;
     if (!snapshot || !Object.keys(currentSections).length) return Promise.resolve(null);
     const metadata = {
@@ -721,10 +724,15 @@ export default function Draft() {
       source_proposal_id: snapshot.source_proposal_id, grant_title: effectiveGrant?.title || "",
       grant_id: String(effectiveGrant?.grant_id || grantId), agency: effectiveGrant?.agency || "",
       grant: { ...effectiveGrant, application_spec: checklistSpec }, application_spec: checklistSpec, original_sections: snapshot.originals,
-      sections: currentSections, section_order: Object.keys(currentSections), diffs: session.data.diffs || {},
+      sections: currentSections, section_order: Object.keys(currentSections), diffs: comparisonDiffs,
       session_id: session.sessionId,
+      analysis: session.data.analysis || loadedDraft?.analysis || null,
+      match_assessment: assessmentOverride,
+      original_match_assessment: originalAssessmentRef.current,
+      matched_grants: assessmentOverride?.fingerprint === matchKey && assessmentOverride.match ? [assessmentOverride.match] : [],
       proposal_context: proposalContext({ title: snapshot.title, application_spec: checklistSpec, proposal_context: snapshot.context, sections: currentSections }, profile || {}),
     };
+    if (originalAssessmentRef.current) originalSavedKey.current = originalAssessmentRef.current.fingerprint;
     const operation = saveQueue.current.catch(() => {}).then(async () => {
       const saved = revisionId.current
         ? await updateDraft(revisionId.current, currentSections, null, metadata)
@@ -761,26 +769,91 @@ export default function Draft() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, session.sessionId, session.data.application_spec, spec, loadId, workLoading]);
 
-  const runRewrite = async () => {
-    if (!session.sessionId || session.loading || session.data.running) return;
-    startedStreams.current.add(session.sessionId);
-    const originals = session.data.original_sections || sourceSnapshot.current?.originals || {};
-    const requirements = session.data.application_spec || spec;
-    const keys = requirements.sections?.length ? requirements.sections.map(item => item.key)
-      : requirements.stage !== "full_proposal" ? starterSections[requirements.stage] : Object.keys(originals);
-    setStreamOrder(keys); setStreamed({});
+  const refreshMatch = async () => {
+    if (!matchProposal || !matchGrantId || !ready || matching) return;
+    const request = ++matchRequest.current;
+    const fingerprint = matchKey;
+    setMatching(true); setMatchError("");
     try {
-      await session.advanceStream({ confirmed_gaps: [], sections_to_rewrite: keys, user_additions: session.data.grant?.revision_context?.instructions ?? instructions },
-        (key, text) => setStreamed(previous => ({ ...previous, [key]: (previous[key] || "") + text })));
-      setCompare(false);
-    } catch (_) { /* The session hook displays the recoverable error below. */ }
+      const response = await api.post("/api/match", {
+        proposal: matchProposal, grant_id: String(matchGrantId), top_k: 1, target_only: true,
+        eligibility_context: matchProposal.eligibility_context,
+      });
+      if (request !== matchRequest.current || latestMatchKey.current !== fingerprint) return;
+      if (!Array.isArray(response.data?.matches)) throw new Error("The match service returned no assessment. Please retry.");
+      const result = {
+        fingerprint, grant_id: String(matchGrantId), checked_at: new Date().toISOString(),
+        match: response.data.matches.find(item => String(item.grant_id) === String(matchGrantId)) || null,
+      };
+      matchAssessmentRef.current = result; setMatchAssessment(result);
+      await saveRevision(spec, result);
+    } catch (error) {
+      if (request === matchRequest.current && latestMatchKey.current === fingerprint) setMatchError(error.response?.data?.detail || error.message || "Could not refresh the match. Please retry.");
+    } finally { if (request === matchRequest.current) setMatching(false); }
   };
 
   useEffect(() => {
-    if (writingPage && session.gate === "gap_review" && !session.loading && !session.error && !startedStreams.current.has(session.sessionId)) runRewrite();
-    // The ref prevents duplicate stream resumes after rerenders or failures.
+    const identity = loadId || session.sessionId;
+    if (!ready || !matchKey || !identity || autoMatch.current === identity || workLoading) return;
+    autoMatch.current = identity;
+    if (!freshMatch) refreshMatch();
+    // One automatic assessment per completed revision; manual edits mark it stale.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [writingPage, session.gate, session.loading, session.error, session.sessionId]);
+  }, [ready, matchKey, loadId, session.sessionId, workLoading]);
+
+  const refreshOriginalMatch = async () => {
+    if (!originalProposal || !matchGrantId || originalMatching) return;
+    const request = ++originalMatchRequest.current;
+    const fingerprint = originalKey;
+    originalAutoMatch.current = fingerprint;
+    setOriginalMatching(true); setOriginalMatchError("");
+    try {
+      const response = await api.post("/api/match", {
+        proposal: originalProposal, grant_id: String(matchGrantId), top_k: 1, target_only: true,
+        eligibility_context: originalProposal.eligibility_context,
+      });
+      if (request !== originalMatchRequest.current || latestOriginalKey.current !== fingerprint) return;
+      if (!Array.isArray(response.data?.matches)) throw new Error("The original match could not be assessed. Please retry.");
+      const result = { fingerprint, grant_id: String(matchGrantId), checked_at: new Date().toISOString(), match: response.data.matches.find(item => String(item.grant_id) === String(matchGrantId)) || null };
+      originalAssessmentRef.current = result; setOriginalAssessment(result);
+    } catch (error) {
+      if (request === originalMatchRequest.current && latestOriginalKey.current === fingerprint) setOriginalMatchError(error.response?.data?.detail || error.message || "Could not assess the original proposal.");
+    } finally { if (request === originalMatchRequest.current) setOriginalMatching(false); }
+  };
+
+  useEffect(() => {
+    if (!writingPage || session.gate !== "gap_review" || analysisUnavailable || !originalKey || freshOriginalMatch || originalAutoMatch.current === originalKey) return;
+    if (session.data.application_spec && spec !== session.data.application_spec) return;
+    refreshOriginalMatch();
+    // Assess the source proposal while gaps are reviewed; never start drafting.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [writingPage, session.gate, originalKey, freshOriginalMatch, analysisUnavailable, spec, session.data.application_spec]);
+
+  useEffect(() => {
+    if (!ready || !freshOriginalMatch || originalSavedKey.current === originalKey) return;
+    saveRevision().catch(error => setSaveError(error.message));
+    // Persist a baseline that finishes after the initial revision save.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, freshOriginalMatch, originalKey, originalAssessment]);
+
+  const runRewrite = async () => {
+    if (!session.sessionId || session.gate !== "gap_review" || session.loading || session.data.running || draftStarting || analysisUnavailable) return;
+    const keys = [...selectedAreas];
+    setDraftStarting(true);
+    setStreamOrder(keys); setStreamed({});
+    try {
+      await session.advanceStream({ confirmed_gaps: [], sections_to_rewrite: keys, user_additions: instructions },
+        (key, text) => setStreamed(previous => ({ ...previous, [key]: (previous[key] || "") + text })));
+      setCompare(false); setEditingDraft(false);
+    } catch (_) { /* The session hook displays the recoverable error below. */ }
+    finally { setDraftStarting(false); }
+  };
+
+  useEffect(() => {
+    if (session.gate !== "gap_review" || !session.data.analysis || reviewSelection.current === session.sessionId) return;
+    reviewSelection.current = session.sessionId;
+    setSelectedAreas(session.data.analysis.sections_to_rewrite || []);
+  }, [session.gate, session.data.analysis, session.sessionId]);
 
   const startRedraft = async () => {
     if (!context || !grant || prefilling || !aiPolicyCheck(spec).ai_drafting_allowed || busy) return;
@@ -791,6 +864,11 @@ export default function Draft() {
     const revisionContext = { title: name, source_title: sourceTitle, source_proposal_id: sourceItem?.id || null, instructions };
     sourceSnapshot.current = { ...revisionContext, originals, context };
     revisionId.current = null; autosaved.current = null;
+    reviewSelection.current = null; setSelectedAreas([]); setEditingDraft(false);
+    matchRequest.current += 1; autoMatch.current = null; matchAssessmentRef.current = null;
+    setMatchAssessment(null); setMatching(false); setMatchError("");
+    originalMatchRequest.current += 1; originalAutoMatch.current = null; originalSavedKey.current = null;
+    originalAssessmentRef.current = null; setOriginalAssessment(null); setOriginalMatching(false); setOriginalMatchError("");
     setEdited({}); setStreamed({}); setStreamOrder([]); setCompare(false); setSaveStatus(""); setSaveError("");
     session.reset(); setLaunching(true);
     navigate("/draft/write");
@@ -822,7 +900,15 @@ export default function Draft() {
     if (result) setEdited(previous => ({ ...previous, [activeTab]: result.newText }));
   };
   const originals = sourceSnapshot.current?.originals || {};
-  const busy = launching || session.loading || Boolean(session.data.running);
+  const comparisonDiffs = ready ? Object.fromEntries([...new Set([...Object.keys(originals), ...Object.keys(currentSections)])].map(key => {
+    const originalText = originals[key]?.content || "";
+    const revisedText = currentSections[key]?.content || "";
+    const stored = session.data.diffs?.[key];
+    const valid = Array.isArray(stored) && stored.filter(token => token.type !== "add").map(token => token.text).join("") === originalText && stored.filter(token => token.type !== "remove").map(token => token.text).join("") === revisedText;
+    return [key, valid ? stored : createTextDiff(originalText, revisedText)];
+  })) : {};
+  const busy = launching || draftStarting || session.loading || Boolean(session.data.running);
+  const reviewingGaps = session.gate === "gap_review" && !busy;
 
   return <div className="draft-workspace"><Nav />
     {!writingPage ? <main className="draft-setup il-form">
@@ -855,36 +941,62 @@ export default function Draft() {
         <label>Instructions for this rewrite<textarea aria-label="Instructions for this rewrite" value={instructions} onChange={event => setInstructions(event.target.value)} maxLength={2000} rows={4} placeholder="What should we emphasize, avoid or clarify?" /></label>
         <p>The rewrite is saved separately. Your original proposal is preserved.</p>
       </section>
-      <div className="draft-start"><button type="button" className="il-primary" disabled={!context || !grant || !grantId || prefilling || busy || !aiPolicyCheck(spec).ai_drafting_allowed} onClick={startRedraft}>Redraft proposal</button></div>
+      <div className="draft-start"><button type="button" className="il-primary" disabled={!context || !grant || !grantId || prefilling || busy || !aiPolicyCheck(spec).ai_drafting_allowed} onClick={startRedraft}>Review gaps</button></div>
       {busy && <p>A rewrite is already running. <button onClick={() => navigate(`/draft/write?session=${encodeURIComponent(session.sessionId || "")}`)}>View writing progress</button></p>}
       <AiPrivacyNotice />
     </main> : <main className="draft-writing">
-      <header className="draft-writing-header"><div><p className="draft-eyebrow">{ready ? "REVISED PROPOSAL" : "WRITING YOUR REVISION"}</p><h1>{title}</h1></div>
+      <header className="draft-writing-header"><div><p className="draft-eyebrow">{ready ? "REVISED PROPOSAL" : reviewingGaps ? "REVIEW BEFORE DRAFTING" : "PREPARING YOUR REVISION"}</p><h1>{title}</h1></div>
         {ready && !busy && <div className="draft-actions">
-          <button aria-pressed={!compare} onClick={() => setCompare(false)}>Edit draft</button>
-          <button aria-pressed={compare} onClick={() => setCompare(true)}>Compare versions</button>
+          <button aria-pressed={!compare && !editingDraft} onClick={() => { setCompare(false); setEditingDraft(false); }}>View draft</button>
+          <button aria-pressed={!compare && editingDraft} onClick={() => { setCompare(false); setEditingDraft(true); }}>Edit draft</button>
+          <button aria-pressed={compare} onClick={() => { setCompare(true); setEditingDraft(false); }}>Compare versions</button>
           <button onClick={() => saveRevision().catch(error => setSaveError(error.message))}>Save draft</button>
           <button disabled={pdfLoading || !check.can_finalize_text} onClick={download}>Download PDF</button>
           <button className="draft-primary" onClick={findGrants}>Find grants</button>
         </div>}
       </header>
-      {!ready && !busy && !session.sessionId && !searchParams.get("session") ? <section className="draft-card"><p>No active rewrite is selected.</p><button onClick={() => navigate("/draft")}>Back to setup</button></section> : !ready && <section aria-label="Writing progress" className="draft-progress"><span className="draft-spinner" />{session.progress || (session.gate === "gap_review" ? "Preparing the rewrite..." : "Reading your proposal and preparing the draft...")}</section>}
-      {!ready && streamOrder.map(key => <article className="draft-paper" key={key}><h2>{getSectionTitle(key)}</h2><div aria-live="polite" style={{ whiteSpace: "pre-wrap" }}>{streamed[key] || "Preparing this section..."}</div></article>)}
+      {reviewingGaps && <>
+        <section className="draft-card draft-match" aria-label="Original grant match"><div className="draft-match-heading"><h2>Original match · {effectiveGrant?.title || "Selected grant"}</h2><button disabled={originalMatching} onClick={refreshOriginalMatch}>{originalMatching ? "Checking original…" : "Refresh original match"}</button></div>
+          {originalMatching ? <p role="status">Assessing the original proposal before changes…</p> : freshOriginalMatch ? originalAssessment.match ? <><p className="draft-match-score">{originalAssessment.match.similarity_score ?? "—"}<span> / 100</span></p><p>Based on the original proposal, before this revision.</p><p>{originalAssessment.match.match_explanation}</p></> : <p>No original match score is available under the current eligibility filters.</p> : <p>The original proposal's match will appear here before drafting.</p>}
+          {originalMatchError && <p role="alert">{originalMatchError}</p>}
+        </section>
+        <GapSummary analysis={session.data.analysis} />
+        {!analysisUnavailable && <section className="draft-card" aria-label="Drafting scope"><h2>Choose the areas to change</h2>
+          <p>Only the selected areas and their identified gaps will be edited. Existing tables and unaffected text are retained.</p>
+          {(session.data.analysis?.sections_to_rewrite || []).map(key => <label key={key} style={{ display: "flex", alignItems: "center", gap: 10, margin: "10px 0", fontSize: 13 }}><input type="checkbox" checked={selectedAreas.includes(key)} onChange={event => setSelectedAreas(previous => event.target.checked ? [...previous, key] : previous.filter(item => item !== key))} />{getSectionTitle(key, sections[key] || originals[key])}</label>)}
+          <label>Additional drafting instructions<textarea aria-label="Additional drafting instructions" rows={3} maxLength={2000} value={instructions} onChange={event => setInstructions(event.target.value)} /></label>
+          <div className="draft-start"><button className="draft-primary" disabled={busy || Boolean(session.error)} onClick={runRewrite}>{selectedAreas.length ? "Draft" : "Keep original draft"}</button></div>
+        </section>}
+      </>}
+      {ready && <section className="draft-card draft-match" aria-label="Updated grant match">
+        <div className="draft-match-heading"><h2>Updated match · {effectiveGrant?.title || "Selected grant"}</h2><button disabled={matching || busy} onClick={refreshMatch}>{matching ? "Updating match…" : "Refresh match"}</button></div>
+        {matching ? <p role="status">Checking the revised proposal against this grant…</p> : freshMatch ? matchAssessment.match ? <>
+          <p className="draft-match-score">{matchAssessment.match.similarity_score ?? "—"}<span> / 100</span></p>
+          {freshOriginalMatch && originalAssessment.match && <p>Original proposal: <strong>{originalAssessment.match.similarity_score} / 100</strong></p>}
+          <p>{matchAssessment.match.score_method === "semantic_similarity" || matchAssessment.match.fit_level === "unknown" ? "Semantic similarity estimate" : "AI project-fit estimate"} · based on the revised proposal.</p>
+          <p>{matchAssessment.match.match_explanation}</p>
+          {matchAssessment.match.application_tip && <p><strong>Application tip:</strong> {matchAssessment.match.application_tip}</p>}
+          {matchAssessment.match.eligibility_check?.status && <p>Eligibility check: {matchAssessment.match.eligibility_check.status.replace(/_/g, " ")}</p>}
+          <p>This estimate does not verify eligibility or predict funding success.</p>
+        </> : <p>No match score is available for the selected grant under the current eligibility filters.</p> : <p>{matchAssessment ? "The proposal or application details changed since this score was calculated. Refresh the match to assess the current version." : "The revised proposal will be checked against the selected grant."}</p>}
+        {matchError && <p role="alert">{matchError}</p>}
+      </section>}
+      {analysisUnavailable && <section role="alert" className="draft-card"><p>Gap analysis could not be completed. No automatic rewrite was started.</p><button onClick={() => navigate("/draft")}>Back to setup</button></section>}
+      {!ready && !busy && !session.sessionId && !searchParams.get("session") ? <section className="draft-card"><p>No active rewrite is selected.</p><button onClick={() => navigate("/draft")}>Back to setup</button></section> : !ready && !reviewingGaps && !analysisUnavailable && <section aria-label="Writing progress" className="draft-progress"><span className="draft-spinner" />{session.progress || (session.gate === "gap_review" ? "Drafting the selected areas..." : "Analyzing your proposal and the grant requirements...")}</section>}
+      {!ready && !reviewingGaps && streamOrder.map(key => <article className="draft-paper" key={key}><h2>{getSectionTitle(key)}</h2><div aria-live="polite" style={{ whiteSpace: "pre-wrap" }}>{streamed[key] || "Preparing this section..."}</div></article>)}
       {session.error && <section role="alert" className="draft-card"><p>{session.error}</p><button onClick={session.refresh} disabled={busy}>Check saved session status</button>{session.gate === "gap_review" && !busy && <button onClick={runRewrite}>Retry rewrite</button>}<button onClick={() => navigate("/draft")}>Back to setup</button></section>}
       {ready && !busy && <>
         <p className="draft-save-status" role="status">{saveStatus || "Saving the new revision..."}</p>
+        {compare && <div className="draft-change-legend" aria-label="Change colors"><span className="draft-removed">Red: removed text</span><span className="draft-added">Green: added text</span></div>}
         {compare ? <section className="draft-comparison" aria-label="Proposal comparison">
-          <article className="draft-paper"><h2>Original proposal</h2>{Object.entries(originals).map(([key, item]) => <section key={key}><h3>{getSectionTitle(key, item)}</h3><FormattedProposalContent fallback={item.content || ""} variant="original" sectionTitle={getSectionTitle(key, item)} /></section>)}</article>
+          <article className="draft-paper"><h2>Original proposal</h2>{Object.entries(originals).map(([key, item]) => <section key={key}><h3>{getSectionTitle(key, item)}</h3><FormattedProposalContent tokens={comparisonDiffs[key]} fallback={item.content || ""} variant="original" sectionTitle={getSectionTitle(key, item)} /></section>)}</article>
           <article className="draft-paper"><h2>Revised proposal</h2>{Object.entries(currentSections).map(([key, item]) => {
-            const drafted = sections[key]?.content || "";
-            const tokens = session.data.diffs?.[key] || createTextDiff(originals[key]?.content || "", drafted);
-            const composed = item.content === drafted ? tokens : composeRevisedDiffTokens(tokens, createTextDiff(drafted, item.content), drafted, item.content);
-            return <section key={key}><h3>{getSectionTitle(key, item)}</h3><CompareEditableSection tokens={composed} value={item.content} sectionTitle={getSectionTitle(key, item)} onChange={text => setEdited(previous => ({ ...previous, [key]: text }))} /></section>;
+            return <section key={key}><h3>{getSectionTitle(key, item)}</h3><CompareEditableSection tokens={comparisonDiffs[key]} value={item.content} sectionTitle={getSectionTitle(key, item)} onChange={text => setEdited(previous => ({ ...previous, [key]: text }))} /></section>;
           })}</article>
-        </section> : <>
+        </section> : editingDraft ? <>
           <div className="draft-format"><button onClick={() => format("bold")}>Bold</button><button onClick={() => format("h2")}>Heading</button><button onClick={() => format("bullet")}>List</button><button onClick={() => format("table")}>Table</button></div>
           {Object.entries(currentSections).map(([key, item]) => <article className="draft-paper" key={key}><h2>{getSectionTitle(key, item)}</h2><textarea aria-label={`Edit ${getSectionTitle(key, item)}`} ref={element => { textareaRefs.current[key] = element; }} onFocus={() => setActiveTab(key)} value={item.content} onChange={event => setEdited(previous => ({ ...previous, [key]: event.target.value }))} /></article>)}
-        </>}
+        </> : <section aria-label="Revised proposal preview">{Object.entries(currentSections).map(([key, item]) => <article className="draft-paper" key={key}><h2>{getSectionTitle(key, item)}</h2><FormattedProposalContent tokens={comparisonDiffs[key]} fallback={item.content || ""} variant="revised" sectionTitle={getSectionTitle(key, item)} /></article>)}</section>}
         <ApplicationReview spec={spec} sections={currentSections} onChange={setSpec} onSave={saveChecklist} />
       </>}
       {saveError && <p role="alert">{saveError}</p>}

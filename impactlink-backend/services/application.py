@@ -151,6 +151,18 @@ def validate_application(sections, grant):
 
 def validate_review_input(state, user_input):
     """Reject over-limit final text before resuming a checkpoint (preserve interrupt)."""
+    if state.get("gate") == "gap_review" and (state.get("analysis") or {}).get("status") == "unavailable":
+        raise ValueError("Application requirements: gap analysis is unavailable. Return to setup and retry before revising.")
+    if state.get("gate") == "gap_review" and "sections_to_rewrite" in user_input:
+        selected = user_input["sections_to_rewrite"]
+        if not isinstance(selected, list) or any(not isinstance(key, str) for key in selected):
+            raise ValueError("Application requirements: selected drafting areas must be a list of section keys")
+        valid_keys = set(state.get("original_sections", {})) | {section["key"] for section in section_definitions(state.get("grant", {}))}
+        if set(selected) - valid_keys:
+            raise ValueError("Application requirements: choose only existing sections or recorded application questions")
+    if state.get("gate") == "slot_confirm":
+        validate_slot_confirmation(state, user_input)
+        return
     if state.get("gate") not in {"draft_review", "final_save"}:
         return
     sections = {key: dict(value) if isinstance(value, dict) else {"content": value} for key, value in state.get("sections", {}).items()}
@@ -165,6 +177,18 @@ def validate_review_input(state, user_input):
         raise ValueError("Application requirements: fix missing or over-limit answers before confirming. Sections: " + ", ".join(report["missing_sections"] + report["over_limit_sections"]))
     if state.get("gate") == "final_save" and report["ai_policy"]["disclosure_pending"]:
         raise ValueError("Funder AI policy: complete the funder's required AI disclosure and mark it ready before completing this session. Drafts can still be saved for review.")
+
+
+def validate_slot_confirmation(state, user_input):
+    """Validate corrections before consuming the confirmation interrupt."""
+    edits = user_input.get("slots", {})
+    if not isinstance(edits, dict) or set(edits) - set(state.get("slots", {})):
+        raise ValueError("Application requirements: edits must use the collected question fields")
+    if any(not isinstance(value, str) or len(value) > 20000 for value in edits.values()):
+        raise ValueError("Application requirements: each answer must be text of at most 20,000 characters")
+    notes = user_input.get("draft_instructions", "")
+    if not isinstance(notes, str) or len(notes) > 2000:
+        raise ValueError("Application requirements: draft instructions must be text of at most 2,000 characters")
 
 
 def merge_checklist(grant, user_input):

@@ -467,6 +467,9 @@ export default function BuildProposal() {
   // The conversation — array of { role: "ai"|"user", type, ...data }
   const [messages,  setMessages]  = useState([]);
   const [input,     setInput]     = useState("");
+  const [slotEdits, setSlotEdits] = useState({});
+  const [draftInstructions, setDraftInstructions] = useState("");
+  const confirmationSession = useRef(null);
   const [pdfLoading,setPdfLoad]   = useState(false);
   const [done,      setDone]      = useState(false);
 
@@ -688,9 +691,14 @@ export default function BuildProposal() {
     }
 
     if (session.gate === "slot_confirm") {
+        if (confirmationSession.current !== session.sessionId) {
+            confirmationSession.current = session.sessionId;
+            setSlotEdits({});
+            setDraftInstructions("");
+        }
         setMessages(prev => {
-            if (prev[prev.length-1]?.type === "slot_confirm") return prev;
-            return [...prev, { role: "ai", type: "slot_confirm", text: "I've collected the necessary details. Please confirm they are correct before I start drafting." }];
+            if (prev.some(message => message.type === "slot_confirm")) return prev;
+            return [...prev, { role: "ai", type: "slot_confirm", text: "Review and edit your answers below. Add any extra details or instructions, then confirm to start drafting." }];
         });
     }
 
@@ -707,7 +715,7 @@ export default function BuildProposal() {
             return [...prev, { role: "ai", type: "final_save", text: "Draft confirmed. Click Complete Session to finish, then download your PDF." }];
         });
     }
-  }, [session.gate, session.data, done]);
+  }, [session.gate, session.data, session.sessionId, done]);
 
   // Log agent routing decisions to browser console (portfolio demo)
   useEffect(() => {
@@ -728,6 +736,7 @@ export default function BuildProposal() {
     try {
       if (pendingBuildSave.current) await pendingBuildSave.current.catch(() => {});
       savedBuildIdRef.current = null; autoSavedSession.current = null; restoredBuild.current = null;
+      confirmationSession.current = null; setSlotEdits({}); setDraftInstructions("");
       setSavedBuildId(null); setDone(false); setAnswers([]); setSections({}); setSecOrder([]); setCoherenceReview(null); setBuildSaveError(null);
       updateLiveSections({ type: "reset" });
       session.reset();
@@ -767,11 +776,13 @@ export default function BuildProposal() {
 
   const handleConfirmSlots = async () => {
       if (session.loading || session.data.running || session.error || session.gate !== "slot_confirm") return;
+      const confirmedSlots = Object.fromEntries(Object.entries(session.data.slots || {}).map(([key, slot]) => [key, slotEdits[key] ?? slot.value ?? ""]));
+      setAnswers(Object.entries(confirmedSlots).map(([step_key, user_answer]) => ({ step_key, user_answer })));
       setMessages(prev => [...prev, { role: "user", type: "answer", text: "Confirmed. Please proceed to drafting." }]);
       updateLiveSections({ type: "reset" });
       try {
         await session.advanceStream(
-          { confirmed: true },
+          { confirmed: true, slots: confirmedSlots, draft_instructions: draftInstructions.trim() },
           (sectionKey, content) => updateLiveSections({ type: "token", section_key: sectionKey, content }),
           updateLiveSections,
         );
@@ -1122,16 +1133,24 @@ export default function BuildProposal() {
 
                           {msg.type === "slot_confirm" && (
                             <div style={{ marginTop: 12, borderTop: "1px solid #1e3a5f", paddingTop: 12 }}>
-                              <table style={{ width: "100%", fontSize: 12, color: "#aaa", borderCollapse: "collapse" }}>
-                                <tbody>
-                                  {Object.entries(session.data.slots || {}).map(([k, s]) => (
-                                    <tr key={k}>
-                                      <td style={{ padding: "4px 0", fontWeight: 700, color: "#ddd", width: "40%" }}>{k}:</td>
-                                      <td style={{ padding: "4px 0", color: "#888" }}>{s.value || "—"}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                              <fieldset disabled={loading || Boolean(session.error) || session.gate !== "slot_confirm"} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+                                {Object.entries(session.data.slots || {}).map(([k, s]) => (
+                                  <label key={k} style={{ display: "block", marginBottom: 14, fontSize: 12, color: "#ddd" }}>
+                                    {s.question || k.replace(/_/g, " ")}
+                                    {!s.filled && <span style={{ display: "block", color: "#fbbf24", marginTop: 4 }}>Please add any missing details you have.</span>}
+                                    <textarea rows={3} maxLength={20000} value={slotEdits[k] ?? s.value ?? ""}
+                                      onChange={event => setSlotEdits(prev => ({ ...prev, [k]: event.target.value }))}
+                                      style={{ display: "block", boxSizing: "border-box", width: "100%", marginTop: 6, padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", font: "inherit", resize: "vertical" }} />
+                                  </label>
+                                ))}
+                                <label style={{ display: "block", fontSize: 12, color: "#ddd" }}>
+                                  Extra details or drafting instructions (optional)
+                                  <textarea rows={3} maxLength={2000} value={draftInstructions}
+                                    onChange={event => setDraftInstructions(event.target.value)}
+                                    placeholder="Add context, corrections, or preferences for the draft."
+                                    style={{ display: "block", boxSizing: "border-box", width: "100%", marginTop: 6, padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--text-primary)", font: "inherit", resize: "vertical" }} />
+                                </label>
+                              </fieldset>
                               <button 
                                 onClick={handleConfirmSlots}
                                 disabled={loading || Boolean(session.error) || session.gate !== "slot_confirm"}

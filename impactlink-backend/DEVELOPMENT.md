@@ -380,6 +380,7 @@ approval open. Stream events include `section_start`, `token`, `section_status`,
 |---|---|
 | `DATABASE_URL environment variable is required` | Add the Neon PostgreSQL URL to `.env` |
 | Session advance times out | Full drafting can take over 10 minutes. Slot confirmation uses SSE progress and 15-second heartbeats, with a 90-second idle timeout and a 20-minute overall limit. Recover using the build page's `?session=<id>` URL or Check saved session status. |
+| Connection lost while saving a draft checkpoint | Checkpoint reads and idempotent writes retry up to three times on transient connection errors, checking out a pooled connection each time. Graph/AI execution is not repeated. TCP keepalives detect dead connections sooner. If retries are exhausted, use Check saved session status after the database recovers before starting another draft. |
 | CORS errors | `ALLOW_ORIGINS=http://localhost:3000` |
 | `401 Unauthorized` | Sign in via Firebase; check frontend Firebase config |
 | Local name protection unavailable | Reinstall backend requirements/model in the active environment; AI processing remains blocked until restored. |

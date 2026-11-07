@@ -128,7 +128,7 @@ export default function Dashboard() {
   ].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
   const p = profile || {};
-  const firstName = (p.org_name || "there").split(" ")[0];
+  const organizationName = p.org_name || "Your Organization";
   const [showAll, setShowAll] = useState(false);
   const recentItems = showAll ? allItems : allItems.slice(0, 8);
 
@@ -190,7 +190,7 @@ export default function Dashboard() {
 
         <SectionHeader
           label="NGO Dashboard"
-          title={`Welcome back, ${firstName} 👋`}
+          title={`Welcome back, ${organizationName} 👋`}
           subtitle={p.mission || "Complete your profile to get better grant matches."}
         />
 

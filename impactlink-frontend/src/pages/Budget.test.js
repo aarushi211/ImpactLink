@@ -24,7 +24,10 @@ beforeEach(() => {
   mockBudget.budget = null;
   mockBudget.loading = null;
   mockBudget.error = null;
+  jest.clearAllMocks();
+  mockBudget.reset.mockImplementation(() => { mockBudget.budget = null; mockBudget.loading = null; mockBudget.error = null; });
   mockBudget.generate.mockResolvedValue();
+  mockUpdateBudget.mockImplementation(async (id, payload) => ({ id, ...payload }));
   mockSaveBudget.mockImplementation(async payload => ({ ...payload, id: "new-budget" }));
 });
 
@@ -83,4 +86,60 @@ test("award floors and total program funding are never used as a grant ceiling",
   mockGrants = [{ grant_id: "g1", title: "Restoration opportunity", award_floor: 10000, estimated_total: "$53,000,000" }];
   render(<Budget />);
   expect(screen.getByPlaceholderText("e.g. 250000")).toHaveValue(null);
+});
+
+test("a generated budget replaces setup and inputs can be reopened without changing the result", async () => {
+  mockQuery = "";
+  const { rerender } = render(<Budget />);
+  fireEvent.change(screen.getByPlaceholderText("e.g. 250000"), { target: { value: "10000" } });
+  fireEvent.click(screen.getByText("Add direct cost"));
+  fireEvent.change(screen.getByLabelText("Cost description 1"), { target: { value: "Workshop delivery" } });
+  fireEvent.change(screen.getByLabelText("Unit cost 1"), { target: { value: "9000" } });
+  await act(async () => fireEvent.click(screen.getByRole("button", { name: /Build Budget/ })));
+  const inputs = mockBudget.generate.mock.calls[0][2];
+  mockBudget.budget = { ...mockSaved, cost_inputs: inputs };
+  rerender(<Budget />);
+  await act(async () => {});
+  expect(screen.getByRole("region", { name: "Generated budget" })).toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Budget setup" })).not.toBeInTheDocument();
+  fireEvent.scroll(screen.getByRole("main", { name: "Budget workspace" }), { target: { scrollTop: 800 } });
+  const advisor = screen.getByRole("complementary", { name: "Budget Advisor" });
+  expect(advisor).toContainElement(screen.getByRole("textbox", { name: "Message Budget Advisor" }));
+  expect(Element.prototype.scrollIntoView).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText("Edit budget inputs"));
+  expect(screen.queryByRole("region", { name: "Generated budget" })).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Cost description 1")).toHaveValue("Workshop delivery");
+  expect(screen.getByLabelText("Unit cost 1")).toHaveValue(9000);
+  expect(screen.getByRole("textbox", { name: "Message Budget Advisor" })).toBeDisabled();
+  fireEvent.click(screen.getByText("View current budget"));
+  expect(screen.getByRole("region", { name: "Generated budget" })).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Message Budget Advisor" })).toBeEnabled();
+});
+
+test("failed rebuilding keeps edits and the old budget; successful rebuilding updates the same saved item", async () => {
+  mockQuery = "";
+  const inputs = { staff: [], direct_costs: [{ id: "workshop", description: "Workshop", kind: "services", quantity: "1", unit_cost: "9000", optional: false }], indirect: { method: "none", rate_pct: 0, base: "MTDC", funder_cap_pct: null, funder_cap_base: "MTDC" }, unallowable_kinds: [] };
+  mockBudget.budget = { ...mockSaved, cost_inputs: inputs };
+  const { rerender } = render(<Budget />);
+  await waitFor(() => expect(mockSaveBudget).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByText("Edit budget inputs"));
+  fireEvent.change(screen.getByLabelText("Unit cost 1"), { target: { value: "9500" } });
+  fireEvent.change(screen.getByPlaceholderText("e.g. 250000"), { target: { value: "10000" } });
+  await act(async () => fireEvent.click(screen.getByText("Rebuild budget")));
+  mockBudget.error = "Could not rebuild. Try again.";
+  rerender(<Budget />);
+  expect(screen.getByRole("alert")).toHaveTextContent("Could not rebuild");
+  expect(screen.getByLabelText("Unit cost 1")).toHaveValue(9500);
+  fireEvent.click(screen.getByText("View current budget"));
+  expect(screen.getByText("Volunteer training")).toBeInTheDocument();
+  fireEvent.click(screen.getByText("Edit budget inputs"));
+  expect(screen.getByLabelText("Unit cost 1")).toHaveValue(9500);
+  await act(async () => fireEvent.click(screen.getByText("Rebuild budget")));
+  const revisedInputs = mockBudget.generate.mock.calls.at(-1)[2];
+  mockBudget.budget = { ...mockSaved, total_requested: 9500, cost_inputs: revisedInputs };
+  rerender(<Budget />);
+  await waitFor(() => expect(mockUpdateBudget).toHaveBeenCalledWith("new-budget", expect.objectContaining({ total_requested: 9500 })));
+  expect(mockSaveBudget).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("region", { name: "Generated budget" })).toBeInTheDocument();
+  expect(screen.queryByRole("region", { name: "Budget setup" })).not.toBeInTheDocument();
 });

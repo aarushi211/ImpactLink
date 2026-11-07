@@ -1,0 +1,4 @@
+.impactlink-brand { display:inline-flex; align-items:center; gap:10px; color:#ededf7; font-size:20px; font-weight:750; letter-spacing:-.04em; text-decoration:none; flex-shrink:0; line-height:1.2; }
+.impactlink-brand img { display:block; flex-shrink:0; }
+.impactlink-brand-link { color:#b8a7ff; }
+.impactlink-brand:focus-visible { outline:2px solid var(--accent,#7c6fef); outline-offset:6px; border-radius:8px; }

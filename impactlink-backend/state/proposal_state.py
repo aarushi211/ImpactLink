@@ -58,6 +58,7 @@ class ProposalState(TypedDict):
 
     # Flow B only: slot-filling
     slots:              dict[str, Slot]
+    draft_instructions: NotRequired[str]  # User's extra context at confirmation
 
     # Flow A only: gap analysis
     analysis:           Optional[dict]   # structured gap analysis result

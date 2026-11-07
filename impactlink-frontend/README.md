@@ -31,13 +31,14 @@ The development UI uses port 3000. Run the backend separately; use API port 8081
 |---|---|
 | `/` and `/login` | Public landing page and sign-in |
 | `/dashboard` | Reopen saved proposals, revisions, budgets and grant records |
-| `/profile` | Nonprofit details, eligibility inputs, private redaction terms and preview |
+| `/profile` | Organization identity, programs, communities, service areas, eligibility defaults, collaboration preferences and private masking terms |
+| `/onboarding` | Three-step setup for new email and Google accounts; saves each step and supports finishing later |
 | `/grants` | Browse/topic search, proposal matching, upload, eligibility and source freshness |
 | `/grants/:id` | Load an individual grant independently of browser matching caches |
 | `/build` | Expanded setup form: proposal name, optional grant, prefilled/manual application requirements and Start |
 | `/build/write?session=<id>` | Assistant questions, answer confirmation and streamed draft replies with a right-hand steps panel |
-| `/draft` | Horizontal proposal/grant selection, automatic grant prefill, expanded requirements and Redraft |
-| `/draft/write?session=<id>` | Stream a new revision, then edit, compare, save or find grants |
+| `/draft` | Proposal/grant selection, automatic prefill, requirements and Review gaps |
+| `/draft/write?session=<id>` | Review gaps, select areas and click Draft; then view formatted output, edit, compare and refresh the grant match |
 | `/budget` | Explicit cost assumptions, calculated budgets, scope options and AI-assisted edits |
 | `/upload` | Compatibility redirect to `/grants` |
 

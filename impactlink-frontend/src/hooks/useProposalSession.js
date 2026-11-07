@@ -107,7 +107,7 @@ export default function useProposalSession(initialSessionId = null) {
       _sync(res);
       setError(res.running ? "Your draft is still running. Check the saved session status again shortly." : null);
     } catch (err) {
-      setError("Failed to refresh session status");
+      setError(typeof err.response?.data?.detail === "string" ? err.response.data.detail : "Failed to refresh session status");
     } finally {
       setLoading(false);
     }

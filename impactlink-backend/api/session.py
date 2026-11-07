@@ -52,7 +52,7 @@ from typing import Iterator, Optional
 
 import os
 from psycopg_pool import ConnectionPool
-from langgraph.checkpoint.postgres import PostgresSaver
+from utils.checkpoint_store import RetryingPostgresSaver
 
 from agents.gap_analysis_agent import validate_user_additions
 from flows.improve_flow import build_improve_graph
@@ -86,9 +86,14 @@ pool = ConnectionPool(
     max_size=20,
     max_idle=60,
     check=ConnectionPool.check_connection,
-    kwargs={"autocommit": True, "prepare_threshold": None, "connect_timeout": 10}
+    kwargs={
+        "autocommit": True, "prepare_threshold": None, "connect_timeout": 10,
+        "keepalives": 1, "keepalives_idle": 30,
+        "keepalives_interval": 10, "keepalives_count": 3,
+        "application_name": "impactlink-checkpoints",
+    }
 )
-checkpointer = PostgresSaver(pool)
+checkpointer = RetryingPostgresSaver(pool)
 checkpointer.setup()
 
 # ── Compiled graphs — built once at startup ───────────────────────────────────
@@ -188,6 +193,7 @@ def _extract_gate_response(raw_result) -> dict:
         "grant_title": (raw_result.get("grant") or {}).get("title", ""),
         "sections":    raw_result.get("sections", {}),
         "coherence_review": raw_result.get("coherence_review"),
+        "analysis": raw_result.get("analysis"),
     }
 
 

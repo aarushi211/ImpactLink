@@ -6,6 +6,7 @@ import useBudget from "../hooks/useBudget";
 import useWorkStore from "../hooks/useWorkStore";
 import BudgetInputs, { emptyCostInputs } from "../components/BudgetInputs";
 import AiPrivacyNotice from "../components/AiPrivacyNotice";
+import "./Budget.css";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -185,9 +186,15 @@ export default function Budget() {
   const [saveError, setSaveError] = useState(null);
   const [preloadedBudget, setPreloadedBudget] = useState(null);
   const [costInputs, setCostInputs] = useState(emptyCostInputs);
+  const [editingSetup, setEditingSetup] = useState(false);
+  const mainRef = useRef(null);
+  const loadedCostInputs = useRef(null);
   useEffect(() => {
     const inputs = budget?.cost_inputs || preloadedBudget?.cost_inputs;
-    if (inputs) setCostInputs(inputs);
+    if (inputs && inputs !== loadedCostInputs.current) {
+      loadedCostInputs.current = inputs;
+      setCostInputs(inputs);
+    }
   }, [budget, preloadedBudget]);
 
   // saved proposal selector
@@ -209,7 +216,7 @@ export default function Budget() {
   const [input,     setInput]     = useState("");
   const [chatReady, setChatReady] = useState(false);
 
-  const chatEndRef  = useRef(null);
+  const chatMessagesRef = useRef(null);
   const inputRef    = useRef(null);
 
   const selectedGrant = grants.find(g => String(g.grant_id) === String(selectedGrantId));
@@ -275,16 +282,16 @@ export default function Budget() {
 
   // scroll chat to bottom on new messages
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = chatMessagesRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
   }, [messages, loading]);
 
   // ── handlers ───────────────────────────────────────────
 
   const handleGenerate = async () => {
-    if (!maxBudget) return;
+    if (!maxBudget || loading) return;
     await pendingBudgetSave.current.catch(() => {});
-    savedBudgetId.current = null;
-    setPreloadedBudget(null);
+    if (displayBudget) setPreloadedBudget(displayBudget);
     reset();
     setMessages([]);
     setChatReady(false);
@@ -294,6 +301,8 @@ export default function Budget() {
   // Persist each generated or refined budget, retaining the same saved ID.
   useEffect(() => {
     if (!budget) return;
+    setEditingSetup(false);
+    if (mainRef.current) mainRef.current.scrollTop = 0;
     const payload = {
       ...budget,
       title: selectedGrant?.title || preloadedBudget?.title || activeProposal?.title || "Budget",
@@ -322,7 +331,7 @@ export default function Budget() {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || !displayBudget || loading) return;
+    if (!text || !displayBudget || loading || editingSetup) return;
     setInput("");
 
     const userMsg = { role: "user", content: text };
@@ -357,11 +366,13 @@ export default function Budget() {
   const canGenerate = (costInputs.staff.length > 0 || costInputs.direct_costs.length > 0) && !!maxBudget && Number(maxBudget) > 0;
   const isGenerating = loading === "generating";
   const isRefining   = loading === "refining";
+  const showSetup = editingSetup || !displayBudget;
+  const chatAvailable = chatReady && !editingSetup;
 
   // ── render ─────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+    <div className="budget-page">
       <Nav />
       {saveError && <p role="alert" style={{ color: "#ef4444", margin: 16 }}>{saveError}</p>}
 
@@ -370,7 +381,7 @@ export default function Budget() {
         background: "#13131f", borderBottom: "1px solid #1e1e30",
         padding: "0 24px", height: 48,
         display: "flex", alignItems: "center", gap: 12,
-        position: "sticky", top: 64, zIndex: 90,
+        flexShrink: 0,
       }}>
         <button
           onClick={() => navigate(-1)}
@@ -389,17 +400,13 @@ export default function Budget() {
       </div>
 
       {/* ── Body ────────────────────────────── */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      <div className="budget-workspace">
 
         {/* ── Left: Config + Table ─────────── */}
-        <div style={{
-          width: "50%", flexShrink: 0, overflowY: "auto",
-          padding: "32px 40px 80px",
-          display: "flex", flexDirection: "column", gap: 24,
-        }}>
+        <main className="budget-main" ref={mainRef} aria-label="Budget workspace">
 
           {/* Config card */}
-          <div style={{
+          {showSetup && !isGenerating && <section aria-label="Budget setup" style={{
             background: "var(--bg-card)", border: "1px solid var(--border)",
             borderRadius: 12, padding: "20px 24px",
           }}>
@@ -407,6 +414,7 @@ export default function Budget() {
               textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 14px" }}>
               Budget Setup
             </p>
+            {displayBudget && <div className="budget-edit-notice"><p>Changes apply when you rebuild the budget. Your current budget is kept until a new one is generated.</p><button type="button" onClick={() => { setEditingSetup(false); setChatReady(true); if (mainRef.current) mainRef.current.scrollTop = 0; }}>View current budget</button></div>}
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               {/* Saved Proposal picker */}
@@ -422,6 +430,9 @@ export default function Budget() {
                     setPreloadedBudget(null);
                     savedBudgetId.current = null;
                     setCostInputs(emptyCostInputs());
+                    loadedCostInputs.current = null;
+                    setChatReady(false);
+                    setMessages([]);
                     setSelectedProposalId(e.target.value);
                     sessionStorage.setItem("upload_draft_id", e.target.value);
                   }}
@@ -487,24 +498,6 @@ export default function Budget() {
                   }}
                 />
               </div>
-
-              {/* Generate button */}
-              <div style={{ display: "flex", alignItems: "flex-end" }}>
-                <button
-                  onClick={handleGenerate}
-                  disabled={!canGenerate || isGenerating}
-                  style={{
-                    padding: "9px 20px", borderRadius: 8, border: "none",
-                    background: canGenerate && !isGenerating ? "var(--accent)" : "#1a1a28",
-                    color: canGenerate && !isGenerating ? "#fff" : "#333",
-                    fontSize: 13, fontWeight: 700,
-                    cursor: canGenerate && !isGenerating ? "pointer" : "not-allowed",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {isGenerating ? "⟳ Building…" : budget ? "↺ Regenerate" : "✦ Build Budget"}
-                </button>
-              </div>
             </div>
 
             <BudgetInputs value={costInputs} onChange={setCostInputs} disabled={!!loading} />
@@ -545,10 +538,27 @@ export default function Budget() {
                 >
                   Choose or upload one in Grants
                 </span>{" "}
-                to link a proposal to this budget, or enter cost assumptions below.
+                to link a proposal to this budget, or enter cost assumptions above.
               </p>
             )}
-          </div>
+            {/* Generate button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+              <button
+                onClick={handleGenerate}
+                disabled={!canGenerate || isGenerating}
+                style={{
+                  padding: "9px 20px", borderRadius: 8, border: "none",
+                  background: canGenerate && !isGenerating ? "var(--accent)" : "#1a1a28",
+                  color: canGenerate && !isGenerating ? "#fff" : "#333",
+                  fontSize: 13, fontWeight: 700,
+                  cursor: canGenerate && !isGenerating ? "pointer" : "not-allowed",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isGenerating ? "⟳ Building…" : displayBudget ? "Rebuild budget" : "✦ Build Budget"}
+              </button>
+            </div>
+          </section>}
 
           {/* Loading state */}
           {isGenerating && (
@@ -575,7 +585,7 @@ export default function Budget() {
 
           {/* Error */}
           {error && (
-            <div style={{
+            <div role="alert" style={{
               background: "#2d0f0f", border: "1px solid #7f1d1d",
               borderRadius: 10, padding: "14px 18px", color: "var(--red)", fontSize: 13,
             }}>
@@ -584,8 +594,9 @@ export default function Budget() {
           )}
 
           {/* Budget table */}
-          {displayBudget && !isGenerating && (
-            <>
+          {displayBudget && !isGenerating && !showSetup && (
+            <section className="budget-results" aria-label="Generated budget">
+              <header className="budget-result-header"><div><h1>Your budget</h1><p>{fmt(displayBudget.total_requested)} total requested</p></div><button type="button" disabled={!!loading} onClick={() => { setEditingSetup(true); if (mainRef.current) mainRef.current.scrollTop = 0; }}>Edit budget inputs</button></header>
               {displayBudget.model_version === 2 && <div style={{ padding: 16, border: "1px solid var(--border)", borderRadius: 8, color: "#ddd", fontSize: 13 }}>
                 {displayBudget.funding_gap > 0
                   ? <p role="alert">Costs exceed the grant ceiling by {fmt(displayBudget.funding_gap)}. Staffing and unit costs have been preserved. Choose a scope change or edit the inputs.</p>
@@ -655,35 +666,14 @@ export default function Budget() {
                   </div>
                 ))}
               </div>
-            </>
+            </section>
           )}
 
-          {/* Empty state */}
-          {!displayBudget && !isGenerating && !error && (
-            <div style={{
-              background: "var(--bg-card)", border: "1px dashed var(--border)",
-              borderRadius: 12, padding: "60px 24px", textAlign: "center",
-            }}>
-              <p style={{ fontSize: 36, margin: "0 0 12px" }}>💰</p>
-              <p style={{ fontWeight: 700, color: "#e0e0f0", fontSize: 18, margin: "0 0 8px" }}>
-                No budget yet
-              </p>
-              <p style={{ color: "#555", fontSize: 13, maxWidth: 360, margin: "0 auto" }}>
-                Select a grant, set the maximum amount, and click Build Budget.
-                Generate a location-aware line-item breakdown based on your proposal.
-              </p>
-            </div>
-          )}
-        </div>
+          <AiPrivacyNotice />
+        </main>
 
         {/* ── Right: Chat Panel ───────────── */}
-        <div style={{
-          width: "50%", flexShrink: 0,
-          background: "#0d0d16", borderLeft: "1px solid var(--border)",
-          display: "flex", flexDirection: "column",
-          position: "sticky", top: 112,
-          height: "calc(100vh - 112px)",
-        }}>
+        <aside className="budget-chat" aria-label="Budget Advisor">
 
           {/* Chat header */}
           <div style={{
@@ -701,13 +691,13 @@ export default function Budget() {
                 Budget Advisor
               </p>
               <p style={{ margin: 0, color: "#444", fontSize: 11 }}>
-                {chatReady ? "Ready to refine" : "Generate a budget to start"}
+                {editingSetup ? "Editing inputs · rebuild to apply" : chatReady ? "Ready to refine" : "Generate a budget to start"}
               </p>
             </div>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "16px 14px" }}>
+          <div ref={chatMessagesRef} className="budget-chat-messages" role="log" aria-label="Budget conversation" aria-live="polite">
             {!chatReady && !isGenerating && (
               <div style={{ textAlign: "center", marginTop: 60 }}>
                 <p style={{ fontSize: 28, margin: "0 0 12px" }}>💬</p>
@@ -762,11 +752,10 @@ export default function Budget() {
               }
             `}</style>
 
-            <div ref={chatEndRef} />
           </div>
 
           {/* Suggestion chips */}
-          {chatReady && messages.length < 3 && (
+          {chatAvailable && messages.length < 3 && (
             <div style={{ padding: "0 12px 8px", display: "flex", gap: 5, flexWrap: "wrap" }}>
               {[
                 "Increase personnel",
@@ -802,8 +791,9 @@ export default function Budget() {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={chatReady ? "e.g. Move $5k from travel to training…" : "Generate a budget first…"}
-              disabled={!chatReady || !!loading}
+              aria-label="Message Budget Advisor"
+              placeholder={editingSetup ? "View your current budget to chat…" : chatReady ? "e.g. Move $5k from travel to training…" : "Generate a budget first…"}
+              disabled={!chatAvailable || !!loading}
               rows={2}
               style={{
                 flex: 1, background: "#111120",
@@ -816,7 +806,8 @@ export default function Budget() {
             />
             <button
               onClick={handleSend}
-              disabled={!input.trim() || !chatReady || !!loading}
+              disabled={!input.trim() || !chatAvailable || !!loading}
+              aria-label="Send budget message"
               style={{
                 width: 36, height: 36, borderRadius: 10, border: "none",
                 background: input.trim() && chatReady && !loading ? "var(--accent)" : "#1e1e30",
@@ -828,9 +819,8 @@ export default function Budget() {
               ↑
             </button>
           </div>
-        </div>
+        </aside>
       </div>
-      <div style={{ padding: "0 40px 16px", flexShrink: 0 }}><AiPrivacyNotice /></div>
     </div>
   );
 }

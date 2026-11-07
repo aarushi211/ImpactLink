@@ -5,6 +5,7 @@ import ProtectedRoute    from "./components/ProtectedRoute";
 import Landing       from "./pages/Landing";
 import Login         from "./pages/Login";
 import Profile       from "./pages/Profile";
+import Onboarding    from "./pages/Onboarding";
 import Dashboard     from "./pages/Dashboard";
 import GrantsList    from "./pages/GrantsList";
 import GrantDetail   from "./pages/GrantDetail";
@@ -26,6 +27,7 @@ export default function App() {
           {/* Protected */}
           <Route path="/dashboard"  element={<P><Dashboard /></P>} />
           <Route path="/profile"    element={<P><Profile /></P>} />
+          <Route path="/onboarding" element={<P><Onboarding /></P>} />
           <Route path="/grants"     element={<P><GrantsList /></P>} />
           <Route path="/grants/:id" element={<P><GrantDetail /></P>} />
           <Route path="/upload"     element={<P><Navigate to="/grants" replace /></P>} />

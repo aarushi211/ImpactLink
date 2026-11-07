@@ -288,20 +288,32 @@ Return JSON array now:""")
 def find_similar_grants(
     proposal: dict, top_k: int = 5, include_grant_id: str | None = None,
     eligibility_context: dict | None = None,
+    target_only: bool = False,
 ) -> list:
     """
     Full proposal → vector search → LLM re-rank → top_k results.
     Replaces the ChromaDB-backed version; no local file dependency.
     """
     applicant = eligibility_context if eligibility_context is not None else proposal.get("eligibility_context") or {}
-    allowed, eligibility_checks = _eligibility_candidates(applicant)
+    if target_only and not include_grant_id:
+        raise ValueError("A target grant is required")
+    allowed, eligibility_checks = (
+        _eligibility_candidates(applicant, [str(include_grant_id)])
+        if target_only else _eligibility_candidates(applicant)
+    )
     if not allowed:
+        return []
+    if target_only and str(include_grant_id) not in allowed:
         return []
     model = _get_model()
     proposal_embedding = model.encode(proposal_to_text(proposal)).tolist()
 
-    rows = _vector_search(proposal_embedding, n_results=max(20, top_k * 2), allowed_grant_ids=allowed)
-    if include_grant_id and str(include_grant_id) in allowed and all(
+    if target_only:
+        selected = _vector_search_grant(proposal_embedding, include_grant_id)
+        rows = [selected] if selected else []
+    else:
+        rows = _vector_search(proposal_embedding, n_results=max(20, top_k * 2), allowed_grant_ids=allowed)
+    if not target_only and include_grant_id and str(include_grant_id) in allowed and all(
         str(row["grant_id"]) != str(include_grant_id) for row in rows
     ):
         requested_grant = _vector_search_grant(proposal_embedding, include_grant_id)
@@ -317,7 +329,7 @@ def find_similar_grants(
             "grant_id":      row["grant_id"],
             "title":         row["title"] or "",
             "agency":        row["agency"] or "",
-            "description":   clean_html(row["description"] or "")[:300],
+            "description":   clean_html(row["description"] or "") if target_only else clean_html(row["description"] or "")[:300],
             "award_ceiling": row["award_ceiling"] or 0,
             "vector_score":  round(float(row["similarity"]) * 100, 1),
         })
@@ -382,6 +394,7 @@ def find_similar_grants(
             "similarity_score":   score,
             "match_explanation":  llm_insight.match_explanation if llm_insight else "Semantic similarity match.",
             "fit_level":          llm_insight.fit_level if llm_insight else "unknown",
+            "score_method":       "ai_project_fit" if llm_insight else "semantic_similarity",
             "application_tip":    llm_insight.application_tip if llm_insight else "Standard review recommended.",
             "location_boosted":   boost > 0,
             "location_boost_pts": boost,

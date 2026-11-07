@@ -56,3 +56,17 @@ test("checking a running session keeps recovery guidance without resubmitting", 
   expect(advanceSession).not.toHaveBeenCalled();
   expect(advanceSessionStream).not.toHaveBeenCalled();
 });
+
+test("temporary database failure preserves the session and a later status check recovers it", async () => {
+  getSessionStatus.mockRejectedValueOnce({ response: { status: 503, data: { detail: "Database temporarily unavailable. Check the saved session status again." } } });
+  const { result } = renderHook(() => useProposalSession("saved-session"));
+  await act(async () => {});
+  expect(result.current.sessionId).toBe("saved-session");
+  expect(result.current.error).toContain("Database temporarily unavailable");
+  getSessionStatus.mockResolvedValue({ session_id: "saved-session", gate: "draft_review", sections: { summary: { content: "Already generated draft" } } });
+  await act(async () => { await result.current.refresh(); });
+  expect(result.current.data.sections.summary.content).toBe("Already generated draft");
+  expect(result.current.error).toBeNull();
+  expect(advanceSession).not.toHaveBeenCalled();
+  expect(advanceSessionStream).not.toHaveBeenCalled();
+});

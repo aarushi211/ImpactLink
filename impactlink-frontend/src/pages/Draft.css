@@ -17,6 +17,15 @@
 .draft-writing button:disabled { opacity: .4; cursor: not-allowed; }
 .draft-progress { display: flex; gap: 12px; align-items: center; color: #aaa; margin: 20px auto; max-width: 820px; font-size: 13px; }
 .draft-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: draft-spin 1s linear infinite; }
+.draft-match-heading { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.draft-match .draft-match-score { color:#c4b5fd; font-size:34px; font-weight:800; margin:12px 0 0; line-height:1.3; }
+.draft-match-score span { color:#999; font-size:15px; font-weight:500; }
+.draft-change-legend { display:flex; flex-wrap:wrap; gap:12px; margin:12px 0; font-size:12px; }
+.draft-change-legend span { padding:5px 10px; border-radius:5px; }
+.draft-removed { color:#991b1b; background:#fee2e2; text-decoration:line-through; }
+.draft-added { color:#166534; background:#dcfce7; }
+.draft-card[aria-label="Drafting scope"] textarea { display:block; width:100%; box-sizing:border-box; margin-top:8px; padding:12px; background:#111120; color:#ddd; border:1px solid var(--border); border-radius:8px; resize:vertical; font:inherit; font-size:13px; }
+.draft-card[aria-label="Drafting scope"] > label { font-size:13px; color:#ccc; }
 @keyframes draft-spin { to { transform: rotate(360deg); } }
 .draft-paper { box-sizing: border-box; color: #252535; background: #fff; border-radius: 10px; padding: 32px 40px; margin: 18px auto; max-width: 860px; width: 100%; font: 14px/1.8 Georgia, serif; box-shadow: 0 8px 30px #0002; }
 .draft-paper h2 { font-size: 20px; line-height: 1.4; margin: 0 0 20px; }

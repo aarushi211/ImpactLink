@@ -104,6 +104,38 @@ class SetupEndpointTests(unittest.TestCase):
         lookup.assert_called_once_with('g1')
         extract.assert_called_once_with(grant)
 
+    def test_targeted_match_refresh_passes_revised_text_and_target(self):
+        proposal = {'sections': {'summary': {'content': 'Revised monitoring plan'}}}
+        with patch.object(self.backend, 'find_similar_grants', return_value=[{'grant_id': 'g1', 'similarity_score': 82}]) as matcher:
+            response = self.client.post('/api/match', json={'proposal': proposal, 'grant_id': 'g1', 'target_only': True, 'top_k': 1})
+        self.assertEqual(response.status_code, 200)
+        matcher.assert_called_once_with(proposal, 1, include_grant_id='g1', eligibility_context=None, target_only=True)
+        self.assertEqual(response.json()['matches'][0]['similarity_score'], 82)
+
+    def test_checkpoint_connection_failure_is_reported_without_exposing_database_details(self):
+        from psycopg import OperationalError
+        with patch.object(self.backend, 'stream_advance_session', side_effect=OperationalError('private connection details')):
+            response = self.client.post('/api/session/saved/advance/stream', json={})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Check saved session status', response.text)
+        self.assertIn('database connection was interrupted', response.text)
+        self.assertNotIn('private connection details', response.text)
+
+    def test_non_streaming_checkpoint_failure_is_retryable_status_not_missing_session(self):
+        from psycopg import OperationalError
+        with patch.object(self.backend, 'advance_session', side_effect=OperationalError('offline')):
+            response = self.client.post('/api/session/saved/advance', json={})
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('saved session status', response.json()['detail'])
+
+    def test_target_only_requires_a_grant_and_authentication(self):
+        with patch.object(self.backend, 'find_similar_grants') as matcher:
+            response = self.client.post('/api/match', json={'proposal': {}, 'target_only': True})
+        self.assertEqual(response.status_code, 422)
+        matcher.assert_not_called()
+        self.backend.app.dependency_overrides.clear()
+        self.assertEqual(self.client.post('/api/match', json={'proposal': {}, 'target_only': True, 'grant_id': 'g1'}).status_code, 401)
+
     def test_missing_grant_does_not_call_extractor(self):
         with patch.object(self.backend, 'get_grant_by_id', return_value=None), patch.object(self.backend, 'extract_application_setup') as extract:
             response = self.client.post('/api/grants/missing/application-requirements')

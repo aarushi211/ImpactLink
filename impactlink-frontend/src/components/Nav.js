@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Brand from "./Brand";
 
 export default function Nav() {
   const navigate = useNavigate();
@@ -23,20 +24,7 @@ export default function Nav() {
       position: "sticky", top: 0, zIndex: 100,
     }}>
       {/* Logo */}
-      <div
-        onClick={() => navigate("/")}
-        style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-      >
-        <span style={{
-          width: 32, height: 32, display: "grid", placeItems: "center",
-          borderRadius: 9, background: "#1a1a2e", color: "var(--accent)",
-          fontSize: 12, fontWeight: 800, letterSpacing: "0.02em",
-        }}>IL</span>
-        <span style={{ fontWeight: 700, fontSize: 17, color: "#fff",
-          letterSpacing: "-0.025em" }}>
-          ImpactLink
-        </span>
-      </div>
+      <Brand />
 
       {/* Links */}
       {profile && (

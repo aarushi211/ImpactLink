@@ -3,6 +3,7 @@ from firebase_admin import credentials, storage
 import os
 import json
 import logging
+from psycopg import OperationalError, InterfaceError
 from dotenv import load_dotenv
 load_dotenv()  # Must happen before os.getenv calls below
 
@@ -106,6 +107,7 @@ class ProposalRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=50)
     grant_id: Optional[str] = None
     eligibility_context: Optional[dict] = None
+    target_only: bool = False
 
 class DraftRequest(BaseModel):
     proposal: dict
@@ -333,10 +335,13 @@ async def upload(file: UploadFile = File(...), uid: str = Depends(verify_ai_user
 
 @app.post("/api/match")
 def match(req: ProposalRequest, uid: str = Depends(verify_ai_user, scope="request")):
+    if req.target_only and not req.grant_id:
+        raise HTTPException(422, "A target grant is required to refresh its match score.")
     return {
         "matches": find_similar_grants(
             req.proposal, req.top_k, include_grant_id=req.grant_id,
             eligibility_context=req.eligibility_context,
+            target_only=req.target_only,
         )
     }
 
@@ -512,6 +517,8 @@ async def session_create(body: dict, uid: str = Depends(verify_ai_user, scope="r
         return await asyncio.to_thread(create_session, body, user_id=uid)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except (OperationalError, InterfaceError):
+        raise HTTPException(503, "The database is temporarily unavailable. Please retry after the connection recovers.")
 
 @app.post("/api/session/{session_id}/advance")
 async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(verify_ai_user, scope="request")):
@@ -523,6 +530,8 @@ async def session_advance(session_id: str, body: dict = {}, uid: str = Depends(v
         if "User instructions" in str(e) or "Application requirements" in str(e) or "Funder AI policy" in str(e):
             raise HTTPException(422, str(e))
         raise HTTPException(404, str(e))
+    except (OperationalError, InterfaceError):
+        raise HTTPException(503, "The database connection was interrupted while saving session progress. Check the saved session status before drafting again.")
     except Exception as e:
         log.exception("Session advance failed")
         raise HTTPException(500, "Internal session error")
@@ -542,6 +551,9 @@ async def session_advance_stream(
             message = str(e)
             log.warning("Streamed session advance rejected: %s", message)
             yield {"type": "error", "message": message}
+        except (OperationalError, InterfaceError):
+            log.exception("Session checkpoint connection failed after database retries")
+            yield {"type": "error", "message": "The database connection was interrupted while saving the draft. Drafting may already be complete. Use Check saved session status before drafting again."}
         except Exception:
             log.exception("Streamed session advance failed")
             yield {"type": "error", "message": "Draft generation failed. Check the saved session status before retrying."}
@@ -555,11 +567,13 @@ async def session_advance_stream(
 @app.get("/api/session/{session_id}")
 async def session_status(session_id: str, uid: str = Depends(verify_token)):
     try:
-        return get_session_status(session_id, user_id=uid)
+        return await asyncio.to_thread(get_session_status, session_id, user_id=uid)
     except ValueError as e:
         if "Unauthorized" in str(e):
             raise HTTPException(403, str(e))
         raise HTTPException(404, str(e))
+    except (OperationalError, InterfaceError):
+        raise HTTPException(503, "The database is temporarily unavailable. Wait a moment and check the saved session status again.")
 
 
 @app.patch("/api/session/{session_id}/checklist")

@@ -102,6 +102,28 @@ test("streaming section text appears as a reply inside the same conversation", a
   expect(Array.from(conversation.querySelectorAll("*")).filter(node => node.style.overflowY === "auto")).toHaveLength(0);
 });
 
+test("confirmation allows corrections and missing details and keeps edits through refresh", async () => {
+  Element.prototype.scrollIntoView = jest.fn();
+  mockSession.gate = "slot_confirm";
+  mockSession.data = { slots: {
+    mission: { question: "What is your mission?", value: "Old mission", filled: true },
+    sustainability: { question: "How will it continue?", value: null, filled: false },
+  } };
+  mockSession.advanceStream.mockResolvedValue({});
+  const { rerender } = render(<BuildProposal />);
+  fireEvent.change(screen.getByLabelText("What is your mission?"), { target: { value: "Restore wetlands" } });
+  fireEvent.change(screen.getByLabelText(/How will it continue/), { target: { value: "Volunteer maintenance" } });
+  fireEvent.change(screen.getByLabelText(/Extra details or drafting instructions/), { target: { value: "Use plain language and mention our pilot." } });
+  mockSession.data = { ...mockSession.data };
+  rerender(<BuildProposal />);
+  expect(screen.getByLabelText("What is your mission?")).toHaveValue("Restore wetlands");
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Confirm & Start Drafting" })); });
+  expect(mockSession.advanceStream).toHaveBeenCalledWith({
+    confirmed: true, slots: { mission: "Restore wetlands", sustainability: "Volunteer maintenance" },
+    draft_instructions: "Use plain language and mention our pilot.",
+  }, expect.any(Function), expect.any(Function));
+});
+
 test("funder limits survive saving and block confirmation of an over-limit answer", async () => {
   Element.prototype.scrollIntoView = jest.fn();
   const spec = { stage: "loi", source_reference: "Funder form page 2", process_notes: "LOI before full application", sections: [{ key: "summary", title: "Summary", instructions: "Summarize the project", max_words: 2, max_characters: null, required: true }], attachments: [] };

@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       // 2. If the backend says 404, register them automatically.
       if (err.response && err.response.status === 404) {
-        const defaultOrgName = user.displayName || "My Organization";
+        const defaultOrgName = "My Organization";
 
         const { data } = await api.post("/api/auth/register", {
           uid: user.uid,
@@ -102,7 +102,7 @@ export function AuthProvider({ children }) {
   const updateProfile = useCallback(async (updates) => {
     // FIX: Rely on Firebase's instantaneous session, not React's delayed state
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) throw new Error("Your session has ended. Sign in again to save your profile.");
 
     const { data } = await api.patch("/api/profile", {
       updates
